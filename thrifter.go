@@ -10,6 +10,7 @@ type Protocol int
 var ProtocolBinary Protocol = 1
 
 type Iterator interface {
+	ReadMessageHeader() protocol.MessageHeader
 	ReadStructCB(func(fieldType protocol.TType, fieldId protocol.FieldId))
 	ReadStruct() (fieldType protocol.TType, fieldId protocol.FieldId)
 	ReadList() (elemType protocol.TType, size int)

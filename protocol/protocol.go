@@ -2,7 +2,20 @@ package protocol
 
 // Type constants in the Thrift protocol
 type TType byte
+type TMessageType int32
+type SeqId int32
 type FieldId int16
+type Version uint32
+
+const VERSION_1 Version = 0x80010000
+
+const (
+	INVALID_TMESSAGE_TYPE TMessageType = 0
+	CALL                  TMessageType = 1
+	REPLY                 TMessageType = 2
+	EXCEPTION             TMessageType = 3
+	ONEWAY                TMessageType = 4
+)
 
 const (
 	STOP   TType = 0
@@ -48,4 +61,11 @@ func (p TType) String() string {
 		return s
 	}
 	return "Unknown"
+}
+
+type MessageHeader struct {
+	Version     Version
+	MessageName string
+	MessageType TMessageType
+	SeqId       SeqId
 }

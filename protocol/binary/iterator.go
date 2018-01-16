@@ -21,6 +21,20 @@ func (iter *Iterator) ReportError(operation string, err string) {
 	}
 }
 
+func (iter *Iterator) ReadMessageHeader() protocol.MessageHeader {
+	versionAndMessageType := iter.ReadInt32()
+	messageType := protocol.TMessageType(versionAndMessageType & 0x0ff)
+	version := protocol.Version(int64(int64(versionAndMessageType) & 0xffff0000))
+	messageName := iter.ReadString()
+	seqId := protocol.SeqId(iter.ReadInt32())
+	return protocol.MessageHeader{
+		Version:     version,
+		MessageName: messageName,
+		MessageType: messageType,
+		SeqId:       seqId,
+	}
+}
+
 func (iter *Iterator) ReadStructCB(cb func(fieldType protocol.TType, fieldId protocol.FieldId)) {
 	for iter.buf[0] != 0 {
 		fieldType := iter.buf[0]
