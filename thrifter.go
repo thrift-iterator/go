@@ -16,6 +16,7 @@ type Iterator interface {
 	ReadStruct() map[protocol.FieldId]interface{}
 	SkipStruct() []byte
 	ReadListHeader() (elemType protocol.TType, size int)
+	ReadList() []interface{}
 	SkipList() []byte
 	ReadMapHeader() (keyType protocol.TType, elemType protocol.TType, size int)
 	SkipMap() []byte

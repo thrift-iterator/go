@@ -155,3 +155,19 @@ func (iter *Iterator) ReadStruct() map[protocol.FieldId]interface{} {
 		}
 	}
 }
+
+func (iter *Iterator) ReadList() []interface{} {
+	var obj []interface{}
+	elemType, length := iter.ReadListHeader()
+	for i := 0; i < length; i++ {
+		var elem interface{}
+		switch elemType {
+		case protocol.I64:
+			elem = iter.ReadInt64()
+		default:
+			panic("unsupported type")
+		}
+		obj = append(obj, elem)
+	}
+	return obj
+}
