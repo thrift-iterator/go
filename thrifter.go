@@ -11,10 +11,18 @@ var ProtocolBinary Protocol = 1
 
 type Iterator interface {
 	ReadStructCB(func(fieldType protocol.TType, fieldId protocol.FieldId))
+	ReadBool() bool
+	ReadInt8() int8
+	ReadUInt8() uint8
+	ReadInt16() int16
+	ReadUInt16() uint16
+	ReadInt32() int32
+	ReadUInt32() uint32
 	ReadInt64() int64
 	ReadUInt64() uint64
 	ReadFloat64() float64
 	ReadString() string
+	ReadBinary() []byte
 }
 
 type Config struct {

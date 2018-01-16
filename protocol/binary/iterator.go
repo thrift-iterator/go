@@ -31,6 +31,32 @@ func (iter *Iterator) ReadStructCB(cb func(fieldType protocol.TType, fieldId pro
 	iter.buf = iter.buf[1:]
 }
 
+func (iter *Iterator) ReadBool() bool {
+	return iter.ReadUInt8() == 1
+}
+
+func (iter *Iterator) ReadUInt8() uint8 {
+	b := iter.buf
+	value := b[0]
+	iter.buf = iter.buf[1:]
+	return value
+}
+
+func (iter *Iterator) ReadInt8() int8 {
+	return int8(iter.ReadUInt8())
+}
+
+func (iter *Iterator) ReadUInt16() uint16 {
+	b := iter.buf
+	value := uint16(b[1]) | uint16(b[0])<<8
+	iter.buf = iter.buf[2:]
+	return value
+}
+
+func (iter *Iterator) ReadInt16() int16 {
+	return int16(iter.ReadUInt16())
+}
+
 func (iter *Iterator) ReadUInt32() uint32 {
 	b := iter.buf
 	value := uint32(b[3]) | uint32(b[2])<<8 | uint32(b[1])<<16 | uint32(b[0])<<24
@@ -39,7 +65,7 @@ func (iter *Iterator) ReadUInt32() uint32 {
 }
 
 func (iter *Iterator) ReadInt32() int32 {
-	return int32(iter.ReadInt32())
+	return int32(iter.ReadUInt32())
 }
 
 func (iter *Iterator) ReadInt64() int64 {
@@ -61,6 +87,13 @@ func (iter *Iterator) ReadFloat64() float64 {
 func (iter *Iterator) ReadString() string {
 	length := iter.ReadUInt32()
 	value := string(iter.buf[:length])
+	iter.buf = iter.buf[length:]
+	return value
+}
+
+func (iter *Iterator) ReadBinary() []byte {
+	length := iter.ReadUInt32()
+	value := iter.buf[:length]
 	iter.buf = iter.buf[length:]
 	return value
 }
