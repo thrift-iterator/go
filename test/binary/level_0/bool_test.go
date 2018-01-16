@@ -15,3 +15,11 @@ func Test_decode_bool(t *testing.T) {
 	iter := thrifter.NewIterator(buf.Bytes())
 	should.Equal(true, iter.ReadBool())
 }
+
+func Test_encode_bool(t *testing.T) {
+	should := require.New(t)
+	stream := thrifter.NewStream(nil)
+	stream.WriteBool(true)
+	iter := thrifter.NewIterator(stream.Buffer())
+	should.Equal(true, iter.ReadBool())
+}

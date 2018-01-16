@@ -15,3 +15,11 @@ func Test_decode_uint64(t *testing.T) {
 	iter := thrifter.NewIterator(buf.Bytes())
 	should.Equal(uint64(1024), iter.ReadUInt64())
 }
+
+func Test_encode_uint64(t *testing.T) {
+	should := require.New(t)
+	stream := thrifter.NewStream(nil)
+	stream.WriteUInt64(1024)
+	iter := thrifter.NewIterator(stream.Buffer())
+	should.Equal(uint64(1024), iter.ReadUInt64())
+}

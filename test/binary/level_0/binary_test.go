@@ -15,3 +15,11 @@ func Test_decode_binary(t *testing.T) {
 	iter := thrifter.NewIterator(buf.Bytes())
 	should.Equal("hello", string(iter.ReadBinary()))
 }
+
+func Test_encode_binary(t *testing.T) {
+	should := require.New(t)
+	stream := thrifter.NewStream(nil)
+	stream.WriteBinary([]byte("hello"))
+	iter := thrifter.NewIterator(stream.Buffer())
+	should.Equal("hello", string(iter.ReadBinary()))
+}

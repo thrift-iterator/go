@@ -15,3 +15,11 @@ func Test_decode_int16(t *testing.T) {
 	iter := thrifter.NewIterator(buf.Bytes())
 	should.Equal(int16(-1), iter.ReadInt16())
 }
+
+func Test_encode_int16(t *testing.T) {
+	should := require.New(t)
+	stream := thrifter.NewStream(nil)
+	stream.WriteInt16(-1)
+	iter := thrifter.NewIterator(stream.Buffer())
+	should.Equal(int16(-1), iter.ReadInt16())
+}

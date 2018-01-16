@@ -15,3 +15,11 @@ func Test_decode_string(t *testing.T) {
 	iter := thrifter.NewIterator(buf.Bytes())
 	should.Equal("hello", iter.ReadString())
 }
+
+func Test_encode_string(t *testing.T) {
+	should := require.New(t)
+	stream := thrifter.NewStream(nil)
+	stream.WriteString("hello")
+	iter := thrifter.NewIterator(stream.Buffer())
+	should.Equal("hello", iter.ReadString())
+}

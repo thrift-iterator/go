@@ -38,8 +38,19 @@ type Iterator interface {
 }
 
 type Stream interface {
-	WriteInt8(val int8)
 	Buffer() []byte
+	WriteBool(val bool)
+	WriteInt8(val int8)
+	WriteUInt8(val uint8)
+	WriteInt16(val int16)
+	WriteUInt16(val uint16)
+	WriteInt32(val int32)
+	WriteUInt32(val uint32)
+	WriteInt64(val int64)
+	WriteUInt64(val uint64)
+	WriteFloat64(val float64)
+	WriteBinary(val []byte)
+	WriteString(val string)
 }
 
 type Config struct {
