@@ -11,6 +11,8 @@ var ProtocolBinary Protocol = 1
 
 type Iterator interface {
 	ReadStructCB(func(fieldType protocol.TType, fieldId protocol.FieldId))
+	ReadStruct() (fieldType protocol.TType, fieldId protocol.FieldId)
+	ReadList() (elemType protocol.TType, size int)
 	ReadBool() bool
 	ReadInt8() int8
 	ReadUInt8() uint8

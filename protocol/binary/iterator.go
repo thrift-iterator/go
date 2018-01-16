@@ -31,6 +31,26 @@ func (iter *Iterator) ReadStructCB(cb func(fieldType protocol.TType, fieldId pro
 	iter.buf = iter.buf[1:]
 }
 
+
+func (iter *Iterator) ReadStruct() (protocol.TType, protocol.FieldId) {
+	fieldType := iter.buf[0]
+	if fieldType == 0 {
+		iter.buf = iter.buf[1:]
+		return protocol.TType(fieldType), 0
+	}
+	fieldId := uint16(iter.buf[2]) | uint16(iter.buf[1])<<8
+	iter.buf = iter.buf[3:]
+	return protocol.TType(fieldType), protocol.FieldId(fieldId)
+}
+
+func (iter *Iterator) ReadList() (elemType protocol.TType, size int) {
+	b := iter.buf
+	fieldType := b[0]
+	length := uint32(b[4]) | uint32(b[3])<<8 | uint32(b[2])<<16 | uint32(b[1])<<24
+	iter.buf = iter.buf[5:]
+	return protocol.TType(fieldType), int(length)
+}
+
 func (iter *Iterator) ReadBool() bool {
 	return iter.ReadUInt8() == 1
 }
