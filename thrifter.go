@@ -37,12 +37,18 @@ type Iterator interface {
 	ReaderOf(ttype protocol.TType) func() interface{}
 }
 
+type Stream interface {
+	WriteInt8(val int8)
+	Buffer() []byte
+}
+
 type Config struct {
 	Protocol Protocol
 }
 
 type API interface {
 	NewIterator(buf []byte) Iterator
+	NewStream(buf []byte) Stream
 }
 
 type frozenConfig struct {
@@ -62,8 +68,20 @@ func (cfg *frozenConfig) NewIterator(buf []byte) Iterator {
 	panic("unsupported protocol")
 }
 
+func (cfg *frozenConfig) NewStream(buf []byte) Stream {
+	switch cfg.protocol {
+	case ProtocolBinary:
+		return binary.NewStream(buf)
+	}
+	panic("unsupported protocol")
+}
+
 var DefaultConfig = Config{Protocol: ProtocolBinary}.Froze()
 
 func NewIterator(buf []byte) Iterator {
 	return DefaultConfig.NewIterator(buf)
+}
+
+func NewStream(buf []byte) Stream {
+	return DefaultConfig.NewStream(buf)
 }
