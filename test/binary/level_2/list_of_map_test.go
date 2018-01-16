@@ -24,3 +24,23 @@ func Test_skip_list_of_map(t *testing.T) {
 	iter := thrifter.NewIterator(buf.Bytes())
 	should.Equal(buf.Bytes(), iter.SkipList())
 }
+
+func Test_decode_list_of_map(t *testing.T) {
+	should := require.New(t)
+	buf := thrift.NewTMemoryBuffer()
+	proto := thrift.NewTBinaryProtocol(buf, true, true)
+	proto.WriteListBegin(thrift.MAP, 2)
+	proto.WriteMapBegin(thrift.I32, thrift.I64, 1)
+	proto.WriteI32(1)
+	proto.WriteI64(1)
+	proto.WriteMapEnd()
+	proto.WriteMapBegin(thrift.I32, thrift.I64, 1)
+	proto.WriteI32(2)
+	proto.WriteI64(2)
+	proto.WriteMapEnd()
+	proto.WriteListEnd()
+	iter := thrifter.NewIterator(buf.Bytes())
+	should.Equal(map[interface{}]interface{}{
+		int32(1): int64(1),
+	}, iter.ReadList()[0])
+}

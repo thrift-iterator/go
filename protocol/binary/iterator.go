@@ -183,13 +183,45 @@ func (iter *Iterator) Read(ttype protocol.TType) interface{} {
 
 func (iter *Iterator) ReaderOf(ttype protocol.TType) func() interface{} {
 	switch ttype {
+	case protocol.BOOL:
+		return func() interface{} {
+			return iter.ReadBool()
+		}
+	case protocol.I08:
+		return func() interface{} {
+			return iter.ReadInt8()
+		}
+	case protocol.I16:
+		return func() interface{} {
+			return iter.ReadInt16()
+		}
+	case protocol.I32:
+		return func() interface{} {
+			return iter.ReadInt32()
+		}
 	case protocol.I64:
 		return func() interface{} {
 			return iter.ReadInt64()
 		}
+	case protocol.DOUBLE:
+		return func() interface{} {
+			return iter.ReadFloat64()
+		}
 	case protocol.STRING:
 		return func() interface{} {
 			return iter.ReadString()
+		}
+	case protocol.LIST:
+		return func() interface{} {
+			return iter.ReadList()
+		}
+	case protocol.MAP:
+		return func() interface{} {
+			return iter.ReadMap()
+		}
+	case protocol.STRUCT:
+		return func() interface{} {
+			return iter.ReadStruct()
 		}
 	default:
 		panic("unsupported type")
