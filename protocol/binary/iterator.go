@@ -45,7 +45,7 @@ func (iter *Iterator) ReadStructCB(cb func(fieldType protocol.TType, fieldId pro
 	iter.buf = iter.buf[1:]
 }
 
-func (iter *Iterator) ReadStruct() (protocol.TType, protocol.FieldId) {
+func (iter *Iterator) ReadStructField() (protocol.TType, protocol.FieldId) {
 	fieldType := iter.buf[0]
 	if fieldType == 0 {
 		iter.buf = iter.buf[1:]
@@ -56,7 +56,7 @@ func (iter *Iterator) ReadStruct() (protocol.TType, protocol.FieldId) {
 	return protocol.TType(fieldType), protocol.FieldId(fieldId)
 }
 
-func (iter *Iterator) ReadList() (protocol.TType, int) {
+func (iter *Iterator) ReadListHeader() (protocol.TType, int) {
 	b := iter.buf
 	elemType := b[0]
 	length := uint32(b[4]) | uint32(b[3])<<8 | uint32(b[2])<<16 | uint32(b[1])<<24
@@ -64,7 +64,7 @@ func (iter *Iterator) ReadList() (protocol.TType, int) {
 	return protocol.TType(elemType), int(length)
 }
 
-func (iter *Iterator) ReadMap() (protocol.TType, protocol.TType, int) {
+func (iter *Iterator) ReadMapHeader() (protocol.TType, protocol.TType, int) {
 	b := iter.buf
 	keyType := b[0]
 	elemType := b[1]
@@ -138,4 +138,20 @@ func (iter *Iterator) ReadBinary() []byte {
 	value := iter.buf[:length]
 	iter.buf = iter.buf[length:]
 	return value
+}
+
+func (iter *Iterator) ReadStruct() map[protocol.FieldId]interface{} {
+	obj := map[protocol.FieldId]interface{}{}
+	for {
+		fieldType, fieldId := iter.ReadStructField()
+		if fieldType == protocol.STOP {
+			return obj
+		}
+		switch fieldType {
+		case protocol.I64:
+			obj[fieldId] = iter.ReadInt64()
+		default:
+			panic("unsupported type")
+		}
+	}
 }

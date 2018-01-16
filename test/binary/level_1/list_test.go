@@ -18,7 +18,7 @@ func Test_decode_list(t *testing.T) {
 	proto.WriteI64(3)
 	proto.WriteListEnd()
 	iter := thrifter.NewIterator(buf.Bytes())
-	elemType, length := iter.ReadList()
+	elemType, length := iter.ReadListHeader()
 	should.Equal(protocol.I64, elemType)
 	should.Equal(3, length)
 	should.Equal(uint64(1), iter.ReadUInt64())

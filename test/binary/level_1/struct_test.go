@@ -8,7 +8,7 @@ import (
 	"github.com/thrift-iterator/go/protocol"
 )
 
-func Test_decode_struct(t *testing.T) {
+func Test_decode_struct_by_iterator(t *testing.T) {
 	should := require.New(t)
 	buf := thrift.NewTMemoryBuffer()
 	proto := thrift.NewTBinaryProtocol(buf, true, true)
@@ -28,6 +28,23 @@ func Test_decode_struct(t *testing.T) {
 		should.Equal(int64(1024), iter.ReadInt64())
 	})
 	should.True(called)
+}
+
+func Test_decode_struct_as_object(t *testing.T) {
+	should := require.New(t)
+	buf := thrift.NewTMemoryBuffer()
+	proto := thrift.NewTBinaryProtocol(buf, true, true)
+	proto.WriteStructBegin("hello")
+	proto.WriteFieldBegin("field1", thrift.I64, 1)
+	proto.WriteI64(1024)
+	proto.WriteFieldEnd()
+	proto.WriteFieldStop()
+	proto.WriteStructEnd()
+	iter := thrifter.NewIterator(buf.Bytes())
+	obj := iter.ReadStruct()
+	should.Equal(map[protocol.FieldId]interface{}{
+		protocol.FieldId(1): int64(1024),
+	}, obj)
 }
 
 func Test_skip_struct(t *testing.T) {

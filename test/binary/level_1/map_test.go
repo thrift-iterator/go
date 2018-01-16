@@ -21,7 +21,7 @@ func Test_decode_map(t *testing.T) {
 	proto.WriteI64(3)
 	proto.WriteMapEnd()
 	iter := thrifter.NewIterator(buf.Bytes())
-	keyType, elemType, length := iter.ReadMap()
+	keyType, elemType, length := iter.ReadMapHeader()
 	should.Equal(protocol.STRING, keyType)
 	should.Equal(protocol.I64, elemType)
 	should.Equal(3, length)

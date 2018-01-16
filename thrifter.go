@@ -12,11 +12,12 @@ var ProtocolBinary Protocol = 1
 type Iterator interface {
 	ReadMessageHeader() protocol.MessageHeader
 	ReadStructCB(func(fieldType protocol.TType, fieldId protocol.FieldId))
-	ReadStruct() (fieldType protocol.TType, fieldId protocol.FieldId)
+	ReadStructField() (fieldType protocol.TType, fieldId protocol.FieldId)
+	ReadStruct() map[protocol.FieldId]interface{}
 	SkipStruct() []byte
-	ReadList() (elemType protocol.TType, size int)
+	ReadListHeader() (elemType protocol.TType, size int)
 	SkipList() []byte
-	ReadMap() (keyType protocol.TType, elemType protocol.TType, size int)
+	ReadMapHeader() (keyType protocol.TType, elemType protocol.TType, size int)
 	SkipMap() []byte
 	ReadBool() bool
 	ReadInt8() int8
