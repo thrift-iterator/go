@@ -65,6 +65,35 @@ func (iter *Iterator) ReadStruct() (protocol.TType, protocol.FieldId) {
 	return protocol.TType(fieldType), protocol.FieldId(fieldId)
 }
 
+func (iter *Iterator) SkipStruct() []byte {
+	bufBeforeSkip := iter.buf
+	skippedBytes := 0
+	for {
+		fieldType := protocol.TType(iter.buf[0])
+		if fieldType == 0 {
+			iter.buf = iter.buf[1:]
+			skippedBytes += 1
+			return bufBeforeSkip[:skippedBytes]
+		}
+		switch fieldType {
+		case protocol.BOOL, protocol.I08:
+			iter.buf = iter.buf[4:]
+			skippedBytes += 4
+		case protocol.I16:
+			iter.buf = iter.buf[5:]
+			skippedBytes += 5
+		case protocol.I32:
+			iter.buf = iter.buf[7:]
+			skippedBytes += 7
+		case protocol.I64, protocol.DOUBLE:
+			iter.buf = iter.buf[11:]
+			skippedBytes += 11
+		default:
+			panic("unsupported type")
+		}
+	}
+}
+
 func (iter *Iterator) ReadList() (protocol.TType, int) {
 	b := iter.buf
 	elemType := b[0]
@@ -74,30 +103,63 @@ func (iter *Iterator) ReadList() (protocol.TType, int) {
 }
 
 func (iter *Iterator) SkipList() []byte {
-	b := iter.buf
-	elemType := protocol.TType(b[0])
-	length := uint32(b[4]) | uint32(b[3])<<8 | uint32(b[2])<<16 | uint32(b[1])<<24
+	bufBeforeSkip := iter.buf
+	elemType := protocol.TType(bufBeforeSkip[0])
+	length := uint32(bufBeforeSkip[4]) | uint32(bufBeforeSkip[3])<<8 | uint32(bufBeforeSkip[2])<<16 | uint32(bufBeforeSkip[1])<<24
 	switch elemType {
 	case protocol.BOOL, protocol.I08:
 		size := 5 + length
-		skipped := b[:size]
-		iter.buf = b[size:]
+		skipped := bufBeforeSkip[:size]
+		iter.buf = bufBeforeSkip[size:]
 		return skipped
 	case protocol.I16:
 		size := 5 + length*2
-		skipped := b[:size]
-		iter.buf = b[size:]
+		skipped := bufBeforeSkip[:size]
+		iter.buf = bufBeforeSkip[size:]
 		return skipped
 	case protocol.I32:
 		size := 5 + length*4
-		skipped := b[:size]
-		iter.buf = b[size:]
+		skipped := bufBeforeSkip[:size]
+		iter.buf = bufBeforeSkip[size:]
 		return skipped
 	case protocol.I64, protocol.DOUBLE:
 		size := 5 + length*8
-		skipped := b[:size]
-		iter.buf = b[size:]
+		skipped := bufBeforeSkip[:size]
+		iter.buf = bufBeforeSkip[size:]
 		return skipped
+	case protocol.STRING:
+		skippedBytes := 5
+		iter.buf = iter.buf[5:]
+		for i := uint32(0); i < length; i++ {
+			skippedBytes += len(iter.ReadBinary())
+			skippedBytes += 4
+		}
+		iter.buf = bufBeforeSkip[skippedBytes:]
+		return bufBeforeSkip[:skippedBytes]
+	case protocol.LIST:
+		skippedBytes := 5
+		iter.buf = iter.buf[5:]
+		for i := uint32(0); i < length; i++ {
+			skippedBytes += len(iter.SkipList())
+		}
+		iter.buf = bufBeforeSkip[skippedBytes:]
+		return bufBeforeSkip[:skippedBytes]
+	case protocol.MAP:
+		skippedBytes := 5
+		iter.buf = iter.buf[5:]
+		for i := uint32(0); i < length; i++ {
+			skippedBytes += len(iter.SkipMap())
+		}
+		iter.buf = bufBeforeSkip[skippedBytes:]
+		return bufBeforeSkip[:skippedBytes]
+	case protocol.STRUCT:
+		skippedBytes := 5
+		iter.buf = iter.buf[5:]
+		for i := uint32(0); i < length; i++ {
+			skippedBytes += len(iter.SkipStruct())
+		}
+		iter.buf = bufBeforeSkip[skippedBytes:]
+		return bufBeforeSkip[:skippedBytes]
 	}
 	panic("unsupported type")
 }
@@ -119,7 +181,7 @@ func (iter *Iterator) SkipMap() []byte {
 	keySize := getTypeSize(keyType)
 	elemSize := getTypeSize(elemType)
 	if keySize != 0 && elemSize != 0 {
-		size := 6 + int(length)*(elemSize + keySize)
+		size := 6 + int(length)*(elemSize+keySize)
 		skipped := b[:size]
 		iter.buf = b[size:]
 		return skipped
