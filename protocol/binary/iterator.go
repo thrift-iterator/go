@@ -3,6 +3,7 @@ package binary
 import (
 	"fmt"
 	"github.com/thrift-iterator/go/protocol"
+	"math"
 )
 
 type Iterator struct {
@@ -12,6 +13,12 @@ type Iterator struct {
 
 func NewIterator(buf []byte) *Iterator {
 	return &Iterator{buf: buf}
+}
+
+func (iter *Iterator) ReportError(operation string, err string) {
+	if iter.Error == nil {
+		iter.Error = fmt.Errorf("%s: %s", operation, err)
+	}
 }
 
 func (iter *Iterator) ReadStructCB(cb func(fieldType protocol.TType, fieldId protocol.FieldId)) {
@@ -24,16 +31,36 @@ func (iter *Iterator) ReadStructCB(cb func(fieldType protocol.TType, fieldId pro
 	iter.buf = iter.buf[1:]
 }
 
+func (iter *Iterator) ReadUInt32() uint32 {
+	b := iter.buf
+	value := uint32(b[3]) | uint32(b[2])<<8 | uint32(b[1])<<16 | uint32(b[0])<<24
+	iter.buf = iter.buf[4:]
+	return value
+}
+
+func (iter *Iterator) ReadInt32() int32 {
+	return int32(iter.ReadInt32())
+}
+
 func (iter *Iterator) ReadInt64() int64 {
+	return int64(iter.ReadUInt64())
+}
+
+func (iter *Iterator) ReadUInt64() uint64 {
 	b := iter.buf
 	value := uint64(b[7]) | uint64(b[6])<<8 | uint64(b[5])<<16 | uint64(b[4])<<24 |
 		uint64(b[3])<<32 | uint64(b[2])<<40 | uint64(b[1])<<48 | uint64(b[0])<<56
 	iter.buf = iter.buf[8:]
-	return int64(value)
+	return value
 }
 
-func (iter *Iterator) ReportError(operation string, err string) {
-	if iter.Error == nil {
-		iter.Error = fmt.Errorf("%s: %s", operation, err)
-	}
+func (iter *Iterator) ReadFloat64() float64 {
+	return math.Float64frombits(iter.ReadUInt64())
+}
+
+func (iter *Iterator) ReadString() string {
+	length := iter.ReadUInt32()
+	value := string(iter.buf[:length])
+	iter.buf = iter.buf[length:]
+	return value
 }
