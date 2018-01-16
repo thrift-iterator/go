@@ -19,6 +19,7 @@ type Iterator interface {
 	ReadList() []interface{}
 	SkipList() []byte
 	ReadMapHeader() (keyType protocol.TType, elemType protocol.TType, size int)
+	ReadMap() map[interface{}]interface{}
 	SkipMap() []byte
 	ReadBool() bool
 	ReadInt8() int8
@@ -32,6 +33,8 @@ type Iterator interface {
 	ReadFloat64() float64
 	ReadString() string
 	ReadBinary() []byte
+	Read(ttype protocol.TType) interface{}
+	ReaderOf(ttype protocol.TType) func() interface{}
 }
 
 type Config struct {

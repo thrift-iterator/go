@@ -147,27 +147,51 @@ func (iter *Iterator) ReadStruct() map[protocol.FieldId]interface{} {
 		if fieldType == protocol.STOP {
 			return obj
 		}
-		switch fieldType {
-		case protocol.I64:
-			obj[fieldId] = iter.ReadInt64()
-		default:
-			panic("unsupported type")
-		}
+		obj[fieldId] = iter.Read(fieldType)
 	}
 }
 
 func (iter *Iterator) ReadList() []interface{} {
 	var obj []interface{}
 	elemType, length := iter.ReadListHeader()
+	elemReader := iter.ReaderOf(elemType)
 	for i := 0; i < length; i++ {
-		var elem interface{}
-		switch elemType {
-		case protocol.I64:
-			elem = iter.ReadInt64()
-		default:
-			panic("unsupported type")
-		}
-		obj = append(obj, elem)
+		obj = append(obj, elemReader())
 	}
 	return obj
+}
+
+func (iter *Iterator) ReadMap() map[interface{}]interface{} {
+	obj := map[interface{}]interface{}{}
+	keyType, elemType, length := iter.ReadMapHeader()
+	keyReader := iter.ReaderOf(keyType)
+	elemReader := iter.ReaderOf(elemType)
+	for i := 0; i < length; i++ {
+		obj[keyReader()] = elemReader()
+	}
+	return obj
+}
+
+func (iter *Iterator) Read(ttype protocol.TType) interface{} {
+	switch ttype {
+	case protocol.I64:
+		return iter.ReadInt64()
+	default:
+		panic("unsupported type")
+	}
+}
+
+func (iter *Iterator) ReaderOf(ttype protocol.TType) func() interface{} {
+	switch ttype {
+	case protocol.I64:
+		return func() interface{} {
+			return iter.ReadInt64()
+		}
+	case protocol.STRING:
+		return func() interface{} {
+			return iter.ReadString()
+		}
+	default:
+		panic("unsupported type")
+	}
 }
