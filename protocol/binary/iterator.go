@@ -11,6 +11,15 @@ type Iterator struct {
 	Error error
 }
 
+var typeSizes = map[protocol.TType]int{
+	protocol.BOOL:   1,
+	protocol.I08:    1,
+	protocol.I16:    2,
+	protocol.I32:    4,
+	protocol.I64:    8,
+	protocol.DOUBLE: 8,
+}
+
 func NewIterator(buf []byte) *Iterator {
 	return &Iterator{buf: buf}
 }
@@ -62,6 +71,34 @@ func (iter *Iterator) ReadList() (protocol.TType, int) {
 	length := uint32(b[4]) | uint32(b[3])<<8 | uint32(b[2])<<16 | uint32(b[1])<<24
 	iter.buf = iter.buf[5:]
 	return protocol.TType(elemType), int(length)
+}
+
+func (iter *Iterator) SkipList() []byte {
+	buf := iter.buf
+	elemType, length := iter.ReadList()
+	switch elemType {
+	case protocol.BOOL, protocol.I08:
+		size := 5 + length
+		skipped := buf[:size]
+		iter.buf = buf[size:]
+		return skipped
+	case protocol.I16:
+		size := 5 + length*2
+		skipped := buf[:size]
+		iter.buf = buf[size:]
+		return skipped
+	case protocol.I32:
+		size := 5 + length*4
+		skipped := buf[:size]
+		iter.buf = buf[size:]
+		return skipped
+	case protocol.I64, protocol.DOUBLE:
+		size := 5 + length*8
+		skipped := buf[:size]
+		iter.buf = buf[size:]
+		return skipped
+	}
+	panic("unsupported type")
 }
 
 func (iter *Iterator) ReadMap() (protocol.TType, protocol.TType, int) {

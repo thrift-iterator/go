@@ -14,6 +14,7 @@ type Iterator interface {
 	ReadStructCB(func(fieldType protocol.TType, fieldId protocol.FieldId))
 	ReadStruct() (fieldType protocol.TType, fieldId protocol.FieldId)
 	ReadList() (elemType protocol.TType, size int)
+	SkipList() []byte
 	ReadMap() (keyType protocol.TType, elemType protocol.TType, size int)
 	ReadBool() bool
 	ReadInt8() int8
