@@ -8,7 +8,7 @@ import (
 	"github.com/thrift-iterator/go/protocol"
 )
 
-func Test_simple_map(t *testing.T) {
+func Test_decode_map(t *testing.T) {
 	should := require.New(t)
 	buf := thrift.NewTMemoryBuffer()
 	proto := thrift.NewTBinaryProtocol(buf, true, true)
@@ -31,4 +31,20 @@ func Test_simple_map(t *testing.T) {
 	should.Equal(uint64(2), iter.ReadUInt64())
 	should.Equal("k3", iter.ReadString())
 	should.Equal(uint64(3), iter.ReadUInt64())
+}
+
+func Test_skip_map(t *testing.T) {
+	should := require.New(t)
+	buf := thrift.NewTMemoryBuffer()
+	proto := thrift.NewTBinaryProtocol(buf, true, true)
+	proto.WriteMapBegin(thrift.I32, thrift.I64, 3)
+	proto.WriteI32(1)
+	proto.WriteI64(1)
+	proto.WriteI32(2)
+	proto.WriteI64(2)
+	proto.WriteI32(3)
+	proto.WriteI64(3)
+	proto.WriteMapEnd()
+	iter := thrifter.NewIterator(buf.Bytes())
+	should.Equal(buf.Bytes(), iter.SkipMap())
 }

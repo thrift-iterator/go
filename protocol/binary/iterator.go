@@ -74,28 +74,29 @@ func (iter *Iterator) ReadList() (protocol.TType, int) {
 }
 
 func (iter *Iterator) SkipList() []byte {
-	buf := iter.buf
-	elemType, length := iter.ReadList()
+	b := iter.buf
+	elemType := protocol.TType(b[0])
+	length := uint32(b[4]) | uint32(b[3])<<8 | uint32(b[2])<<16 | uint32(b[1])<<24
 	switch elemType {
 	case protocol.BOOL, protocol.I08:
 		size := 5 + length
-		skipped := buf[:size]
-		iter.buf = buf[size:]
+		skipped := b[:size]
+		iter.buf = b[size:]
 		return skipped
 	case protocol.I16:
 		size := 5 + length*2
-		skipped := buf[:size]
-		iter.buf = buf[size:]
+		skipped := b[:size]
+		iter.buf = b[size:]
 		return skipped
 	case protocol.I32:
 		size := 5 + length*4
-		skipped := buf[:size]
-		iter.buf = buf[size:]
+		skipped := b[:size]
+		iter.buf = b[size:]
 		return skipped
 	case protocol.I64, protocol.DOUBLE:
 		size := 5 + length*8
-		skipped := buf[:size]
-		iter.buf = buf[size:]
+		skipped := b[:size]
+		iter.buf = b[size:]
 		return skipped
 	}
 	panic("unsupported type")
@@ -108,6 +109,36 @@ func (iter *Iterator) ReadMap() (protocol.TType, protocol.TType, int) {
 	length := uint32(b[5]) | uint32(b[4])<<8 | uint32(b[3])<<16 | uint32(b[2])<<24
 	iter.buf = iter.buf[6:]
 	return protocol.TType(keyType), protocol.TType(elemType), int(length)
+}
+
+func (iter *Iterator) SkipMap() []byte {
+	b := iter.buf
+	keyType := protocol.TType(b[0])
+	elemType := protocol.TType(b[1])
+	length := uint32(b[5]) | uint32(b[4])<<8 | uint32(b[3])<<16 | uint32(b[2])<<24
+	keySize := getTypeSize(keyType)
+	elemSize := getTypeSize(elemType)
+	if keySize != 0 && elemSize != 0 {
+		size := 6 + int(length)*(elemSize + keySize)
+		skipped := b[:size]
+		iter.buf = b[size:]
+		return skipped
+	}
+	panic("unsupported type")
+}
+
+func getTypeSize(elemType protocol.TType) int {
+	switch elemType {
+	case protocol.BOOL, protocol.I08:
+		return 1
+	case protocol.I16:
+		return 2
+	case protocol.I32:
+		return 4
+	case protocol.I64, protocol.DOUBLE:
+		return 8
+	}
+	return 0
 }
 
 func (iter *Iterator) ReadBool() bool {

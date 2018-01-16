@@ -16,6 +16,7 @@ type Iterator interface {
 	ReadList() (elemType protocol.TType, size int)
 	SkipList() []byte
 	ReadMap() (keyType protocol.TType, elemType protocol.TType, size int)
+	SkipMap() []byte
 	ReadBool() bool
 	ReadInt8() int8
 	ReadUInt8() uint8
