@@ -88,6 +88,24 @@ func (iter *Iterator) SkipStruct() []byte {
 		case protocol.I64, protocol.DOUBLE:
 			iter.buf = iter.buf[11:]
 			skippedBytes += 11
+		case protocol.STRING:
+			b := iter.buf
+			size := uint32(b[6]) | uint32(b[5])<<8 | uint32(b[4])<<16 | uint32(b[3])<<24
+			skippedBytes += int(size)
+			skippedBytes += 7
+			iter.buf = bufBeforeSkip[skippedBytes:]
+		case protocol.LIST:
+			iter.buf = iter.buf[3:]
+			skippedBytes += len(iter.SkipList())
+			skippedBytes += 3
+		case protocol.MAP:
+			iter.buf = iter.buf[3:]
+			skippedBytes += len(iter.SkipMap())
+			skippedBytes += 3
+		case protocol.STRUCT:
+			iter.buf = iter.buf[3:]
+			skippedBytes += len(iter.SkipStruct())
+			skippedBytes += 3
 		default:
 			panic("unsupported type")
 		}
