@@ -2,6 +2,10 @@ package binary
 
 import "github.com/thrift-iterator/go/protocol"
 
+func (iter *Iterator) SkipMessage(space []byte) []byte {
+	panic("not implemented")
+}
+
 func (iter *Iterator) SkipStruct(space []byte) []byte {
 	bufBeforeSkip := iter.buf
 	skippedBytes := 0
@@ -117,7 +121,6 @@ func (iter *Iterator) skipList() []byte {
 	}
 	panic("unsupported type")
 }
-
 
 func (iter *Iterator) SkipMap(space []byte) []byte {
 	if len(space) > 0 {
