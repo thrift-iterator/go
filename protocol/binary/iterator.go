@@ -25,6 +25,11 @@ func (iter *Iterator) ReportError(operation string, err string) {
 	}
 }
 
+func (iter *Iterator) Reset(buf []byte) {
+	iter.buf = buf
+	iter.err = nil
+}
+
 func (iter *Iterator) ReadMessageHeader() protocol.MessageHeader {
 	versionAndMessageType := iter.ReadInt32()
 	messageType := protocol.TMessageType(versionAndMessageType & 0x0ff)

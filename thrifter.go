@@ -4,6 +4,7 @@ import (
 	"github.com/thrift-iterator/go/protocol/binary"
 	"github.com/thrift-iterator/go/protocol"
 	"errors"
+	"io"
 )
 
 type Protocol int
@@ -13,6 +14,7 @@ var ProtocolBinary Protocol = 1
 type Iterator interface {
 	Error() error
 	ReportError(operation string, err string)
+	Reset(buf []byte)
 	ReadMessageHeader() protocol.MessageHeader
 	ReadMessage() protocol.Message
 	ReadStructCB(func(fieldType protocol.TType, fieldId protocol.FieldId))
@@ -69,8 +71,13 @@ type Stream interface {
 	WriteString(val string)
 }
 
+type Decoder interface {
+	Decode(obj interface{}) error
+}
+
 type Config struct {
 	Protocol Protocol
+	IsFramed bool
 }
 
 type API interface {
@@ -78,14 +85,16 @@ type API interface {
 	NewStream(buf []byte) Stream
 	Unmarshal(buf []byte, obj interface{}) error
 	Marshal(obj interface{}) ([]byte, error)
+	NewDecoder(reader io.Reader) Decoder
 }
 
 type frozenConfig struct {
 	protocol Protocol
+	isFramed bool
 }
 
 func (cfg Config) Froze() API {
-	api := &frozenConfig{protocol: cfg.Protocol}
+	api := &frozenConfig{protocol: cfg.Protocol, isFramed: cfg.IsFramed}
 	return api
 }
 
@@ -115,11 +124,7 @@ func (cfg *frozenConfig) Unmarshal(buf []byte, obj interface{}) error {
 	if iter.Error() != nil {
 		return iter.Error()
 	}
-	msg.Version = msgRead.Version
-	msg.MessageType = msgRead.MessageType
-	msg.MessageName = msgRead.MessageName
-	msg.SeqId = msgRead.SeqId
-	msg.Arguments = msgRead.Arguments
+	msg.Set(&msgRead)
 	return nil
 }
 
@@ -136,7 +141,17 @@ func (cfg *frozenConfig) Marshal(obj interface{}) ([]byte, error) {
 	return stream.Buffer(), nil
 }
 
-var DefaultConfig = Config{Protocol: ProtocolBinary}.Froze()
+func (cfg *frozenConfig) NewDecoder(reader io.Reader) Decoder {
+	if cfg.isFramed {
+		switch cfg.protocol {
+		case ProtocolBinary:
+			return &framedDecoder{reader: reader, iter: cfg.NewIterator(nil)}
+		}
+	}
+	panic("unsupported protocol")
+}
+
+var DefaultConfig = Config{Protocol: ProtocolBinary, IsFramed: true}.Froze()
 
 func NewIterator(buf []byte) Iterator {
 	return DefaultConfig.NewIterator(buf)
@@ -152,4 +167,8 @@ func Unmarshal(buf []byte, obj interface{}) error {
 
 func Marshal(obj interface{}) ([]byte, error) {
 	return DefaultConfig.Marshal(obj)
+}
+
+func NewDecoder(reader io.Reader) Decoder {
+	return DefaultConfig.NewDecoder(reader)
 }

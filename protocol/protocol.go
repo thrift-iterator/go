@@ -74,3 +74,11 @@ type Message struct {
 	MessageHeader
 	Arguments map[FieldId]interface{}
 }
+
+func (msg *Message) Set(msgRead *Message) {
+	msg.Version = msgRead.Version
+	msg.MessageType = msgRead.MessageType
+	msg.MessageName = msgRead.MessageName
+	msg.SeqId = msgRead.SeqId
+	msg.Arguments = msgRead.Arguments
+}
