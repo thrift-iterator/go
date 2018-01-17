@@ -1,20 +1,23 @@
 package thrifter
 
 import (
-	"io"
+	"github.com/thrift-iterator/go/protocol"
+	"errors"
 )
 
 type unframedDecoder struct {
-	reader io.Reader
-	iter   Iterator
-	buf    []byte
-	tmp    []byte
+	iter Iterator
 }
 
 func (decoder *unframedDecoder) Decode(obj interface{}) error {
-	decoder.readMessageHeader()
+	msg, _ := obj.(*protocol.Message)
+	if msg == nil {
+		return errors.New("can only unmarshal protocol.Message")
+	}
+	msgRead := decoder.iter.ReadMessage()
+	if decoder.iter.Error() != nil {
+		return decoder.iter.Error()
+	}
+	msg.Set(&msgRead)
 	return nil
-}
-
-func (decoder *unframedDecoder) readMessageHeader() {
 }

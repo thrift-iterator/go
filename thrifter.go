@@ -172,7 +172,7 @@ func (cfg *frozenConfig) NewDecoder(reader io.Reader) Decoder {
 	if cfg.isFramed {
 		return &framedDecoder{reader: reader, iter: cfg.NewBufferedIterator(nil)}
 	} else {
-		return &unframedDecoder{reader: reader, iter: cfg.NewBufferedIterator(nil)}
+		return &unframedDecoder{iter: cfg.NewIterator(reader)}
 	}
 }
 
