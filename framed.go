@@ -9,7 +9,7 @@ import (
 
 type framedDecoder struct {
 	reader io.Reader
-	iter   Iterator
+	iter   BufferedIterator
 	tmp    []byte
 }
 

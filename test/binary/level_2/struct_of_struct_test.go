@@ -25,7 +25,7 @@ func Test_skip_struct_of_struct(t *testing.T) {
 	proto.WriteFieldEnd()
 	proto.WriteFieldStop()
 	proto.WriteStructEnd()
-	iter := thrifter.NewIterator(buf.Bytes())
+	iter := thrifter.NewBufferedIterator(buf.Bytes())
 	should.Equal(buf.Bytes(), iter.SkipStruct())
 }
 
@@ -46,7 +46,7 @@ func Test_decode_struct_of_struct(t *testing.T) {
 	proto.WriteFieldEnd()
 	proto.WriteFieldStop()
 	proto.WriteStructEnd()
-	iter := thrifter.NewIterator(buf.Bytes())
+	iter := thrifter.NewBufferedIterator(buf.Bytes())
 	should.Equal(map[protocol.FieldId]interface{}{
 		protocol.FieldId(1): "abc",
 	}, iter.ReadStruct()[protocol.FieldId(1)])
@@ -54,13 +54,13 @@ func Test_decode_struct_of_struct(t *testing.T) {
 
 func Test_encode_struct_of_struct(t *testing.T) {
 	should := require.New(t)
-	stream := thrifter.NewStream(nil)
+	stream := thrifter.NewBufferedStream(nil)
 	stream.WriteStruct(map[protocol.FieldId]interface{}{
 		protocol.FieldId(1): map[protocol.FieldId]interface{}{
 			protocol.FieldId(1): "abc",
 		},
 	})
-	iter := thrifter.NewIterator(stream.Buffer())
+	iter := thrifter.NewBufferedIterator(stream.Buffer())
 	should.Equal(map[protocol.FieldId]interface{}{
 		protocol.FieldId(1): "abc",
 	}, iter.ReadStruct()[protocol.FieldId(1)])

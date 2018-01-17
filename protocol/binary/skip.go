@@ -2,7 +2,7 @@ package binary
 
 import "github.com/thrift-iterator/go/protocol"
 
-func (iter *Iterator) SkipStruct() []byte {
+func (iter *Iterator) SkipStruct(space []byte) []byte {
 	bufBeforeSkip := iter.buf
 	skippedBytes := 0
 	for {
@@ -10,6 +10,9 @@ func (iter *Iterator) SkipStruct() []byte {
 		if fieldType == 0 {
 			iter.buf = iter.buf[1:]
 			skippedBytes += 1
+			if len(space) > 0 {
+				return append(space, bufBeforeSkip[:skippedBytes]...)
+			}
 			return bufBeforeSkip[:skippedBytes]
 		}
 		switch fieldType {
@@ -33,15 +36,15 @@ func (iter *Iterator) SkipStruct() []byte {
 			iter.buf = bufBeforeSkip[skippedBytes:]
 		case protocol.LIST:
 			iter.buf = iter.buf[3:]
-			skippedBytes += len(iter.SkipList())
+			skippedBytes += len(iter.SkipList(nil))
 			skippedBytes += 3
 		case protocol.MAP:
 			iter.buf = iter.buf[3:]
-			skippedBytes += len(iter.SkipMap())
+			skippedBytes += len(iter.SkipMap(nil))
 			skippedBytes += 3
 		case protocol.STRUCT:
 			iter.buf = iter.buf[3:]
-			skippedBytes += len(iter.SkipStruct())
+			skippedBytes += len(iter.SkipStruct(nil))
 			skippedBytes += 3
 		default:
 			panic("unsupported type")
@@ -49,7 +52,14 @@ func (iter *Iterator) SkipStruct() []byte {
 	}
 }
 
-func (iter *Iterator) SkipList() []byte {
+func (iter *Iterator) SkipList(space []byte) []byte {
+	if len(space) > 0 {
+		return append(space, iter.skipList()...)
+	}
+	return iter.skipList()
+}
+
+func (iter *Iterator) skipList() []byte {
 	bufBeforeSkip := iter.buf
 	elemType := protocol.TType(bufBeforeSkip[0])
 	length := uint32(bufBeforeSkip[4]) | uint32(bufBeforeSkip[3])<<8 | uint32(bufBeforeSkip[2])<<16 | uint32(bufBeforeSkip[1])<<24
@@ -87,21 +97,21 @@ func (iter *Iterator) SkipList() []byte {
 		skippedBytes := 5
 		iter.buf = iter.buf[5:]
 		for i := uint32(0); i < length; i++ {
-			skippedBytes += len(iter.SkipList())
+			skippedBytes += len(iter.SkipList(nil))
 		}
 		return bufBeforeSkip[:skippedBytes]
 	case protocol.MAP:
 		skippedBytes := 5
 		iter.buf = iter.buf[5:]
 		for i := uint32(0); i < length; i++ {
-			skippedBytes += len(iter.SkipMap())
+			skippedBytes += len(iter.SkipMap(nil))
 		}
 		return bufBeforeSkip[:skippedBytes]
 	case protocol.STRUCT:
 		skippedBytes := 5
 		iter.buf = iter.buf[5:]
 		for i := uint32(0); i < length; i++ {
-			skippedBytes += len(iter.SkipStruct())
+			skippedBytes += len(iter.SkipStruct(nil))
 		}
 		return bufBeforeSkip[:skippedBytes]
 	}
@@ -109,7 +119,14 @@ func (iter *Iterator) SkipList() []byte {
 }
 
 
-func (iter *Iterator) SkipMap() []byte {
+func (iter *Iterator) SkipMap(space []byte) []byte {
+	if len(space) > 0 {
+		return append(space, iter.skipMap()...)
+	}
+	return iter.skipMap()
+}
+
+func (iter *Iterator) skipMap() []byte {
 	bufBeforeSkip := iter.buf
 	keyType := protocol.TType(bufBeforeSkip[0])
 	elemType := protocol.TType(bufBeforeSkip[1])
@@ -122,10 +139,10 @@ func (iter *Iterator) SkipMap() []byte {
 		iter.buf = bufBeforeSkip[size:]
 		return skipped
 	}
-	var skipKey func() []byte
-	var skipElem func() []byte
+	var skipKey func(space []byte) []byte
+	var skipElem func(space []byte) []byte
 	if keySize != 0 {
-		skipKey = func() []byte {
+		skipKey = func(space []byte) []byte {
 			skipped := iter.buf[:keySize]
 			iter.buf = iter.buf[keySize:]
 			return skipped
@@ -139,7 +156,7 @@ func (iter *Iterator) SkipMap() []byte {
 		}
 	}
 	if elemSize != 0 {
-		skipElem = func() []byte {
+		skipElem = func(space []byte) []byte {
 			skipped := iter.buf[:elemSize]
 			iter.buf = iter.buf[elemSize:]
 			return skipped
@@ -161,13 +178,20 @@ func (iter *Iterator) SkipMap() []byte {
 	skippedBytes := 6
 	iter.buf = iter.buf[6:]
 	for i := uint32(0); i < length; i++ {
-		skippedBytes += len(skipKey())
-		skippedBytes += len(skipElem())
+		skippedBytes += len(skipKey(nil))
+		skippedBytes += len(skipElem(nil))
 	}
 	return bufBeforeSkip[:skippedBytes]
 }
 
-func (iter *Iterator) SkipBinary() []byte {
+func (iter *Iterator) SkipBinary(space []byte) []byte {
+	if len(space) > 0 {
+		return append(space, iter.skipBinary()...)
+	}
+	return iter.skipBinary()
+}
+
+func (iter *Iterator) skipBinary() []byte {
 	b := iter.buf
 	size := uint32(b[3]) | uint32(b[2])<<8 | uint32(b[1])<<16 | uint32(b[0])<<24
 	skipped := iter.buf[:4+size]

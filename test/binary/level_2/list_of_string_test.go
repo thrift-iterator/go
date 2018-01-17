@@ -16,7 +16,7 @@ func Test_skip_list_of_string(t *testing.T) {
 	proto.WriteString("b")
 	proto.WriteString("c")
 	proto.WriteListEnd()
-	iter := thrifter.NewIterator(buf.Bytes())
+	iter := thrifter.NewBufferedIterator(buf.Bytes())
 	should.Equal(buf.Bytes(), iter.SkipList())
 }
 
@@ -29,16 +29,16 @@ func Test_decode_list_of_string(t *testing.T) {
 	proto.WriteString("b")
 	proto.WriteString("c")
 	proto.WriteListEnd()
-	iter := thrifter.NewIterator(buf.Bytes())
+	iter := thrifter.NewBufferedIterator(buf.Bytes())
 	should.Equal([]interface{}{"a", "b", "c"}, iter.ReadList())
 }
 
 func Test_encode_list_of_string(t *testing.T) {
 	should := require.New(t)
-	stream := thrifter.NewStream(nil)
+	stream := thrifter.NewBufferedStream(nil)
 	stream.WriteList([]interface{}{
 		"a", "b", "c",
 	})
-	iter := thrifter.NewIterator(stream.Buffer())
+	iter := thrifter.NewBufferedIterator(stream.Buffer())
 	should.Equal([]interface{}{"a", "b", "c"}, iter.ReadList())
 }

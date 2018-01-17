@@ -18,7 +18,7 @@ func Test_decode_struct_by_iterator(t *testing.T) {
 	proto.WriteFieldEnd()
 	proto.WriteFieldStop()
 	proto.WriteStructEnd()
-	iter := thrifter.NewIterator(buf.Bytes())
+	iter := thrifter.NewBufferedIterator(buf.Bytes())
 	called := false
 	iter.ReadStructCB(func(fieldType protocol.TType, fieldId protocol.FieldId) {
 		should.False(called)
@@ -32,11 +32,11 @@ func Test_decode_struct_by_iterator(t *testing.T) {
 
 func Test_encode_struct_by_stream(t *testing.T) {
 	should := require.New(t)
-	stream := thrifter.NewStream(nil)
+	stream := thrifter.NewBufferedStream(nil)
 	stream.WriteStructField(protocol.I64, protocol.FieldId(1))
 	stream.WriteInt64(1024)
 	stream.WriteStructFieldStop()
-	iter := thrifter.NewIterator(stream.Buffer())
+	iter := thrifter.NewBufferedIterator(stream.Buffer())
 	called := false
 	iter.ReadStructCB(func(fieldType protocol.TType, fieldId protocol.FieldId) {
 		should.False(called)
@@ -57,7 +57,7 @@ func Test_decode_struct_as_object(t *testing.T) {
 	proto.WriteFieldEnd()
 	proto.WriteFieldStop()
 	proto.WriteStructEnd()
-	iter := thrifter.NewIterator(buf.Bytes())
+	iter := thrifter.NewBufferedIterator(buf.Bytes())
 	obj := iter.ReadStruct()
 	should.Equal(map[protocol.FieldId]interface{}{
 		protocol.FieldId(1): int64(1024),
@@ -66,11 +66,11 @@ func Test_decode_struct_as_object(t *testing.T) {
 
 func Test_encode_struct_from_object(t *testing.T) {
 	should := require.New(t)
-	stream := thrifter.NewStream(nil)
+	stream := thrifter.NewBufferedStream(nil)
 	stream.WriteStruct(map[protocol.FieldId]interface{}{
 		protocol.FieldId(1): int64(1024),
 	})
-	iter := thrifter.NewIterator(stream.Buffer())
+	iter := thrifter.NewBufferedIterator(stream.Buffer())
 	obj := iter.ReadStruct()
 	should.Equal(map[protocol.FieldId]interface{}{
 		protocol.FieldId(1): int64(1024),
@@ -87,6 +87,6 @@ func Test_skip_struct(t *testing.T) {
 	proto.WriteFieldEnd()
 	proto.WriteFieldStop()
 	proto.WriteStructEnd()
-	iter := thrifter.NewIterator(buf.Bytes())
+	iter := thrifter.NewBufferedIterator(buf.Bytes())
 	should.Equal(buf.Bytes(), iter.SkipStruct())
 }

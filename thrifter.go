@@ -5,6 +5,7 @@ import (
 	"github.com/thrift-iterator/go/protocol"
 	"errors"
 	"io"
+	"github.com/thrift-iterator/go/protocol/sbinary"
 )
 
 type Protocol int
@@ -14,19 +15,18 @@ var ProtocolBinary Protocol = 1
 type Iterator interface {
 	Error() error
 	ReportError(operation string, err string)
-	Reset(buf []byte)
 	ReadMessageHeader() protocol.MessageHeader
 	ReadMessage() protocol.Message
 	ReadStructCB(func(fieldType protocol.TType, fieldId protocol.FieldId))
 	ReadStructField() (fieldType protocol.TType, fieldId protocol.FieldId)
 	ReadStruct() map[protocol.FieldId]interface{}
-	SkipStruct() []byte
+	SkipStruct(space []byte) []byte
 	ReadListHeader() (elemType protocol.TType, size int)
 	ReadList() []interface{}
-	SkipList() []byte
+	SkipList(space []byte) []byte
 	ReadMapHeader() (keyType protocol.TType, elemType protocol.TType, size int)
 	ReadMap() map[interface{}]interface{}
-	SkipMap() []byte
+	SkipMap(space []byte) []byte
 	ReadBool() bool
 	ReadInt8() int8
 	ReadUInt8() uint8
@@ -39,8 +39,14 @@ type Iterator interface {
 	ReadFloat64() float64
 	ReadString() string
 	ReadBinary() []byte
+	SkipBinary(space []byte) []byte
 	Read(ttype protocol.TType) interface{}
 	ReaderOf(ttype protocol.TType) func() interface{}
+}
+
+type BufferedIterator interface {
+	Iterator
+	Reset(buf []byte)
 }
 
 type Stream interface {
@@ -81,8 +87,9 @@ type Config struct {
 }
 
 type API interface {
-	NewIterator(buf []byte) Iterator
-	NewStream(buf []byte) Stream
+	NewBufferedIterator(buf []byte) BufferedIterator
+	NewBufferedStream(buf []byte) Stream
+	NewIterator(reader io.Reader) Iterator
 	Unmarshal(buf []byte, obj interface{}) error
 	Marshal(obj interface{}) ([]byte, error)
 	NewDecoder(reader io.Reader) Decoder
@@ -98,7 +105,7 @@ func (cfg Config) Froze() API {
 	return api
 }
 
-func (cfg *frozenConfig) NewIterator(buf []byte) Iterator {
+func (cfg *frozenConfig) NewBufferedIterator(buf []byte) BufferedIterator {
 	switch cfg.protocol {
 	case ProtocolBinary:
 		return binary.NewIterator(buf)
@@ -106,10 +113,18 @@ func (cfg *frozenConfig) NewIterator(buf []byte) Iterator {
 	panic("unsupported protocol")
 }
 
-func (cfg *frozenConfig) NewStream(buf []byte) Stream {
+func (cfg *frozenConfig) NewBufferedStream(buf []byte) Stream {
 	switch cfg.protocol {
 	case ProtocolBinary:
 		return binary.NewStream(buf)
+	}
+	panic("unsupported protocol")
+}
+
+func (cfg *frozenConfig) NewIterator(reader io.Reader) Iterator {
+	switch cfg.protocol {
+	case ProtocolBinary:
+		return sbinary.NewIterator(reader)
 	}
 	panic("unsupported protocol")
 }
@@ -123,7 +138,7 @@ func (cfg *frozenConfig) Unmarshal(buf []byte, obj interface{}) error {
 		size := uint32(buf[3]) | uint32(buf[2])<<8 | uint32(buf[1])<<16 | uint32(buf[0])<<24
 		buf = buf[4:4+size]
 	}
-	iter := cfg.NewIterator(buf)
+	iter := cfg.NewBufferedIterator(buf)
 	msgRead := iter.ReadMessage()
 	if iter.Error() != nil {
 		return iter.Error()
@@ -137,7 +152,7 @@ func (cfg *frozenConfig) Marshal(obj interface{}) ([]byte, error) {
 	if !isMsg {
 		return nil, errors.New("can only unmarshal protocol.Message")
 	}
-	stream := cfg.NewStream(nil)
+	stream := cfg.NewBufferedStream(nil)
 	stream.WriteMessage(msg)
 	if stream.Error() != nil {
 		return nil, stream.Error()
@@ -154,22 +169,24 @@ func (cfg *frozenConfig) Marshal(obj interface{}) ([]byte, error) {
 
 func (cfg *frozenConfig) NewDecoder(reader io.Reader) Decoder {
 	if cfg.isFramed {
-		switch cfg.protocol {
-		case ProtocolBinary:
-			return &framedDecoder{reader: reader, iter: cfg.NewIterator(nil)}
-		}
+		return &framedDecoder{reader: reader, iter: cfg.NewBufferedIterator(nil)}
+	} else {
+		return &unframedDecoder{reader: reader, iter: cfg.NewBufferedIterator(nil)}
 	}
-	panic("unsupported protocol")
 }
 
 var DefaultConfig = Config{Protocol: ProtocolBinary, IsFramed: true}.Froze()
 
-func NewIterator(buf []byte) Iterator {
-	return DefaultConfig.NewIterator(buf)
+func NewBufferedIterator(buf []byte) BufferedIterator {
+	return DefaultConfig.NewBufferedIterator(buf)
 }
 
-func NewStream(buf []byte) Stream {
-	return DefaultConfig.NewStream(buf)
+func NewBufferedStream(buf []byte) Stream {
+	return DefaultConfig.NewBufferedStream(buf)
+}
+
+func NewIterator(reader io.Reader) Iterator {
+	return DefaultConfig.NewIterator(reader)
 }
 
 func Unmarshal(buf []byte, obj interface{}) error {

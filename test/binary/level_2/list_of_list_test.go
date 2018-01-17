@@ -19,7 +19,7 @@ func Test_skip_list_of_list(t *testing.T) {
 	proto.WriteI64(2)
 	proto.WriteListEnd()
 	proto.WriteListEnd()
-	iter := thrifter.NewIterator(buf.Bytes())
+	iter := thrifter.NewBufferedIterator(buf.Bytes())
 	should.Equal(buf.Bytes(), iter.SkipList())
 }
 
@@ -35,13 +35,13 @@ func Test_decode_list_of_list(t *testing.T) {
 	proto.WriteI64(2)
 	proto.WriteListEnd()
 	proto.WriteListEnd()
-	iter := thrifter.NewIterator(buf.Bytes())
+	iter := thrifter.NewBufferedIterator(buf.Bytes())
 	should.Equal([]interface{}{int64(1)}, iter.ReadList()[0])
 }
 
 func Test_encode_list_of_list(t *testing.T) {
 	should := require.New(t)
-	stream := thrifter.NewStream(nil)
+	stream := thrifter.NewBufferedStream(nil)
 	stream.WriteList([]interface{}{
 		[]interface{}{
 			int64(1),
@@ -50,6 +50,6 @@ func Test_encode_list_of_list(t *testing.T) {
 			int64(2),
 		},
 	})
-	iter := thrifter.NewIterator(stream.Buffer())
+	iter := thrifter.NewBufferedIterator(stream.Buffer())
 	should.Equal([]interface{}{int64(1)}, iter.ReadList()[0])
 }

@@ -20,7 +20,7 @@ func Test_skip_map_of_map(t *testing.T) {
 	proto.WriteMapEnd()
 
 	proto.WriteMapEnd()
-	iter := thrifter.NewIterator(buf.Bytes())
+	iter := thrifter.NewBufferedIterator(buf.Bytes())
 	should.Equal(buf.Bytes(), iter.SkipMap())
 }
 
@@ -37,7 +37,7 @@ func Test_decode_map_of_map(t *testing.T) {
 	proto.WriteMapEnd()
 
 	proto.WriteMapEnd()
-	iter := thrifter.NewIterator(buf.Bytes())
+	iter := thrifter.NewBufferedIterator(buf.Bytes())
 	should.Equal(map[interface{}]interface{}{
 		"k1": int64(1),
 	}, iter.ReadMap()[int64(1)])
@@ -45,13 +45,13 @@ func Test_decode_map_of_map(t *testing.T) {
 
 func Test_encode_map_of_map(t *testing.T) {
 	should := require.New(t)
-	stream := thrifter.NewStream(nil)
+	stream := thrifter.NewBufferedStream(nil)
 	stream.WriteMap(map[interface{}]interface{}{
 		int64(1): map[interface{}]interface{}{
 			"k1": int64(1),
 		},
 	})
-	iter := thrifter.NewIterator(stream.Buffer())
+	iter := thrifter.NewBufferedIterator(stream.Buffer())
 	should.Equal(map[interface{}]interface{}{
 		"k1": int64(1),
 	}, iter.ReadMap()[int64(1)])

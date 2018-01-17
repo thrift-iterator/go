@@ -21,7 +21,7 @@ func Test_skip_list_of_map(t *testing.T) {
 	proto.WriteI64(2)
 	proto.WriteMapEnd()
 	proto.WriteListEnd()
-	iter := thrifter.NewIterator(buf.Bytes())
+	iter := thrifter.NewBufferedIterator(buf.Bytes())
 	should.Equal(buf.Bytes(), iter.SkipList())
 }
 
@@ -39,7 +39,7 @@ func Test_decode_list_of_map(t *testing.T) {
 	proto.WriteI64(2)
 	proto.WriteMapEnd()
 	proto.WriteListEnd()
-	iter := thrifter.NewIterator(buf.Bytes())
+	iter := thrifter.NewBufferedIterator(buf.Bytes())
 	should.Equal(map[interface{}]interface{}{
 		int32(1): int64(1),
 	}, iter.ReadList()[0])
@@ -47,7 +47,7 @@ func Test_decode_list_of_map(t *testing.T) {
 
 func Test_encode_list_of_map(t *testing.T) {
 	should := require.New(t)
-	stream := thrifter.NewStream(nil)
+	stream := thrifter.NewBufferedStream(nil)
 	stream.WriteList([]interface{}{
 		map[interface{}]interface{} {
 			int32(1): int64(1),
@@ -56,7 +56,7 @@ func Test_encode_list_of_map(t *testing.T) {
 			int32(2): int64(2),
 		},
 	})
-	iter := thrifter.NewIterator(stream.Buffer())
+	iter := thrifter.NewBufferedIterator(stream.Buffer())
 	should.Equal(map[interface{}]interface{}{
 		int32(1): int64(1),
 	}, iter.ReadList()[0])
