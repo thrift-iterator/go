@@ -51,6 +51,7 @@ func (encoder *framedEncoder) Encode(obj interface{}) error {
 	if !isMsg {
 		return errors.New("can only unmarshal protocol.Message")
 	}
+	encoder.stream.Reset(nil)
 	encoder.stream.WriteMessage(msg)
 	buf := encoder.stream.Buffer()
 	size := len(buf)

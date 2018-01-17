@@ -37,10 +37,19 @@ func (stream *Stream) Buffer() []byte {
 func (stream *Stream) Reset(writer io.Writer) {
 	stream.writer = writer
 	stream.err = nil
+	stream.buf = stream.buf[:0]
 }
 
-func (stream *Stream) Flush() error {
-	return nil
+func (stream *Stream) Flush() {
+	if stream.writer == nil {
+		return
+	}
+	_, err := stream.writer.Write(stream.buf)
+	if err != nil {
+		stream.ReportError("Flush", err.Error())
+		return
+	}
+	stream.buf = stream.buf[:0]
 }
 
 func (stream *Stream) WriteMessageHeader(header protocol.MessageHeader) {
@@ -130,6 +139,7 @@ func (stream *Stream) WriteStruct(val map[protocol.FieldId]interface{}) {
 		}
 	}
 	stream.WriteStructFieldStop()
+	stream.Flush()
 }
 
 func (stream *Stream) WriteMapHeader(keyType protocol.TType, elemType protocol.TType, length int) {

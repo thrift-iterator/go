@@ -50,7 +50,7 @@ type Stream interface {
 	Error() error
 	ReportError(operation string, err string)
 	Reset(writer io.Writer)
-	Flush() error
+	Flush()
 	Buffer() []byte
 	WriteMessageHeader(header protocol.MessageHeader)
 	WriteMessage(message protocol.Message)
@@ -179,7 +179,7 @@ func (cfg *frozenConfig) NewEncoder(writer io.Writer) Encoder {
 	if cfg.isFramed {
 		return &framedEncoder{writer: writer, stream: cfg.NewStream(nil, nil)}
 	} else {
-		panic("not implemented")
+		return &unframedEncoder{stream: cfg.NewStream(writer, nil)}
 	}
 }
 
