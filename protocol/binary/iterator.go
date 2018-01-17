@@ -39,6 +39,14 @@ func (iter *Iterator) ReadMessageHeader() protocol.MessageHeader {
 	}
 }
 
+func (iter *Iterator) ReadMessage() protocol.Message {
+	header := iter.ReadMessageHeader()
+	return protocol.Message{
+		MessageHeader: header,
+		Arguments:     iter.ReadStruct(),
+	}
+}
+
 func (iter *Iterator) ReadStructCB(cb func(fieldType protocol.TType, fieldId protocol.FieldId)) {
 	for iter.buf[0] != 0 {
 		fieldType := iter.buf[0]

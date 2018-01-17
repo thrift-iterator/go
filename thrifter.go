@@ -13,6 +13,7 @@ type Iterator interface {
 	Error() error
 	ReportError(operation string, err string)
 	ReadMessageHeader() protocol.MessageHeader
+	ReadMessage() protocol.Message
 	ReadStructCB(func(fieldType protocol.TType, fieldId protocol.FieldId))
 	ReadStructField() (fieldType protocol.TType, fieldId protocol.FieldId)
 	ReadStruct() map[protocol.FieldId]interface{}
