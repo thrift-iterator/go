@@ -34,7 +34,7 @@ func Test_decode_struct_by_iterator(t *testing.T) {
 
 func Test_encode_struct_by_stream(t *testing.T) {
 	should := require.New(t)
-	stream := thrifter.NewStream(nil)
+	stream := thrifter.NewStream(nil, nil)
 	stream.WriteStructField(protocol.I64, protocol.FieldId(1))
 	stream.WriteInt64(1024)
 	stream.WriteStructFieldStop()
@@ -69,7 +69,7 @@ func Test_decode_struct_as_object(t *testing.T) {
 
 func Test_encode_struct_from_object(t *testing.T) {
 	should := require.New(t)
-	stream := thrifter.NewStream(nil)
+	stream := thrifter.NewStream(nil, nil)
 	stream.WriteStruct(map[protocol.FieldId]interface{}{
 		protocol.FieldId(1): int64(1024),
 	})

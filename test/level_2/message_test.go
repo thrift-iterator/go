@@ -59,7 +59,7 @@ func Test_decode_message_as_object(t *testing.T) {
 
 func Test_encode_message_as_object(t *testing.T) {
 	should := require.New(t)
-	stream := thrifter.NewStream(nil)
+	stream := thrifter.NewStream(nil, nil)
 	stream.WriteMessage(protocol.Message{
 		MessageHeader: protocol.MessageHeader{
 			Version: protocol.VERSION_1,

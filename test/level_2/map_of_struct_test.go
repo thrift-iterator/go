@@ -53,7 +53,7 @@ func Test_decode_map_of_struct(t *testing.T) {
 
 func Test_encode_map_of_struct(t *testing.T) {
 	should := require.New(t)
-	stream := thrifter.NewStream(nil)
+	stream := thrifter.NewStream(nil, nil)
 	stream.WriteMap(map[interface{}]interface{}{
 		int64(1): map[protocol.FieldId]interface{} {
 			protocol.FieldId(1): int64(1024),

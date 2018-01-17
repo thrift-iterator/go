@@ -6,11 +6,13 @@ import (
 	"errors"
 	"io"
 	"github.com/thrift-iterator/go/protocol/sbinary"
+	"github.com/thrift-iterator/go/protocol/compact"
 )
 
 type Protocol int
 
 var ProtocolBinary Protocol = 1
+var ProtocolCompact Protocol = 2
 
 type Iterator interface {
 	Error() error
@@ -125,6 +127,8 @@ func (cfg *frozenConfig) NewIterator(reader io.Reader, buf []byte) Iterator {
 			return sbinary.NewIterator(reader, buf)
 		}
 		return binary.NewIterator(buf)
+	case ProtocolCompact:
+		return compact.NewIterator(buf)
 	}
 	panic("unsupported protocol")
 }

@@ -50,7 +50,7 @@ func Test_decode_list_of_map(t *testing.T) {
 
 func Test_encode_list_of_map(t *testing.T) {
 	should := require.New(t)
-	stream := thrifter.NewStream(nil)
+	stream := thrifter.NewStream(nil, nil)
 	stream.WriteList([]interface{}{
 		map[interface{}]interface{} {
 			int32(1): int64(1),

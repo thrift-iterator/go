@@ -57,7 +57,7 @@ func Test_decode_struct_of_struct(t *testing.T) {
 
 func Test_encode_struct_of_struct(t *testing.T) {
 	should := require.New(t)
-	stream := thrifter.NewStream(nil)
+	stream := thrifter.NewStream(nil, nil)
 	stream.WriteStruct(map[protocol.FieldId]interface{}{
 		protocol.FieldId(1): map[protocol.FieldId]interface{}{
 			protocol.FieldId(1): "abc",

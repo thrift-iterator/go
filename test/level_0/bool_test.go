@@ -19,7 +19,7 @@ func Test_decode_bool(t *testing.T) {
 
 func Test_encode_bool(t *testing.T) {
 	should := require.New(t)
-	stream := thrifter.NewStream(nil)
+	stream := thrifter.NewStream(nil, nil)
 	stream.WriteBool(true)
 	iter := thrifter.NewIterator(nil, stream.Buffer())
 	should.Equal(true, iter.ReadBool())

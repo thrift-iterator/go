@@ -44,7 +44,7 @@ func Test_decode_list_of_list(t *testing.T) {
 
 func Test_encode_list_of_list(t *testing.T) {
 	should := require.New(t)
-	stream := thrifter.NewStream(nil)
+	stream := thrifter.NewStream(nil, nil)
 	stream.WriteList([]interface{}{
 		[]interface{}{
 			int64(1),

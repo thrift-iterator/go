@@ -42,7 +42,7 @@ func Test_decode_map_of_list(t *testing.T) {
 
 func Test_encode_map_of_list(t *testing.T) {
 	should := require.New(t)
-	stream := thrifter.NewStream(nil)
+	stream := thrifter.NewStream(nil, nil)
 	stream.WriteMap(map[interface{}]interface{}{
 		int64(1): []interface{}{int64(1)},
 	})

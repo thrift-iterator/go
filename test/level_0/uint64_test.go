@@ -19,7 +19,7 @@ func Test_decode_uint64(t *testing.T) {
 
 func Test_encode_uint64(t *testing.T) {
 	should := require.New(t)
-	stream := thrifter.NewStream(nil)
+	stream := thrifter.NewStream(nil, nil)
 	stream.WriteUInt64(1024)
 	iter := thrifter.NewIterator(nil, stream.Buffer())
 	should.Equal(uint64(1024), iter.ReadUInt64())

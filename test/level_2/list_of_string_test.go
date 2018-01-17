@@ -37,7 +37,7 @@ func Test_decode_list_of_string(t *testing.T) {
 
 func Test_encode_list_of_string(t *testing.T) {
 	should := require.New(t)
-	stream := thrifter.NewStream(nil)
+	stream := thrifter.NewStream(nil, nil)
 	stream.WriteList([]interface{}{
 		"a", "b", "c",
 	})

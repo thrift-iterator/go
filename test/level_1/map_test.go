@@ -37,7 +37,7 @@ func Test_decode_map_by_iterator(t *testing.T) {
 
 func Test_encode_map_by_stream(t *testing.T) {
 	should := require.New(t)
-	stream := thrifter.NewStream(nil)
+	stream := thrifter.NewStream(nil, nil)
 	stream.WriteMapHeader(protocol.STRING, protocol.I64, 3)
 	stream.WriteString("k1")
 	stream.WriteUInt64(1)
@@ -82,7 +82,7 @@ func Test_decode_map_as_object(t *testing.T) {
 
 func Test_encode_map_from_object(t *testing.T) {
 	should := require.New(t)
-	stream := thrifter.NewStream(nil)
+	stream := thrifter.NewStream(nil, nil)
 	stream.WriteMap(map[interface{}]interface{}{
 		"k1": int64(1),
 		"k2": int64(2),

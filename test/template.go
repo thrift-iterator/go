@@ -32,4 +32,15 @@ var Combinations = []Combination{
 			return thrifter.NewIterator(bytes.NewBuffer(buf), nil)
 		},
 	},
+	{
+		CreateProtocol: func() (*thrift.TMemoryBuffer, thrift.TProtocol) {
+			buf := thrift.NewTMemoryBuffer()
+			proto := thrift.NewTCompactProtocol(buf)
+			return buf, proto
+		},
+		CreateIterator: func(buf []byte) thrifter.Iterator {
+			cfg := thrifter.Config{Protocol: thrifter.ProtocolCompact}.Froze()
+			return cfg.NewIterator(nil, buf)
+		},
+	},
 }
