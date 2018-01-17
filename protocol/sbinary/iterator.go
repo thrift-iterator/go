@@ -148,6 +148,26 @@ func (iter *Iterator) SkipList(space []byte) []byte {
 		}
 		space = append(space, tmp...)
 		return space
+	case protocol.STRING:
+		for i := 0; i < length; i++ {
+			space = iter.SkipBinary(space)
+		}
+		return space
+	case protocol.LIST:
+		for i := 0; i < length; i++ {
+			space = iter.SkipList(space)
+		}
+		return space
+	case protocol.MAP:
+		for i := 0; i < length; i++ {
+			space = iter.SkipMap(space)
+		}
+		return space
+	case protocol.STRUCT:
+		for i := 0; i < length; i++ {
+			space = iter.SkipStruct(space)
+		}
+		return space
 	default:
 		panic("unsupported type")
 	}
@@ -311,8 +331,24 @@ func (iter *Iterator) ReadBinary() []byte {
 }
 
 func (iter *Iterator) SkipBinary(space []byte) []byte {
-	panic("not implemented")
+	tmp := iter.tmp[:4]
+	_, err := io.ReadFull(iter.reader, tmp)
+	if err != nil {
+		iter.ReportError("SkipBinary", err.Error())
+		return nil
+	}
+	space = append(space, tmp...)
+	size := uint32(tmp[3]) | uint32(tmp[2])<<8 | uint32(tmp[1])<<16 | uint32(tmp[0])<<24
+	tmp = iter.allocate(int(size))
+	_, err = io.ReadFull(iter.reader, tmp)
+	if err != nil {
+		iter.ReportError("SkipBinary", err.Error())
+		return nil
+	}
+	space = append(space, tmp...)
+	return space
 }
+
 func (iter *Iterator) Read(ttype protocol.TType) interface{} {
 	panic("not implemented")
 }

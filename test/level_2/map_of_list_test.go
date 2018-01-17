@@ -18,7 +18,7 @@ func Test_skip_map_of_list(t *testing.T) {
 	proto.WriteListEnd()
 	proto.WriteMapEnd()
 	iter := thrifter.NewBufferedIterator(buf.Bytes())
-	should.Equal(buf.Bytes(), iter.SkipMap())
+	should.Equal(buf.Bytes(), iter.SkipMap(nil))
 }
 
 func Test_decode_map_of_list(t *testing.T) {

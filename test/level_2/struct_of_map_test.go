@@ -5,59 +5,55 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/thrift-iterator/go"
 	"git.apache.org/thrift.git/lib/go/thrift"
+	"github.com/thrift-iterator/go/protocol"
 )
 
-func Test_skip_list_of_map(t *testing.T) {
+func Test_skip_struct_of_map(t *testing.T) {
 	should := require.New(t)
 	buf := thrift.NewTMemoryBuffer()
 	proto := thrift.NewTBinaryProtocol(buf, true, true)
-	proto.WriteListBegin(thrift.MAP, 2)
-	proto.WriteMapBegin(thrift.I32, thrift.I64, 1)
-	proto.WriteI32(1)
-	proto.WriteI64(1)
-	proto.WriteMapEnd()
+	proto.WriteStructBegin("hello")
+	proto.WriteFieldBegin("field1", thrift.MAP, 1)
 	proto.WriteMapBegin(thrift.I32, thrift.I64, 1)
 	proto.WriteI32(2)
 	proto.WriteI64(2)
 	proto.WriteMapEnd()
-	proto.WriteListEnd()
+	proto.WriteFieldEnd()
+	proto.WriteFieldStop()
+	proto.WriteStructEnd()
 	iter := thrifter.NewBufferedIterator(buf.Bytes())
-	should.Equal(buf.Bytes(), iter.SkipList())
+	should.Equal(buf.Bytes(), iter.SkipStruct(nil))
 }
 
-func Test_decode_list_of_map(t *testing.T) {
+func Test_decode_struct_of_map(t *testing.T) {
 	should := require.New(t)
 	buf := thrift.NewTMemoryBuffer()
 	proto := thrift.NewTBinaryProtocol(buf, true, true)
-	proto.WriteListBegin(thrift.MAP, 2)
-	proto.WriteMapBegin(thrift.I32, thrift.I64, 1)
-	proto.WriteI32(1)
-	proto.WriteI64(1)
-	proto.WriteMapEnd()
+	proto.WriteStructBegin("hello")
+	proto.WriteFieldBegin("field1", thrift.MAP, 1)
 	proto.WriteMapBegin(thrift.I32, thrift.I64, 1)
 	proto.WriteI32(2)
 	proto.WriteI64(2)
 	proto.WriteMapEnd()
-	proto.WriteListEnd()
+	proto.WriteFieldEnd()
+	proto.WriteFieldStop()
+	proto.WriteStructEnd()
 	iter := thrifter.NewBufferedIterator(buf.Bytes())
 	should.Equal(map[interface{}]interface{}{
-		int32(1): int64(1),
-	}, iter.ReadList()[0])
+		int32(2): int64(2),
+	}, iter.ReadStruct()[protocol.FieldId(1)])
 }
 
-func Test_encode_list_of_map(t *testing.T) {
+func Test_encode_struct_of_map(t *testing.T) {
 	should := require.New(t)
 	stream := thrifter.NewBufferedStream(nil)
-	stream.WriteList([]interface{}{
-		map[interface{}]interface{} {
-			int32(1): int64(1),
-		},
-		map[interface{}]interface{} {
+	stream.WriteStruct(map[protocol.FieldId]interface{}{
+		protocol.FieldId(1): map[interface{}]interface{}{
 			int32(2): int64(2),
 		},
 	})
 	iter := thrifter.NewBufferedIterator(stream.Buffer())
 	should.Equal(map[interface{}]interface{}{
-		int32(1): int64(1),
-	}, iter.ReadList()[0])
+		int32(2): int64(2),
+	}, iter.ReadStruct()[protocol.FieldId(1)])
 }

@@ -8,65 +8,60 @@ import (
 	"github.com/thrift-iterator/go/protocol"
 )
 
-func Test_skip_list_of_struct(t *testing.T) {
+func Test_skip_struct_of_struct(t *testing.T) {
 	should := require.New(t)
 	buf := thrift.NewTMemoryBuffer()
 	proto := thrift.NewTBinaryProtocol(buf, true, true)
-	proto.WriteListBegin(thrift.STRUCT, 2)
 	proto.WriteStructBegin("hello")
-	proto.WriteFieldBegin("field1", thrift.I64, 1)
-	proto.WriteI64(1024)
+	proto.WriteFieldBegin("field1", thrift.STRUCT, 1)
+
+	proto.WriteStructBegin("hello")
+	proto.WriteFieldBegin("field1", thrift.STRING, 1)
+	proto.WriteString("abc")
 	proto.WriteFieldEnd()
 	proto.WriteFieldStop()
 	proto.WriteStructEnd()
-	proto.WriteStructBegin("hello")
-	proto.WriteFieldBegin("field1", thrift.I64, 1)
-	proto.WriteI64(1024)
+
 	proto.WriteFieldEnd()
 	proto.WriteFieldStop()
 	proto.WriteStructEnd()
-	proto.WriteListEnd()
 	iter := thrifter.NewBufferedIterator(buf.Bytes())
-	should.Equal(buf.Bytes(), iter.SkipList())
+	should.Equal(buf.Bytes(), iter.SkipStruct(nil))
 }
 
-func Test_decode_list_of_struct(t *testing.T) {
+func Test_decode_struct_of_struct(t *testing.T) {
 	should := require.New(t)
 	buf := thrift.NewTMemoryBuffer()
 	proto := thrift.NewTBinaryProtocol(buf, true, true)
-	proto.WriteListBegin(thrift.STRUCT, 2)
 	proto.WriteStructBegin("hello")
-	proto.WriteFieldBegin("field1", thrift.I64, 1)
-	proto.WriteI64(1024)
+	proto.WriteFieldBegin("field1", thrift.STRUCT, 1)
+
+	proto.WriteStructBegin("hello")
+	proto.WriteFieldBegin("field1", thrift.STRING, 1)
+	proto.WriteString("abc")
 	proto.WriteFieldEnd()
 	proto.WriteFieldStop()
 	proto.WriteStructEnd()
-	proto.WriteStructBegin("hello")
-	proto.WriteFieldBegin("field1", thrift.I64, 1)
-	proto.WriteI64(1024)
+
 	proto.WriteFieldEnd()
 	proto.WriteFieldStop()
 	proto.WriteStructEnd()
-	proto.WriteListEnd()
 	iter := thrifter.NewBufferedIterator(buf.Bytes())
 	should.Equal(map[protocol.FieldId]interface{}{
-		protocol.FieldId(1): int64(1024),
-	}, iter.ReadList()[0])
+		protocol.FieldId(1): "abc",
+	}, iter.ReadStruct()[protocol.FieldId(1)])
 }
 
-func Test_encode_list_of_struct(t *testing.T) {
+func Test_encode_struct_of_struct(t *testing.T) {
 	should := require.New(t)
 	stream := thrifter.NewBufferedStream(nil)
-	stream.WriteList([]interface{}{
-		map[protocol.FieldId]interface{}{
-			protocol.FieldId(1): int64(1024),
-		},
-		map[protocol.FieldId]interface{}{
-			protocol.FieldId(1): int64(1024),
+	stream.WriteStruct(map[protocol.FieldId]interface{}{
+		protocol.FieldId(1): map[protocol.FieldId]interface{}{
+			protocol.FieldId(1): "abc",
 		},
 	})
 	iter := thrifter.NewBufferedIterator(stream.Buffer())
 	should.Equal(map[protocol.FieldId]interface{}{
-		protocol.FieldId(1): int64(1024),
-	}, iter.ReadList()[0])
+		protocol.FieldId(1): "abc",
+	}, iter.ReadStruct()[protocol.FieldId(1)])
 }
