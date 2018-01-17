@@ -46,17 +46,63 @@ func (iter *Iterator) ReadMessageHeader() protocol.MessageHeader {
 func (iter *Iterator) ReadMessage() protocol.Message {
 	panic("not implemented")
 }
-func (iter *Iterator) ReadStructCB(func(fieldType protocol.TType, fieldId protocol.FieldId)) {
-	panic("not implemented")
+
+func (iter *Iterator) ReadStructCB(cb func(fieldType protocol.TType, fieldId protocol.FieldId)) {
+	for {
+		fieldType, fieldId := iter.ReadStructField()
+		if fieldType == protocol.STOP {
+			return
+		}
+		cb(fieldType, fieldId)
+	}
 }
+
 func (iter *Iterator) ReadStructField() (fieldType protocol.TType, fieldId protocol.FieldId) {
-	panic("not implemented")
+	tmp := iter.tmp[:3]
+	_, err := io.ReadFull(iter.reader, tmp)
+	if err != nil {
+		iter.ReportError("ReadStructField", err.Error())
+		return protocol.STOP, 0
+	}
+	iter.real.Reset(tmp)
+	return iter.real.ReadStructField()
 }
+
 func (iter *Iterator) ReadStruct() map[protocol.FieldId]interface{} {
-	panic("not implemented")
+	buf := iter.SkipStruct(iter.space[:0])
+	if iter.err != nil {
+		return nil
+	}
+	iter.space = buf
+	iter.real.Reset(buf)
+	return iter.real.ReadStruct()
 }
+
 func (iter *Iterator) SkipStruct(space []byte) []byte {
-	panic("not implemented")
+	for {
+		tmp := iter.tmp[:1]
+		_, err := io.ReadFull(iter.reader, tmp)
+		if err != nil {
+			iter.ReportError("SkipStruct", err.Error())
+			return nil
+		}
+		fieldType := protocol.TType(tmp[0])
+		space = append(space, tmp[0])
+		switch fieldType {
+		case protocol.STOP:
+			return space
+		case protocol.I64, protocol.DOUBLE:
+			tmp := iter.tmp[:10]
+			_, err := io.ReadFull(iter.reader, tmp)
+			if err != nil {
+				iter.ReportError("SkipStruct", err.Error())
+				return nil
+			}
+			space = append(space, tmp...)
+		default:
+			panic("unsupported type")
+		}
+	}
 }
 
 func (iter *Iterator) ReadListHeader() (elemType protocol.TType, length int) {
