@@ -7,7 +7,7 @@ import (
 )
 
 type Stream struct {
-	buf   []byte
+	buf []byte
 	err error
 }
 
@@ -41,14 +41,10 @@ func (stream *Stream) WriteList(val []interface{}) {
 		stream.ReportError("WriteList", "input is empty slice, can not tell element type")
 		return
 	}
-	switch val[0].(type) {
-	case int64:
-		stream.WriteListHeader(protocol.I64, len(val))
-		for _, elem := range val {
-			stream.WriteInt64(elem.(int64))
-		}
-	default:
-		panic("unsupported type")
+	elemType, elemWriter := stream.WriterOf(val[0])
+	stream.WriteListHeader(elemType, len(val))
+	for _, elem := range val {
+		elemWriter(elem)
 	}
 }
 
@@ -71,6 +67,33 @@ func (stream *Stream) WriteStruct(val map[protocol.FieldId]interface{}) {
 		}
 	}
 	stream.WriteStructFieldStop()
+}
+
+func (stream *Stream) WriteMapHeader(keyType protocol.TType, elemType protocol.TType, length int) {
+	stream.buf = append(stream.buf, byte(keyType), byte(elemType),
+		byte(length>>24), byte(length>>16), byte(length>>8), byte(length))
+}
+
+func (stream *Stream) WriteMap(val map[interface{}]interface{}) {
+	hasSample, sampleKey, sampleElem := takeSampleFromMap(val)
+	if !hasSample {
+		stream.ReportError("WriteMap", "input is empty map, can not tell element type")
+		return
+	}
+	keyType, keyWriter := stream.WriterOf(sampleKey)
+	elemType, elemWriter := stream.WriterOf(sampleElem)
+	stream.WriteMapHeader(keyType, elemType, len(val))
+	for key, elem := range val {
+		keyWriter(key)
+		elemWriter(elem)
+	}
+}
+
+func takeSampleFromMap(val map[interface{}]interface{}) (bool, interface{}, interface{}) {
+	for key, elem := range val {
+		return true, key, elem
+	}
+	return false, nil, nil
 }
 
 func (stream *Stream) WriteBool(val bool) {
@@ -127,4 +150,19 @@ func (stream *Stream) WriteBinary(val []byte) {
 func (stream *Stream) WriteString(val string) {
 	stream.WriteUInt32(uint32(len(val)))
 	stream.buf = append(stream.buf, val...)
+}
+
+func (stream *Stream) WriterOf(sample interface{}) (protocol.TType, func(interface{})) {
+	switch sample.(type) {
+	case int64:
+		return protocol.I64, func(val interface{}) {
+			stream.WriteInt64(val.(int64))
+		}
+	case string:
+		return protocol.STRING, func(val interface{}) {
+			stream.WriteString(val.(string))
+		}
+	default:
+		panic("unsupported type")
+	}
 }
