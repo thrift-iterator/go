@@ -107,14 +107,50 @@ func (iter *Iterator) SkipList(space []byte) []byte {
 	}
 }
 
-func (iter *Iterator) ReadMapHeader() (keyType protocol.TType, elemType protocol.TType, size int) {
-	panic("not implemented")
+func (iter *Iterator) ReadMapHeader() (keyType protocol.TType, elemType protocol.TType, length int) {
+	tmp := iter.tmp[:6]
+	_, err := io.ReadFull(iter.reader, tmp)
+	if err != nil {
+		iter.ReportError("ReadMapHeader", err.Error())
+		return protocol.STOP, protocol.STOP, 0
+	}
+	iter.real.Reset(tmp)
+	return iter.real.ReadMapHeader()
 }
+
 func (iter *Iterator) ReadMap() map[interface{}]interface{} {
-	panic("not implemented")
+	buf := iter.SkipMap(iter.space[:0])
+	if iter.err != nil {
+		return nil
+	}
+	iter.space = buf
+	iter.real.Reset(buf)
+	return iter.real.ReadMap()
 }
+
 func (iter *Iterator) SkipMap(space []byte) []byte {
-	panic("not implemented")
+	tmp := iter.tmp[:6]
+	_, err := io.ReadFull(iter.reader, tmp)
+	if err != nil {
+		iter.ReportError("SkipMap", err.Error())
+		return nil
+	}
+	space = append(space, tmp...)
+	iter.real.Reset(tmp)
+	keyType, elemType, length := iter.real.ReadMapHeader()
+	keySize := getTypeSize(keyType)
+	elemSize := getTypeSize(elemType)
+	if keySize != 0 && elemSize != 0 {
+		tmp := iter.allocate(length * (keySize + elemSize))
+		_, err := io.ReadFull(iter.reader, tmp)
+		if err != nil {
+			iter.ReportError("SkipMap", err.Error())
+			return nil
+		}
+		space = append(space, tmp...)
+		return space
+	}
+	panic("unsupported type")
 }
 
 func (iter *Iterator) ReadBool() bool {
@@ -236,4 +272,18 @@ func (iter *Iterator) Read(ttype protocol.TType) interface{} {
 }
 func (iter *Iterator) ReaderOf(ttype protocol.TType) func() interface{} {
 	panic("not implemented")
+}
+
+func getTypeSize(elemType protocol.TType) int {
+	switch elemType {
+	case protocol.BOOL, protocol.I08:
+		return 1
+	case protocol.I16:
+		return 2
+	case protocol.I32:
+		return 4
+	case protocol.I64, protocol.DOUBLE:
+		return 8
+	}
+	return 0
 }
