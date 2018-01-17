@@ -3,6 +3,7 @@ package thrifter
 import (
 	"github.com/thrift-iterator/go/protocol/binary"
 	"github.com/thrift-iterator/go/protocol"
+	"errors"
 )
 
 type Protocol int
@@ -75,6 +76,8 @@ type Config struct {
 type API interface {
 	NewIterator(buf []byte) Iterator
 	NewStream(buf []byte) Stream
+	Unmarshal(buf []byte, obj interface{}) error
+	Marshal(obj interface{}) ([]byte, error)
 }
 
 type frozenConfig struct {
@@ -102,6 +105,37 @@ func (cfg *frozenConfig) NewStream(buf []byte) Stream {
 	panic("unsupported protocol")
 }
 
+func (cfg *frozenConfig) Unmarshal(buf []byte, obj interface{}) error {
+	msg, _ := obj.(*protocol.Message)
+	if msg == nil {
+		return errors.New("can only unmarshal protocol.Message")
+	}
+	iter := cfg.NewIterator(buf)
+	msgRead := iter.ReadMessage()
+	if iter.Error() != nil {
+		return iter.Error()
+	}
+	msg.Version = msgRead.Version
+	msg.MessageType = msgRead.MessageType
+	msg.MessageName = msgRead.MessageName
+	msg.SeqId = msgRead.SeqId
+	msg.Arguments = msgRead.Arguments
+	return nil
+}
+
+func (cfg *frozenConfig) Marshal(obj interface{}) ([]byte, error) {
+	msg, isMsg := obj.(protocol.Message)
+	if !isMsg {
+		return nil, errors.New("can only unmarshal protocol.Message")
+	}
+	stream := cfg.NewStream(nil)
+	stream.WriteMessage(msg)
+	if stream.Error() != nil {
+		return nil, stream.Error()
+	}
+	return stream.Buffer(), nil
+}
+
 var DefaultConfig = Config{Protocol: ProtocolBinary}.Froze()
 
 func NewIterator(buf []byte) Iterator {
@@ -110,4 +144,12 @@ func NewIterator(buf []byte) Iterator {
 
 func NewStream(buf []byte) Stream {
 	return DefaultConfig.NewStream(buf)
+}
+
+func Unmarshal(buf []byte, obj interface{}) error {
+	return DefaultConfig.Unmarshal(buf, obj)
+}
+
+func Marshal(obj interface{}) ([]byte, error) {
+	return DefaultConfig.Marshal(obj)
 }
