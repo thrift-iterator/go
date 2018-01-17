@@ -19,8 +19,8 @@ func Test_decode_uint32(t *testing.T) {
 
 func Test_encode_uint32(t *testing.T) {
 	should := require.New(t)
-	stream := thrifter.NewBufferedStream(nil)
+	stream := thrifter.NewStream(nil)
 	stream.WriteUInt32(1024)
-	iter := thrifter.NewBufferedIterator(stream.Buffer())
+	iter := thrifter.NewIterator(nil, stream.Buffer())
 	should.Equal(uint32(1024), iter.ReadUInt32())
 }

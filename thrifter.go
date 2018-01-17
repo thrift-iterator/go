@@ -14,6 +14,7 @@ var ProtocolBinary Protocol = 1
 
 type Iterator interface {
 	Error() error
+	Reset(reader io.Reader, buf []byte)
 	ReportError(operation string, err string)
 	ReadMessageHeader() protocol.MessageHeader
 	ReadMessage() protocol.Message
@@ -43,11 +44,6 @@ type Iterator interface {
 	SkipBinary(space []byte) []byte
 	Read(ttype protocol.TType) interface{}
 	ReaderOf(ttype protocol.TType) func() interface{}
-}
-
-type BufferedIterator interface {
-	Iterator
-	Reset(buf []byte)
 }
 
 type Stream interface {
@@ -88,9 +84,8 @@ type Config struct {
 }
 
 type API interface {
-	NewBufferedIterator(buf []byte) BufferedIterator
 	NewBufferedStream(buf []byte) Stream
-	NewIterator(reader io.Reader) Iterator
+	NewIterator(reader io.Reader, buf []byte) Iterator
 	Unmarshal(buf []byte, obj interface{}) error
 	Marshal(obj interface{}) ([]byte, error)
 	NewDecoder(reader io.Reader) Decoder
@@ -106,14 +101,6 @@ func (cfg Config) Froze() API {
 	return api
 }
 
-func (cfg *frozenConfig) NewBufferedIterator(buf []byte) BufferedIterator {
-	switch cfg.protocol {
-	case ProtocolBinary:
-		return binary.NewIterator(buf)
-	}
-	panic("unsupported protocol")
-}
-
 func (cfg *frozenConfig) NewBufferedStream(buf []byte) Stream {
 	switch cfg.protocol {
 	case ProtocolBinary:
@@ -122,10 +109,13 @@ func (cfg *frozenConfig) NewBufferedStream(buf []byte) Stream {
 	panic("unsupported protocol")
 }
 
-func (cfg *frozenConfig) NewIterator(reader io.Reader) Iterator {
+func (cfg *frozenConfig) NewIterator(reader io.Reader, buf []byte) Iterator {
 	switch cfg.protocol {
 	case ProtocolBinary:
-		return sbinary.NewIterator(reader)
+		if reader != nil {
+			return sbinary.NewIterator(reader, buf)
+		}
+		return binary.NewIterator(buf)
 	}
 	panic("unsupported protocol")
 }
@@ -139,7 +129,7 @@ func (cfg *frozenConfig) Unmarshal(buf []byte, obj interface{}) error {
 		size := uint32(buf[3]) | uint32(buf[2])<<8 | uint32(buf[1])<<16 | uint32(buf[0])<<24
 		buf = buf[4:4+size]
 	}
-	iter := cfg.NewBufferedIterator(buf)
+	iter := cfg.NewIterator(nil, buf)
 	msgRead := iter.ReadMessage()
 	if iter.Error() != nil {
 		return iter.Error()
@@ -170,24 +160,20 @@ func (cfg *frozenConfig) Marshal(obj interface{}) ([]byte, error) {
 
 func (cfg *frozenConfig) NewDecoder(reader io.Reader) Decoder {
 	if cfg.isFramed {
-		return &framedDecoder{reader: reader, iter: cfg.NewBufferedIterator(nil)}
+		return &framedDecoder{reader: reader, iter: cfg.NewIterator(nil, nil)}
 	} else {
-		return &unframedDecoder{iter: cfg.NewIterator(reader)}
+		return &unframedDecoder{iter: cfg.NewIterator(reader, make([]byte, 256))}
 	}
 }
 
 var DefaultConfig = Config{Protocol: ProtocolBinary, IsFramed: true}.Froze()
 
-func NewBufferedIterator(buf []byte) BufferedIterator {
-	return DefaultConfig.NewBufferedIterator(buf)
-}
-
-func NewBufferedStream(buf []byte) Stream {
+func NewStream(buf []byte) Stream {
 	return DefaultConfig.NewBufferedStream(buf)
 }
 
-func NewIterator(reader io.Reader) Iterator {
-	return DefaultConfig.NewIterator(reader)
+func NewIterator(reader io.Reader, buf []byte) Iterator {
+	return DefaultConfig.NewIterator(reader, buf)
 }
 
 func Unmarshal(buf []byte, obj interface{}) error {

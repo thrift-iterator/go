@@ -31,16 +31,16 @@ func Test_decode_list_of_string(t *testing.T) {
 	proto.WriteString("b")
 	proto.WriteString("c")
 	proto.WriteListEnd()
-	iter := thrifter.NewBufferedIterator(buf.Bytes())
+	iter := thrifter.NewIterator(nil,  buf.Bytes())
 	should.Equal([]interface{}{"a", "b", "c"}, iter.ReadList())
 }
 
 func Test_encode_list_of_string(t *testing.T) {
 	should := require.New(t)
-	stream := thrifter.NewBufferedStream(nil)
+	stream := thrifter.NewStream(nil)
 	stream.WriteList([]interface{}{
 		"a", "b", "c",
 	})
-	iter := thrifter.NewBufferedIterator(stream.Buffer())
+	iter := thrifter.NewIterator(nil,  stream.Buffer())
 	should.Equal([]interface{}{"a", "b", "c"}, iter.ReadList())
 }

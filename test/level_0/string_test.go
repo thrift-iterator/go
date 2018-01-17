@@ -19,8 +19,8 @@ func Test_decode_string(t *testing.T) {
 
 func Test_encode_string(t *testing.T) {
 	should := require.New(t)
-	stream := thrifter.NewBufferedStream(nil)
+	stream := thrifter.NewStream(nil)
 	stream.WriteString("hello")
-	iter := thrifter.NewBufferedIterator(stream.Buffer())
+	iter := thrifter.NewIterator(nil, stream.Buffer())
 	should.Equal("hello", iter.ReadString())
 }

@@ -59,7 +59,7 @@ func Test_decode_message_as_object(t *testing.T) {
 
 func Test_encode_message_as_object(t *testing.T) {
 	should := require.New(t)
-	stream := thrifter.NewBufferedStream(nil)
+	stream := thrifter.NewStream(nil)
 	stream.WriteMessage(protocol.Message{
 		MessageHeader: protocol.MessageHeader{
 			Version: protocol.VERSION_1,
@@ -72,7 +72,7 @@ func Test_encode_message_as_object(t *testing.T) {
 			protocol.FieldId(2): int64(2),
 		},
 	})
-	iter := thrifter.NewBufferedIterator(stream.Buffer())
+	iter := thrifter.NewIterator(nil,  stream.Buffer())
 	msg := iter.ReadMessage()
 	should.Equal(protocol.VERSION_1, msg.Version)
 	should.Equal("hello", msg.MessageName)

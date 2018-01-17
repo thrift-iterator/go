@@ -15,12 +15,17 @@ type Iterator struct {
 	err    error
 }
 
-func NewIterator(reader io.Reader) *Iterator {
+func NewIterator(reader io.Reader, buf []byte) *Iterator {
 	return &Iterator{
 		reader: reader, real: binary.NewIterator(nil),
-		tmp:    make([]byte, 256),
-		space:  make([]byte, 256),
+		tmp:    make([]byte, 8),
+		space:  buf,
 	}
+}
+
+func (iter *Iterator) Reset(reader io.Reader, buf []byte) {
+	iter.reader = reader
+	iter.err = nil
 }
 
 func (iter *Iterator) allocate(nBytes int) []byte {
@@ -70,7 +75,7 @@ func (iter *Iterator) ReadMessage() protocol.Message {
 		return protocol.Message{}
 	}
 	iter.space = buf
-	iter.real.Reset(buf)
+	iter.real.Reset(nil, buf)
 	return iter.real.ReadMessage()
 }
 
@@ -99,7 +104,7 @@ func (iter *Iterator) ReadStructField() (fieldType protocol.TType, fieldId proto
 		iter.ReportError("ReadStructField", err.Error())
 		return protocol.STOP, 0
 	}
-	iter.real.Reset(tmp)
+	iter.real.Reset(nil, tmp)
 	return iter.real.ReadStructField()
 }
 
@@ -109,7 +114,7 @@ func (iter *Iterator) ReadStruct() map[protocol.FieldId]interface{} {
 		return nil
 	}
 	iter.space = buf
-	iter.real.Reset(buf)
+	iter.real.Reset(nil, buf)
 	return iter.real.ReadStruct()
 }
 
@@ -183,7 +188,7 @@ func (iter *Iterator) ReadListHeader() (elemType protocol.TType, length int) {
 		iter.ReportError("ReadListHeader", err.Error())
 		return protocol.STOP, 0
 	}
-	iter.real.Reset(tmp)
+	iter.real.Reset(nil, tmp)
 	return iter.real.ReadListHeader()
 }
 
@@ -193,7 +198,7 @@ func (iter *Iterator) ReadList() []interface{} {
 		return nil
 	}
 	iter.space = buf
-	iter.real.Reset(buf)
+	iter.real.Reset(nil, buf)
 	return iter.real.ReadList()
 }
 
@@ -205,7 +210,7 @@ func (iter *Iterator) SkipList(space []byte) []byte {
 		return nil
 	}
 	space = append(space, tmp...)
-	iter.real.Reset(tmp)
+	iter.real.Reset(nil, tmp)
 	elemType, length := iter.real.ReadListHeader()
 	switch elemType {
 	case protocol.STOP:
@@ -251,7 +256,7 @@ func (iter *Iterator) ReadMapHeader() (keyType protocol.TType, elemType protocol
 		iter.ReportError("ReadMapHeader", err.Error())
 		return protocol.STOP, protocol.STOP, 0
 	}
-	iter.real.Reset(tmp)
+	iter.real.Reset(nil, tmp)
 	return iter.real.ReadMapHeader()
 }
 
@@ -261,7 +266,7 @@ func (iter *Iterator) ReadMap() map[interface{}]interface{} {
 		return nil
 	}
 	iter.space = buf
-	iter.real.Reset(buf)
+	iter.real.Reset(nil, buf)
 	return iter.real.ReadMap()
 }
 
@@ -273,7 +278,7 @@ func (iter *Iterator) SkipMap(space []byte) []byte {
 		return nil
 	}
 	space = append(space, tmp...)
-	iter.real.Reset(tmp)
+	iter.real.Reset(nil, tmp)
 	keyType, elemType, length := iter.real.ReadMapHeader()
 	keySize := getTypeSize(keyType)
 	elemSize := getTypeSize(elemType)
@@ -347,7 +352,7 @@ func (iter *Iterator) ReadBool() bool {
 		iter.ReportError("ReadBool", err.Error())
 		return false
 	}
-	iter.real.Reset(tmp)
+	iter.real.Reset(nil, tmp)
 	return iter.real.ReadBool()
 }
 
@@ -362,7 +367,7 @@ func (iter *Iterator) ReadUInt8() uint8 {
 		iter.ReportError("ReadUInt8", err.Error())
 		return 0
 	}
-	iter.real.Reset(tmp)
+	iter.real.Reset(nil, tmp)
 	return iter.real.ReadUInt8()
 }
 
@@ -377,7 +382,7 @@ func (iter *Iterator) ReadUInt16() uint16 {
 		iter.ReportError("ReadUInt16", err.Error())
 		return 0
 	}
-	iter.real.Reset(tmp)
+	iter.real.Reset(nil, tmp)
 	return iter.real.ReadUInt16()
 }
 
@@ -392,7 +397,7 @@ func (iter *Iterator) ReadUInt32() uint32 {
 		iter.ReportError("ReadUInt32", err.Error())
 		return 0
 	}
-	iter.real.Reset(tmp)
+	iter.real.Reset(nil, tmp)
 	return iter.real.ReadUInt32()
 }
 
@@ -403,7 +408,7 @@ func (iter *Iterator) ReadInt64() int64 {
 		iter.ReportError("ReadInt64", err.Error())
 		return 0
 	}
-	iter.real.Reset(tmp)
+	iter.real.Reset(nil, tmp)
 	return iter.real.ReadInt64()
 }
 
@@ -414,7 +419,7 @@ func (iter *Iterator) ReadUInt64() uint64 {
 		iter.ReportError("ReadUInt64", err.Error())
 		return 0
 	}
-	iter.real.Reset(tmp)
+	iter.real.Reset(nil, tmp)
 	return iter.real.ReadUInt64()
 }
 
@@ -425,7 +430,7 @@ func (iter *Iterator) ReadFloat64() float64 {
 		iter.ReportError("ReadFloat64", err.Error())
 		return 0
 	}
-	iter.real.Reset(tmp)
+	iter.real.Reset(nil, tmp)
 	return iter.real.ReadFloat64()
 }
 

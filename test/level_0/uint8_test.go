@@ -19,8 +19,8 @@ func Test_decode_uint8(t *testing.T) {
 
 func Test_encode_uint8(t *testing.T) {
 	should := require.New(t)
-	stream := thrifter.NewBufferedStream(nil)
+	stream := thrifter.NewStream(nil)
 	stream.WriteUInt8(100)
-	iter := thrifter.NewBufferedIterator(stream.Buffer())
+	iter := thrifter.NewIterator(nil, stream.Buffer())
 	should.Equal(uint8(100), iter.ReadUInt8())
 }

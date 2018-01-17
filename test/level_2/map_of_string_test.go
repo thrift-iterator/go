@@ -51,11 +51,11 @@ func Test_decode_map_of_string_key(t *testing.T) {
 
 func Test_encode_map_of_string_key(t *testing.T) {
 	should := require.New(t)
-	stream := thrifter.NewBufferedStream(nil)
+	stream := thrifter.NewStream(nil)
 	stream.WriteMap(map[interface{}]interface{}{
 		"1": int64(1),
 	})
-	iter := thrifter.NewBufferedIterator(stream.Buffer())
+	iter := thrifter.NewIterator(nil,  stream.Buffer())
 	should.Equal(map[interface{}]interface{}{
 		"1": int64(1),
 	}, iter.ReadMap())

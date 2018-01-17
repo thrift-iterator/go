@@ -41,10 +41,10 @@ func Test_decode_struct_of_string(t *testing.T) {
 
 func Test_encode_struct_of_string(t *testing.T) {
 	should := require.New(t)
-	stream := thrifter.NewBufferedStream(nil)
+	stream := thrifter.NewStream(nil)
 	stream.WriteStruct(map[protocol.FieldId]interface{}{
 		protocol.FieldId(1): "abc",
 	})
-	iter := thrifter.NewBufferedIterator(stream.Buffer())
+	iter := thrifter.NewIterator(nil,  stream.Buffer())
 	should.Equal("abc", iter.ReadStruct()[protocol.FieldId(1)])
 }

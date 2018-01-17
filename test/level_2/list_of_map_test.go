@@ -50,7 +50,7 @@ func Test_decode_list_of_map(t *testing.T) {
 
 func Test_encode_list_of_map(t *testing.T) {
 	should := require.New(t)
-	stream := thrifter.NewBufferedStream(nil)
+	stream := thrifter.NewStream(nil)
 	stream.WriteList([]interface{}{
 		map[interface{}]interface{} {
 			int32(1): int64(1),
@@ -59,7 +59,7 @@ func Test_encode_list_of_map(t *testing.T) {
 			int32(2): int64(2),
 		},
 	})
-	iter := thrifter.NewBufferedIterator(stream.Buffer())
+	iter := thrifter.NewIterator(nil,  stream.Buffer())
 	should.Equal(map[interface{}]interface{}{
 		int32(1): int64(1),
 	}, iter.ReadList()[0])

@@ -37,7 +37,7 @@ func Test_decode_map_by_iterator(t *testing.T) {
 
 func Test_encode_map_by_stream(t *testing.T) {
 	should := require.New(t)
-	stream := thrifter.NewBufferedStream(nil)
+	stream := thrifter.NewStream(nil)
 	stream.WriteMapHeader(protocol.STRING, protocol.I64, 3)
 	stream.WriteString("k1")
 	stream.WriteUInt64(1)
@@ -45,7 +45,7 @@ func Test_encode_map_by_stream(t *testing.T) {
 	stream.WriteUInt64(2)
 	stream.WriteString("k3")
 	stream.WriteUInt64(3)
-	iter := thrifter.NewBufferedIterator(stream.Buffer())
+	iter := thrifter.NewIterator(nil, stream.Buffer())
 	keyType, elemType, length := iter.ReadMapHeader()
 	should.Equal(protocol.STRING, keyType)
 	should.Equal(protocol.I64, elemType)
@@ -82,13 +82,13 @@ func Test_decode_map_as_object(t *testing.T) {
 
 func Test_encode_map_from_object(t *testing.T) {
 	should := require.New(t)
-	stream := thrifter.NewBufferedStream(nil)
+	stream := thrifter.NewStream(nil)
 	stream.WriteMap(map[interface{}]interface{}{
 		"k1": int64(1),
 		"k2": int64(2),
 		"k3": int64(3),
 	})
-	iter := thrifter.NewBufferedIterator(stream.Buffer())
+	iter := thrifter.NewIterator(nil, stream.Buffer())
 	obj := iter.ReadMap()
 	should.Equal(map[interface{}]interface{}{
 		"k1": int64(1),
@@ -109,6 +109,6 @@ func Test_skip_map(t *testing.T) {
 	proto.WriteI32(3)
 	proto.WriteI64(3)
 	proto.WriteMapEnd()
-	iter := thrifter.NewBufferedIterator(buf.Bytes())
+	iter := thrifter.NewIterator(nil, buf.Bytes())
 	should.Equal(buf.Bytes(), iter.SkipMap(nil))
 }

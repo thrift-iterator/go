@@ -19,7 +19,7 @@ var Combinations = []Combination{
 			return buf, proto
 		},
 		CreateIterator: func(buf []byte) thrifter.Iterator {
-			return thrifter.NewBufferedIterator(buf)
+			return thrifter.NewIterator(nil, buf)
 		},
 	},
 	{
@@ -29,7 +29,7 @@ var Combinations = []Combination{
 			return buf, proto
 		},
 		CreateIterator: func(buf []byte) thrifter.Iterator {
-			return thrifter.NewIterator(bytes.NewBuffer(buf))
+			return thrifter.NewIterator(bytes.NewBuffer(buf), nil)
 		},
 	},
 }

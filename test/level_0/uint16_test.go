@@ -19,8 +19,8 @@ func Test_decode_uint16(t *testing.T) {
 
 func Test_encode_uint16(t *testing.T) {
 	should := require.New(t)
-	stream := thrifter.NewBufferedStream(nil)
+	stream := thrifter.NewStream(nil)
 	stream.WriteUInt16(1024)
-	iter := thrifter.NewBufferedIterator(stream.Buffer())
+	iter := thrifter.NewIterator(nil, stream.Buffer())
 	should.Equal(uint16(1024), iter.ReadUInt16())
 }

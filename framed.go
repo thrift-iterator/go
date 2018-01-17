@@ -9,7 +9,7 @@ import (
 
 type framedDecoder struct {
 	reader io.Reader
-	iter   BufferedIterator
+	iter   Iterator
 	tmp    []byte
 }
 
@@ -35,7 +35,7 @@ func (decoder *framedDecoder) Decode(obj interface{}) error {
 	if err != nil {
 		return err
 	}
-	decoder.iter.Reset(tmp)
+	decoder.iter.Reset(nil, tmp)
 	msgRead := decoder.iter.ReadMessage()
 	msg.Set(&msgRead)
 	return nil

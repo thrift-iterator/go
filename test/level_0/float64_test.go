@@ -19,8 +19,8 @@ func Test_decode_float64(t *testing.T) {
 
 func Test_encode_float64(t *testing.T) {
 	should := require.New(t)
-	stream := thrifter.NewBufferedStream(nil)
+	stream := thrifter.NewStream(nil)
 	stream.WriteFloat64(10.24)
-	iter := thrifter.NewBufferedIterator(stream.Buffer())
+	iter := thrifter.NewIterator(nil, stream.Buffer())
 	should.Equal(10.24, iter.ReadFloat64())
 }

@@ -19,8 +19,8 @@ func Test_decode_binary(t *testing.T) {
 
 func Test_encode_binary(t *testing.T) {
 	should := require.New(t)
-	stream := thrifter.NewBufferedStream(nil)
+	stream := thrifter.NewStream(nil)
 	stream.WriteBinary([]byte("hello"))
-	iter := thrifter.NewBufferedIterator(stream.Buffer())
+	iter := thrifter.NewIterator(nil, stream.Buffer())
 	should.Equal("hello", string(iter.ReadBinary()))
 }

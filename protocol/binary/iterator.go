@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/thrift-iterator/go/protocol"
 	"math"
+	"io"
 )
 
 type Iterator struct {
@@ -25,7 +26,7 @@ func (iter *Iterator) ReportError(operation string, err string) {
 	}
 }
 
-func (iter *Iterator) Reset(buf []byte) {
+func (iter *Iterator) Reset(reader io.Reader, buf []byte) {
 	iter.buf = buf
 	iter.err = nil
 }
