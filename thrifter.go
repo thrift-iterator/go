@@ -119,6 +119,10 @@ func (cfg *frozenConfig) Unmarshal(buf []byte, obj interface{}) error {
 	if msg == nil {
 		return errors.New("can only unmarshal protocol.Message")
 	}
+	if cfg.isFramed {
+		size := uint32(buf[3]) | uint32(buf[2])<<8 | uint32(buf[1])<<16 | uint32(buf[0])<<24
+		buf = buf[4:4+size]
+	}
 	iter := cfg.NewIterator(buf)
 	msgRead := iter.ReadMessage()
 	if iter.Error() != nil {
@@ -138,7 +142,14 @@ func (cfg *frozenConfig) Marshal(obj interface{}) ([]byte, error) {
 	if stream.Error() != nil {
 		return nil, stream.Error()
 	}
-	return stream.Buffer(), nil
+	buf := stream.Buffer()
+	if cfg.isFramed {
+		size := len(buf)
+		buf = append([]byte{
+			byte(size >> 24), byte(size >> 16), byte(size >> 8), byte(size),
+		}, buf...)
+	}
+	return buf, nil
 }
 
 func (cfg *frozenConfig) NewDecoder(reader io.Reader) Decoder {
