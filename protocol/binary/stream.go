@@ -2,11 +2,13 @@ package binary
 
 import (
 	"math"
+	"github.com/thrift-iterator/go/protocol"
+	"fmt"
 )
 
 type Stream struct {
 	buf   []byte
-	Error error
+	err error
 }
 
 func NewStream(buf []byte) *Stream {
@@ -15,8 +17,39 @@ func NewStream(buf []byte) *Stream {
 	}
 }
 
+func (stream *Stream) Error() error {
+	return stream.err
+}
+
+func (stream *Stream) ReportError(operation string, err string) {
+	if stream.err == nil {
+		stream.err = fmt.Errorf("%s: %s", operation, err)
+	}
+}
+
 func (stream *Stream) Buffer() []byte {
 	return stream.buf
+}
+
+func (stream *Stream) WriteListHeader(elemType protocol.TType, length int) {
+	stream.buf = append(stream.buf, byte(elemType),
+		byte(length>>24), byte(length>>16), byte(length>>8), byte(length))
+}
+
+func (stream *Stream) WriteList(val []interface{}) {
+	if len(val) == 0 {
+		stream.ReportError("WriteList", "input is empty slice, can not tell element type")
+		return
+	}
+	switch val[0].(type) {
+	case int64:
+		stream.WriteListHeader(protocol.I64, len(val))
+		for _, elem := range val {
+			stream.WriteInt64(elem.(int64))
+		}
+	default:
+		panic("unsupported type")
+	}
 }
 
 func (stream *Stream) WriteBool(val bool) {

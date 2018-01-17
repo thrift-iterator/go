@@ -7,17 +7,21 @@ import (
 )
 
 type Iterator struct {
-	buf   []byte
-	Error error
+	buf []byte
+	err error
 }
 
 func NewIterator(buf []byte) *Iterator {
 	return &Iterator{buf: buf}
 }
 
+func (iter *Iterator) Error() error {
+	return iter.err
+}
+
 func (iter *Iterator) ReportError(operation string, err string) {
-	if iter.Error == nil {
-		iter.Error = fmt.Errorf("%s: %s", operation, err)
+	if iter.err == nil {
+		iter.err = fmt.Errorf("%s: %s", operation, err)
 	}
 }
 

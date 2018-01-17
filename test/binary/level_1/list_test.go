@@ -26,6 +26,22 @@ func Test_decode_list_by_iterator(t *testing.T) {
 	should.Equal(uint64(3), iter.ReadUInt64())
 }
 
+func Test_encode_list_by_stream(t *testing.T) {
+	should := require.New(t)
+	stream := thrifter.NewStream(nil)
+	stream.WriteListHeader(protocol.I64, 3)
+	stream.WriteUInt64(1)
+	stream.WriteUInt64(2)
+	stream.WriteUInt64(3)
+	iter := thrifter.NewIterator(stream.Buffer())
+	elemType, length := iter.ReadListHeader()
+	should.Equal(protocol.I64, elemType)
+	should.Equal(3, length)
+	should.Equal(uint64(1), iter.ReadUInt64())
+	should.Equal(uint64(2), iter.ReadUInt64())
+	should.Equal(uint64(3), iter.ReadUInt64())
+}
+
 func Test_decode_list_as_object(t *testing.T) {
 	should := require.New(t)
 	buf := thrift.NewTMemoryBuffer()
@@ -38,6 +54,21 @@ func Test_decode_list_as_object(t *testing.T) {
 	iter := thrifter.NewIterator(buf.Bytes())
 	obj := iter.ReadList()
 	should.Equal([]interface{}{int64(1), int64(2), int64(3)}, obj)
+}
+
+func Test_encode_list_from_object(t *testing.T) {
+	should := require.New(t)
+	stream := thrifter.NewStream(nil)
+	stream.WriteList([]interface{}{
+		int64(1), int64(2), int64(3),
+	})
+	iter := thrifter.NewIterator(stream.Buffer())
+	elemType, length := iter.ReadListHeader()
+	should.Equal(protocol.I64, elemType)
+	should.Equal(3, length)
+	should.Equal(uint64(1), iter.ReadUInt64())
+	should.Equal(uint64(2), iter.ReadUInt64())
+	should.Equal(uint64(3), iter.ReadUInt64())
 }
 
 func Test_skip_list(t *testing.T) {

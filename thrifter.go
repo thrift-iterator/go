@@ -10,6 +10,8 @@ type Protocol int
 var ProtocolBinary Protocol = 1
 
 type Iterator interface {
+	Error() error
+	ReportError(operation string, err string)
 	ReadMessageHeader() protocol.MessageHeader
 	ReadStructCB(func(fieldType protocol.TType, fieldId protocol.FieldId))
 	ReadStructField() (fieldType protocol.TType, fieldId protocol.FieldId)
@@ -38,7 +40,11 @@ type Iterator interface {
 }
 
 type Stream interface {
+	Error() error
+	ReportError(operation string, err string)
 	Buffer() []byte
+	WriteListHeader(elemType protocol.TType, length int)
+	WriteList(val []interface{})
 	WriteBool(val bool)
 	WriteInt8(val int8)
 	WriteUInt8(val uint8)
