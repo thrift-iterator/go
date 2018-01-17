@@ -47,6 +47,7 @@ type Stream interface {
 	WriteList(val []interface{})
 	WriteStructField(fieldType protocol.TType, fieldId protocol.FieldId)
 	WriteStructFieldStop()
+	WriteStruct(val map[protocol.FieldId]interface{})
 	WriteBool(val bool)
 	WriteInt8(val int8)
 	WriteUInt8(val uint8)

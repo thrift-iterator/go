@@ -60,6 +60,19 @@ func (stream *Stream) WriteStructFieldStop() {
 	stream.buf = append(stream.buf, byte(protocol.STOP))
 }
 
+func (stream *Stream) WriteStruct(val map[protocol.FieldId]interface{}) {
+	for key, elem := range val {
+		switch typedElem := elem.(type) {
+		case int64:
+			stream.WriteStructField(protocol.I64, key)
+			stream.WriteInt64(typedElem)
+		default:
+			panic("unsupported type")
+		}
+	}
+	stream.WriteStructFieldStop()
+}
+
 func (stream *Stream) WriteBool(val bool) {
 	if val {
 		stream.WriteUInt8(1)

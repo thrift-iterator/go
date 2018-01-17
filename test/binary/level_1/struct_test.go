@@ -64,6 +64,19 @@ func Test_decode_struct_as_object(t *testing.T) {
 	}, obj)
 }
 
+func Test_encode_struct_from_object(t *testing.T) {
+	should := require.New(t)
+	stream := thrifter.NewStream(nil)
+	stream.WriteStruct(map[protocol.FieldId]interface{}{
+		protocol.FieldId(1): int64(1024),
+	})
+	iter := thrifter.NewIterator(stream.Buffer())
+	obj := iter.ReadStruct()
+	should.Equal(map[protocol.FieldId]interface{}{
+		protocol.FieldId(1): int64(1024),
+	}, obj)
+}
+
 func Test_skip_struct(t *testing.T) {
 	should := require.New(t)
 	buf := thrift.NewTMemoryBuffer()
