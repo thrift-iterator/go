@@ -107,5 +107,5 @@ func Test_skip_map(t *testing.T) {
 	proto.WriteI64(3)
 	proto.WriteMapEnd()
 	iter := thrifter.NewBufferedIterator(buf.Bytes())
-	should.Equal(buf.Bytes(), iter.SkipMap())
+	should.Equal(buf.Bytes(), iter.SkipMap(nil))
 }

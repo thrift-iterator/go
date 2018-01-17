@@ -11,11 +11,16 @@ type Iterator struct {
 	real   *binary.Iterator
 	reader io.Reader
 	tmp    []byte
+	space  []byte
 	err    error
 }
 
 func NewIterator(reader io.Reader) *Iterator {
-	return &Iterator{reader: reader, real: binary.NewIterator(nil), tmp: make([]byte, 8)}
+	return &Iterator{
+		reader: reader, real: binary.NewIterator(nil),
+		tmp:    make([]byte, 256),
+		space:  make([]byte, 256),
+	}
 }
 
 func (iter *Iterator) allocate(nBytes int) []byte {
@@ -53,15 +58,55 @@ func (iter *Iterator) ReadStruct() map[protocol.FieldId]interface{} {
 func (iter *Iterator) SkipStruct(space []byte) []byte {
 	panic("not implemented")
 }
-func (iter *Iterator) ReadListHeader() (elemType protocol.TType, size int) {
-	panic("not implemented")
+
+func (iter *Iterator) ReadListHeader() (elemType protocol.TType, length int) {
+	tmp := iter.tmp[:5]
+	_, err := io.ReadFull(iter.reader, tmp)
+	if err != nil {
+		iter.ReportError("ReadListHeader", err.Error())
+		return protocol.STOP, 0
+	}
+	iter.real.Reset(tmp)
+	return iter.real.ReadListHeader()
 }
+
 func (iter *Iterator) ReadList() []interface{} {
-	panic("not implemented")
+	buf := iter.SkipList(iter.space[:0])
+	if iter.err != nil {
+		return nil
+	}
+	iter.space = buf
+	iter.real.Reset(buf)
+	return iter.real.ReadList()
 }
+
 func (iter *Iterator) SkipList(space []byte) []byte {
-	panic("not implemented")
+	tmp := iter.tmp[:5]
+	_, err := io.ReadFull(iter.reader, tmp)
+	if err != nil {
+		iter.ReportError("SkipList", err.Error())
+		return nil
+	}
+	space = append(space, tmp...)
+	iter.real.Reset(tmp)
+	elemType, length := iter.real.ReadListHeader()
+	switch elemType {
+	case protocol.STOP:
+		return nil
+	case protocol.I64, protocol.DOUBLE:
+		tmp := iter.allocate(length * 8)
+		_, err := io.ReadFull(iter.reader, tmp)
+		if err != nil {
+			iter.ReportError("SkipList", err.Error())
+			return nil
+		}
+		space = append(space, tmp...)
+		return space
+	default:
+		panic("unsupported type")
+	}
 }
+
 func (iter *Iterator) ReadMapHeader() (keyType protocol.TType, elemType protocol.TType, size int) {
 	panic("not implemented")
 }

@@ -88,5 +88,5 @@ func Test_skip_struct(t *testing.T) {
 	proto.WriteFieldStop()
 	proto.WriteStructEnd()
 	iter := thrifter.NewBufferedIterator(buf.Bytes())
-	should.Equal(buf.Bytes(), iter.SkipStruct())
+	should.Equal(buf.Bytes(), iter.SkipStruct(nil))
 }
