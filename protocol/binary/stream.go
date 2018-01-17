@@ -154,6 +154,10 @@ func (stream *Stream) WriteString(val string) {
 
 func (stream *Stream) WriterOf(sample interface{}) (protocol.TType, func(interface{})) {
 	switch sample.(type) {
+	case int32:
+		return protocol.I32, func(val interface{}) {
+			stream.WriteInt32(val.(int32))
+		}
 	case int64:
 		return protocol.I64, func(val interface{}) {
 			stream.WriteInt64(val.(int64))
@@ -161,6 +165,18 @@ func (stream *Stream) WriterOf(sample interface{}) (protocol.TType, func(interfa
 	case string:
 		return protocol.STRING, func(val interface{}) {
 			stream.WriteString(val.(string))
+		}
+	case []interface{}:
+		return protocol.LIST, func(val interface{}) {
+			stream.WriteList(val.([]interface{}))
+		}
+	case map[interface{}]interface{}:
+		return protocol.MAP, func(val interface{}) {
+			stream.WriteMap(val.(map[interface{}]interface{}))
+		}
+	case map[protocol.FieldId]interface{}:
+		return protocol.STRUCT, func(val interface{}) {
+			stream.WriteStruct(val.(map[protocol.FieldId]interface{}))
 		}
 	default:
 		panic("unsupported type")

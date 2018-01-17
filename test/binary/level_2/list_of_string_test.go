@@ -32,3 +32,13 @@ func Test_decode_list_of_string(t *testing.T) {
 	iter := thrifter.NewIterator(buf.Bytes())
 	should.Equal([]interface{}{"a", "b", "c"}, iter.ReadList())
 }
+
+func Test_encode_list_of_string(t *testing.T) {
+	should := require.New(t)
+	stream := thrifter.NewStream(nil)
+	stream.WriteList([]interface{}{
+		"a", "b", "c",
+	})
+	iter := thrifter.NewIterator(stream.Buffer())
+	should.Equal([]interface{}{"a", "b", "c"}, iter.ReadList())
+}

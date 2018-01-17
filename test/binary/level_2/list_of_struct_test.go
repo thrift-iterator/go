@@ -53,3 +53,20 @@ func Test_decode_list_of_struct(t *testing.T) {
 		protocol.FieldId(1): int64(1024),
 	}, iter.ReadList()[0])
 }
+
+func Test_encode_list_of_struct(t *testing.T) {
+	should := require.New(t)
+	stream := thrifter.NewStream(nil)
+	stream.WriteList([]interface{}{
+		map[protocol.FieldId]interface{}{
+			protocol.FieldId(1): int64(1024),
+		},
+		map[protocol.FieldId]interface{}{
+			protocol.FieldId(1): int64(1024),
+		},
+	})
+	iter := thrifter.NewIterator(stream.Buffer())
+	should.Equal(map[protocol.FieldId]interface{}{
+		protocol.FieldId(1): int64(1024),
+	}, iter.ReadList()[0])
+}
