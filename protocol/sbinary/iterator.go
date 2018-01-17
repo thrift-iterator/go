@@ -252,7 +252,57 @@ func (iter *Iterator) SkipMap(space []byte) []byte {
 		space = append(space, tmp...)
 		return space
 	}
-	panic("unsupported type")
+	var skipKey func(space []byte) []byte
+	var skipElem func(space []byte) []byte
+	if keySize != 0 {
+		skipKey = func(space []byte) []byte {
+			tmp := iter.tmp[:keySize]
+			_, err := io.ReadFull(iter.reader, tmp)
+			if err != nil {
+				iter.ReportError("SkipMap", err.Error())
+				return nil
+			}
+			space = append(space, tmp...)
+			return space
+		}
+	} else {
+		switch keyType {
+		case protocol.STRING:
+			skipKey = iter.SkipBinary
+		default:
+			panic("unsupported type")
+		}
+	}
+	if elemSize != 0 {
+		skipElem = func(space []byte) []byte {
+			tmp := iter.tmp[:elemSize]
+			_, err := io.ReadFull(iter.reader, tmp)
+			if err != nil {
+				iter.ReportError("SkipMap", err.Error())
+				return nil
+			}
+			space = append(space, tmp...)
+			return space
+		}
+	} else {
+		switch elemType {
+		case protocol.STRING:
+			skipElem = iter.SkipBinary
+		case protocol.LIST:
+			skipElem = iter.SkipList
+		case protocol.STRUCT:
+			skipElem = iter.SkipStruct
+		case protocol.MAP:
+			skipElem = iter.SkipMap
+		default:
+			panic("unsupported type")
+		}
+	}
+	for i := 0; i < length; i++ {
+		space = skipKey(space)
+		space = skipElem(space)
+	}
+	return space
 }
 
 func (iter *Iterator) ReadBool() bool {

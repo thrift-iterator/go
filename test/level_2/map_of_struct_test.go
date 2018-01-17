@@ -6,46 +6,49 @@ import (
 	"github.com/thrift-iterator/go"
 	"git.apache.org/thrift.git/lib/go/thrift"
 	"github.com/thrift-iterator/go/protocol"
+	"github.com/thrift-iterator/go/test"
 )
 
 func Test_skip_map_of_struct(t *testing.T) {
 	should := require.New(t)
-	buf := thrift.NewTMemoryBuffer()
-	proto := thrift.NewTBinaryProtocol(buf, true, true)
-	proto.WriteMapBegin(thrift.I64, thrift.STRUCT, 1)
-	proto.WriteI64(1)
+	for _, c := range test.Combinations {
+		buf, proto := c.CreateProtocol()
+		proto.WriteMapBegin(thrift.I64, thrift.STRUCT, 1)
+		proto.WriteI64(1)
 
-	proto.WriteStructBegin("hello")
-	proto.WriteFieldBegin("field1", thrift.I64, 1)
-	proto.WriteI64(1024)
-	proto.WriteFieldEnd()
-	proto.WriteFieldStop()
-	proto.WriteStructEnd()
+		proto.WriteStructBegin("hello")
+		proto.WriteFieldBegin("field1", thrift.I64, 1)
+		proto.WriteI64(1024)
+		proto.WriteFieldEnd()
+		proto.WriteFieldStop()
+		proto.WriteStructEnd()
 
-	proto.WriteMapEnd()
-	iter := thrifter.NewBufferedIterator(buf.Bytes())
-	should.Equal(buf.Bytes(), iter.SkipMap(nil))
+		proto.WriteMapEnd()
+		iter := c.CreateIterator(buf.Bytes())
+		should.Equal(buf.Bytes(), iter.SkipMap(nil))
+	}
 }
 
 func Test_decode_map_of_struct(t *testing.T) {
 	should := require.New(t)
-	buf := thrift.NewTMemoryBuffer()
-	proto := thrift.NewTBinaryProtocol(buf, true, true)
-	proto.WriteMapBegin(thrift.I64, thrift.STRUCT, 1)
-	proto.WriteI64(1)
+	for _, c := range test.Combinations {
+		buf, proto := c.CreateProtocol()
+		proto.WriteMapBegin(thrift.I64, thrift.STRUCT, 1)
+		proto.WriteI64(1)
 
-	proto.WriteStructBegin("hello")
-	proto.WriteFieldBegin("field1", thrift.I64, 1)
-	proto.WriteI64(1024)
-	proto.WriteFieldEnd()
-	proto.WriteFieldStop()
-	proto.WriteStructEnd()
+		proto.WriteStructBegin("hello")
+		proto.WriteFieldBegin("field1", thrift.I64, 1)
+		proto.WriteI64(1024)
+		proto.WriteFieldEnd()
+		proto.WriteFieldStop()
+		proto.WriteStructEnd()
 
-	proto.WriteMapEnd()
-	iter := thrifter.NewBufferedIterator(buf.Bytes())
-	should.Equal(map[protocol.FieldId]interface{}{
-		protocol.FieldId(1): int64(1024),
-	}, iter.ReadMap()[int64(1)])
+		proto.WriteMapEnd()
+		iter := c.CreateIterator(buf.Bytes())
+		should.Equal(map[protocol.FieldId]interface{}{
+			protocol.FieldId(1): int64(1024),
+		}, iter.ReadMap()[int64(1)])
+	}
 }
 
 func Test_encode_map_of_struct(t *testing.T) {
