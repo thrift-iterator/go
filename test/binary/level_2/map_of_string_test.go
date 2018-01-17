@@ -44,3 +44,15 @@ func Test_decode_map_of_string_key(t *testing.T) {
 		"1": int64(1),
 	}, iter.ReadMap())
 }
+
+func Test_encode_map_of_string_key(t *testing.T) {
+	should := require.New(t)
+	stream := thrifter.NewStream(nil)
+	stream.WriteMap(map[interface{}]interface{}{
+		"1": int64(1),
+	})
+	iter := thrifter.NewIterator(stream.Buffer())
+	should.Equal(map[interface{}]interface{}{
+		"1": int64(1),
+	}, iter.ReadMap())
+}
