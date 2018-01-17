@@ -49,6 +49,8 @@ type Iterator interface {
 type Stream interface {
 	Error() error
 	ReportError(operation string, err string)
+	Reset(writer io.Writer)
+	Flush() error
 	Buffer() []byte
 	WriteMessageHeader(header protocol.MessageHeader)
 	WriteMessage(message protocol.Message)
@@ -78,17 +80,24 @@ type Decoder interface {
 	Decode(obj interface{}) error
 }
 
+type Encoder interface {
+	Encode(obj interface{}) error
+}
+
 type Config struct {
 	Protocol Protocol
 	IsFramed bool
 }
 
 type API interface {
-	NewBufferedStream(buf []byte) Stream
+	// NewStream is low level streaming api
+	NewStream(writer io.Writer, buf []byte) Stream
+	// NewIterator is low level streaming api
 	NewIterator(reader io.Reader, buf []byte) Iterator
 	Unmarshal(buf []byte, obj interface{}) error
 	Marshal(obj interface{}) ([]byte, error)
 	NewDecoder(reader io.Reader) Decoder
+	NewEncoder(writer io.Writer) Encoder
 }
 
 type frozenConfig struct {
@@ -101,10 +110,10 @@ func (cfg Config) Froze() API {
 	return api
 }
 
-func (cfg *frozenConfig) NewBufferedStream(buf []byte) Stream {
+func (cfg *frozenConfig) NewStream(writer io.Writer, buf []byte) Stream {
 	switch cfg.protocol {
 	case ProtocolBinary:
-		return binary.NewStream(buf)
+		return binary.NewStream(writer, buf)
 	}
 	panic("unsupported protocol")
 }
@@ -143,7 +152,7 @@ func (cfg *frozenConfig) Marshal(obj interface{}) ([]byte, error) {
 	if !isMsg {
 		return nil, errors.New("can only unmarshal protocol.Message")
 	}
-	stream := cfg.NewBufferedStream(nil)
+	stream := cfg.NewStream(nil, nil)
 	stream.WriteMessage(msg)
 	if stream.Error() != nil {
 		return nil, stream.Error()
@@ -166,10 +175,18 @@ func (cfg *frozenConfig) NewDecoder(reader io.Reader) Decoder {
 	}
 }
 
+func (cfg *frozenConfig) NewEncoder(writer io.Writer) Encoder {
+	if cfg.isFramed {
+		return &framedEncoder{writer: writer, stream: cfg.NewStream(nil, nil)}
+	} else {
+		panic("not implemented")
+	}
+}
+
 var DefaultConfig = Config{Protocol: ProtocolBinary, IsFramed: true}.Froze()
 
-func NewStream(buf []byte) Stream {
-	return DefaultConfig.NewBufferedStream(buf)
+func NewStream(writer io.Writer, buf []byte) Stream {
+	return DefaultConfig.NewStream(writer, buf)
 }
 
 func NewIterator(reader io.Reader, buf []byte) Iterator {
@@ -186,4 +203,8 @@ func Marshal(obj interface{}) ([]byte, error) {
 
 func NewDecoder(reader io.Reader) Decoder {
 	return DefaultConfig.NewDecoder(reader)
+}
+
+func NewEncoder(writer io.Writer) Encoder {
+	return DefaultConfig.NewEncoder(writer)
 }

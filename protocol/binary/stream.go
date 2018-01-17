@@ -4,16 +4,19 @@ import (
 	"math"
 	"github.com/thrift-iterator/go/protocol"
 	"fmt"
+	"io"
 )
 
 type Stream struct {
-	buf []byte
-	err error
+	writer io.Writer
+	buf    []byte
+	err    error
 }
 
-func NewStream(buf []byte) *Stream {
+func NewStream(writer io.Writer, buf []byte) *Stream {
 	return &Stream{
-		buf: buf,
+		writer: writer,
+		buf:    buf,
 	}
 }
 
@@ -29,6 +32,15 @@ func (stream *Stream) ReportError(operation string, err string) {
 
 func (stream *Stream) Buffer() []byte {
 	return stream.buf
+}
+
+func (stream *Stream) Reset(writer io.Writer) {
+	stream.writer = writer
+	stream.err = nil
+}
+
+func (stream *Stream) Flush() error {
+	return nil
 }
 
 func (stream *Stream) WriteMessageHeader(header protocol.MessageHeader) {
@@ -229,7 +241,7 @@ func (stream *Stream) WriterOf(sample interface{}) (protocol.TType, func(interfa
 		return protocol.I32, func(val interface{}) {
 			stream.WriteInt32(val.(int32))
 		}
- 	case uint32:
+	case uint32:
 		return protocol.I32, func(val interface{}) {
 			stream.WriteUInt32(val.(uint32))
 		}

@@ -88,3 +88,30 @@ func Test_decode_unframed_message(t *testing.T) {
 		fmt.Println(fieldId, fieldValue)
 	}
 }
+
+func Test_encode_framed_message(t *testing.T) {
+	should := require.New(t)
+	msg := protocol.Message{
+		MessageHeader: protocol.MessageHeader{
+			Version:     protocol.VERSION_1,
+			MessageType: protocol.CALL,
+			MessageName: "hello",
+			SeqId:       protocol.SeqId(17),
+		},
+		Arguments: map[protocol.FieldId]interface{}{
+			protocol.FieldId(1): int64(1),
+			protocol.FieldId(2): int64(2),
+		},
+	}
+	var msgRead protocol.Message
+	buf := bytes.NewBuffer(nil)
+	encoder := thrifter.NewEncoder(buf)
+	should.NoError(encoder.Encode(msg))
+	err := thrifter.Unmarshal(buf.Bytes(), &msgRead)
+	should.NoError(err)
+	fmt.Println(msgRead.MessageType)
+	fmt.Println(msgRead.MessageName)
+	for fieldId, fieldValue := range msgRead.Arguments {
+		fmt.Println(fieldId, fieldValue)
+	}
+}
