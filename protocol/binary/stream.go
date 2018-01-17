@@ -59,9 +59,48 @@ func (stream *Stream) WriteStructFieldStop() {
 func (stream *Stream) WriteStruct(val map[protocol.FieldId]interface{}) {
 	for key, elem := range val {
 		switch typedElem := elem.(type) {
+		case bool:
+			stream.WriteStructField(protocol.BOOL, key)
+			stream.WriteBool(typedElem)
+		case int8:
+			stream.WriteStructField(protocol.I08, key)
+			stream.WriteInt8(typedElem)
+		case uint8:
+			stream.WriteStructField(protocol.I08, key)
+			stream.WriteUInt8(typedElem)
+		case int16:
+			stream.WriteStructField(protocol.I16, key)
+			stream.WriteInt16(typedElem)
+		case uint16:
+			stream.WriteStructField(protocol.I16, key)
+			stream.WriteUInt16(typedElem)
+		case int32:
+			stream.WriteStructField(protocol.I32, key)
+			stream.WriteInt32(typedElem)
+		case uint32:
+			stream.WriteStructField(protocol.I32, key)
+			stream.WriteUInt32(typedElem)
 		case int64:
 			stream.WriteStructField(protocol.I64, key)
 			stream.WriteInt64(typedElem)
+		case uint64:
+			stream.WriteStructField(protocol.I64, key)
+			stream.WriteUInt64(typedElem)
+		case float64:
+			stream.WriteStructField(protocol.DOUBLE, key)
+			stream.WriteFloat64(typedElem)
+		case string:
+			stream.WriteStructField(protocol.STRING, key)
+			stream.WriteString(typedElem)
+		case []interface{}:
+			stream.WriteStructField(protocol.LIST, key)
+			stream.WriteList(typedElem)
+		case map[interface{}]interface{}:
+			stream.WriteStructField(protocol.MAP, key)
+			stream.WriteMap(typedElem)
+		case map[protocol.FieldId]interface{}:
+			stream.WriteStructField(protocol.STRUCT, key)
+			stream.WriteStruct(typedElem)
 		default:
 			panic("unsupported type")
 		}
@@ -154,13 +193,45 @@ func (stream *Stream) WriteString(val string) {
 
 func (stream *Stream) WriterOf(sample interface{}) (protocol.TType, func(interface{})) {
 	switch sample.(type) {
+	case bool:
+		return protocol.BOOL, func(val interface{}) {
+			stream.WriteBool(val.(bool))
+		}
+	case int8:
+		return protocol.I08, func(val interface{}) {
+			stream.WriteInt8(val.(int8))
+		}
+	case uint8:
+		return protocol.I08, func(val interface{}) {
+			stream.WriteUInt8(val.(uint8))
+		}
+	case int16:
+		return protocol.I16, func(val interface{}) {
+			stream.WriteInt16(val.(int16))
+		}
+	case uint16:
+		return protocol.I16, func(val interface{}) {
+			stream.WriteUInt16(val.(uint16))
+		}
 	case int32:
 		return protocol.I32, func(val interface{}) {
 			stream.WriteInt32(val.(int32))
 		}
+ 	case uint32:
+		return protocol.I32, func(val interface{}) {
+			stream.WriteUInt32(val.(uint32))
+		}
 	case int64:
 		return protocol.I64, func(val interface{}) {
 			stream.WriteInt64(val.(int64))
+		}
+	case uint64:
+		return protocol.I64, func(val interface{}) {
+			stream.WriteUInt64(val.(uint64))
+		}
+	case float64:
+		return protocol.DOUBLE, func(val interface{}) {
+			stream.WriteFloat64(val.(float64))
 		}
 	case string:
 		return protocol.STRING, func(val interface{}) {
