@@ -53,3 +53,28 @@ func Test_decode_message_as_object(t *testing.T) {
 	should.Equal(int64(1), msg.Arguments[protocol.FieldId(1)])
 	should.Equal(int64(2), msg.Arguments[protocol.FieldId(2)])
 }
+
+func Test_encode_message_as_object(t *testing.T) {
+	should := require.New(t)
+	stream := thrifter.NewStream(nil)
+	stream.WriteMessage(protocol.Message{
+		MessageHeader: protocol.MessageHeader{
+			Version: protocol.VERSION_1,
+			MessageType: protocol.CALL,
+			MessageName: "hello",
+			SeqId: protocol.SeqId(17),
+		},
+		Arguments: map[protocol.FieldId]interface{} {
+			protocol.FieldId(1): int64(1),
+			protocol.FieldId(2): int64(2),
+		},
+	})
+	iter := thrifter.NewIterator(stream.Buffer())
+	msg := iter.ReadMessage()
+	should.Equal(protocol.VERSION_1, msg.Version)
+	should.Equal("hello", msg.MessageName)
+	should.Equal(protocol.CALL, msg.MessageType)
+	should.Equal(protocol.SeqId(17), msg.SeqId)
+	should.Equal(int64(1), msg.Arguments[protocol.FieldId(1)])
+	should.Equal(int64(2), msg.Arguments[protocol.FieldId(2)])
+}

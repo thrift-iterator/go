@@ -44,6 +44,8 @@ type Stream interface {
 	Error() error
 	ReportError(operation string, err string)
 	Buffer() []byte
+	WriteMessageHeader(header protocol.MessageHeader)
+	WriteMessage(message protocol.Message)
 	WriteListHeader(elemType protocol.TType, length int)
 	WriteList(val []interface{})
 	WriteStructField(fieldType protocol.TType, fieldId protocol.FieldId)

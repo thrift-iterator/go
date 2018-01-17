@@ -31,6 +31,18 @@ func (stream *Stream) Buffer() []byte {
 	return stream.buf
 }
 
+func (stream *Stream) WriteMessageHeader(header protocol.MessageHeader) {
+	versionAndMessageType := uint32(header.Version) | uint32(header.MessageType)
+	stream.WriteUInt32(versionAndMessageType)
+	stream.WriteString(header.MessageName)
+	stream.WriteInt32(int32(header.SeqId))
+}
+
+func (stream *Stream) WriteMessage(message protocol.Message) {
+	stream.WriteMessageHeader(message.MessageHeader)
+	stream.WriteStruct(message.Arguments)
+}
+
 func (stream *Stream) WriteListHeader(elemType protocol.TType, length int) {
 	stream.buf = append(stream.buf, byte(elemType),
 		byte(length>>24), byte(length>>16), byte(length>>8), byte(length))
