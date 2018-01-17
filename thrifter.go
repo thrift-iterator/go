@@ -45,6 +45,8 @@ type Stream interface {
 	Buffer() []byte
 	WriteListHeader(elemType protocol.TType, length int)
 	WriteList(val []interface{})
+	WriteStructField(fieldType protocol.TType, fieldId protocol.FieldId)
+	WriteStructFieldStop()
 	WriteBool(val bool)
 	WriteInt8(val int8)
 	WriteUInt8(val uint8)

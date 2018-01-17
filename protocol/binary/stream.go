@@ -52,6 +52,14 @@ func (stream *Stream) WriteList(val []interface{}) {
 	}
 }
 
+func (stream *Stream) WriteStructField(fieldType protocol.TType, fieldId protocol.FieldId) {
+	stream.buf = append(stream.buf, byte(fieldType), byte(fieldId>>8), byte(fieldId))
+}
+
+func (stream *Stream) WriteStructFieldStop() {
+	stream.buf = append(stream.buf, byte(protocol.STOP))
+}
+
 func (stream *Stream) WriteBool(val bool) {
 	if val {
 		stream.WriteUInt8(1)
