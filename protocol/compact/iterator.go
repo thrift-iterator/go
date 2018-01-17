@@ -5,6 +5,7 @@ import (
 	"github.com/thrift-iterator/go/protocol"
 	"math"
 	"io"
+	"encoding/binary"
 )
 
 type Iterator struct {
@@ -153,18 +154,20 @@ func (iter *Iterator) readVarInt64() int64 {
 }
 
 func (iter *Iterator) ReadFloat64() float64 {
-	return math.Float64frombits(iter.ReadUInt64())
+	value := math.Float64frombits(binary.LittleEndian.Uint64(iter.buf))
+	iter.buf = iter.buf[8:]
+	return value
 }
 
 func (iter *Iterator) ReadString() string {
-	length := iter.ReadUInt32()
+	length := iter.readVarInt32()
 	value := string(iter.buf[:length])
 	iter.buf = iter.buf[length:]
 	return value
 }
 
 func (iter *Iterator) ReadBinary() []byte {
-	length := iter.ReadUInt32()
+	length := iter.readVarInt32()
 	value := iter.buf[:length]
 	iter.buf = iter.buf[length:]
 	return value
