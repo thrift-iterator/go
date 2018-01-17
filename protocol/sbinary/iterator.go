@@ -99,6 +99,42 @@ func (iter *Iterator) SkipStruct(space []byte) []byte {
 				return nil
 			}
 			space = append(space, tmp...)
+		case protocol.LIST:
+			tmp := iter.tmp[:2]
+			_, err := io.ReadFull(iter.reader, tmp)
+			if err != nil {
+				iter.ReportError("SkipStruct", err.Error())
+				return nil
+			}
+			space = append(space, tmp...)
+			space = iter.SkipList(space)
+		case protocol.MAP:
+			tmp := iter.tmp[:2]
+			_, err := io.ReadFull(iter.reader, tmp)
+			if err != nil {
+				iter.ReportError("SkipStruct", err.Error())
+				return nil
+			}
+			space = append(space, tmp...)
+			space = iter.SkipMap(space)
+		case protocol.STRING:
+			tmp := iter.tmp[:2]
+			_, err := io.ReadFull(iter.reader, tmp)
+			if err != nil {
+				iter.ReportError("SkipStruct", err.Error())
+				return nil
+			}
+			space = append(space, tmp...)
+			space = iter.SkipBinary(space)
+		case protocol.STRUCT:
+			tmp := iter.tmp[:2]
+			_, err := io.ReadFull(iter.reader, tmp)
+			if err != nil {
+				iter.ReportError("SkipStruct", err.Error())
+				return nil
+			}
+			space = append(space, tmp...)
+			space = iter.SkipStruct(space)
 		default:
 			panic("unsupported type")
 		}

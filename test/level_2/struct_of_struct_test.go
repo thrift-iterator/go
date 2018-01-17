@@ -6,50 +6,53 @@ import (
 	"github.com/thrift-iterator/go"
 	"git.apache.org/thrift.git/lib/go/thrift"
 	"github.com/thrift-iterator/go/protocol"
+	"github.com/thrift-iterator/go/test"
 )
 
 func Test_skip_struct_of_struct(t *testing.T) {
 	should := require.New(t)
-	buf := thrift.NewTMemoryBuffer()
-	proto := thrift.NewTBinaryProtocol(buf, true, true)
-	proto.WriteStructBegin("hello")
-	proto.WriteFieldBegin("field1", thrift.STRUCT, 1)
+	for _, c := range test.Combinations {
+		buf, proto := c.CreateProtocol()
+		proto.WriteStructBegin("hello")
+		proto.WriteFieldBegin("field1", thrift.STRUCT, 1)
 
-	proto.WriteStructBegin("hello")
-	proto.WriteFieldBegin("field1", thrift.STRING, 1)
-	proto.WriteString("abc")
-	proto.WriteFieldEnd()
-	proto.WriteFieldStop()
-	proto.WriteStructEnd()
+		proto.WriteStructBegin("hello")
+		proto.WriteFieldBegin("field1", thrift.STRING, 1)
+		proto.WriteString("abc")
+		proto.WriteFieldEnd()
+		proto.WriteFieldStop()
+		proto.WriteStructEnd()
 
-	proto.WriteFieldEnd()
-	proto.WriteFieldStop()
-	proto.WriteStructEnd()
-	iter := thrifter.NewBufferedIterator(buf.Bytes())
-	should.Equal(buf.Bytes(), iter.SkipStruct(nil))
+		proto.WriteFieldEnd()
+		proto.WriteFieldStop()
+		proto.WriteStructEnd()
+		iter := c.CreateIterator(buf.Bytes())
+		should.Equal(buf.Bytes(), iter.SkipStruct(nil))
+	}
 }
 
 func Test_decode_struct_of_struct(t *testing.T) {
 	should := require.New(t)
-	buf := thrift.NewTMemoryBuffer()
-	proto := thrift.NewTBinaryProtocol(buf, true, true)
-	proto.WriteStructBegin("hello")
-	proto.WriteFieldBegin("field1", thrift.STRUCT, 1)
+	for _, c := range test.Combinations {
+		buf, proto := c.CreateProtocol()
+		proto.WriteStructBegin("hello")
+		proto.WriteFieldBegin("field1", thrift.STRUCT, 1)
 
-	proto.WriteStructBegin("hello")
-	proto.WriteFieldBegin("field1", thrift.STRING, 1)
-	proto.WriteString("abc")
-	proto.WriteFieldEnd()
-	proto.WriteFieldStop()
-	proto.WriteStructEnd()
+		proto.WriteStructBegin("hello")
+		proto.WriteFieldBegin("field1", thrift.STRING, 1)
+		proto.WriteString("abc")
+		proto.WriteFieldEnd()
+		proto.WriteFieldStop()
+		proto.WriteStructEnd()
 
-	proto.WriteFieldEnd()
-	proto.WriteFieldStop()
-	proto.WriteStructEnd()
-	iter := thrifter.NewBufferedIterator(buf.Bytes())
-	should.Equal(map[protocol.FieldId]interface{}{
-		protocol.FieldId(1): "abc",
-	}, iter.ReadStruct()[protocol.FieldId(1)])
+		proto.WriteFieldEnd()
+		proto.WriteFieldStop()
+		proto.WriteStructEnd()
+		iter := c.CreateIterator(buf.Bytes())
+		should.Equal(map[protocol.FieldId]interface{}{
+			protocol.FieldId(1): "abc",
+		}, iter.ReadStruct()[protocol.FieldId(1)])
+	}
 }
 
 func Test_encode_struct_of_struct(t *testing.T) {
