@@ -76,11 +76,19 @@ func (iter *Iterator) ReadStructField() (protocol.TType, protocol.FieldId) {
 }
 
 func (iter *Iterator) ReadListHeader() (protocol.TType, int) {
-	b := iter.buf
-	elemType := b[0]
-	length := uint32(b[4]) | uint32(b[3])<<8 | uint32(b[2])<<16 | uint32(b[1])<<24
-	iter.buf = iter.buf[5:]
-	return protocol.TType(elemType), int(length)
+	lenAndType := iter.buf[0]
+	iter.buf = iter.buf[1:]
+	length := int((lenAndType >> 4) & 0x0f)
+	if length == 15 {
+		length2 := iter.readVarInt32()
+		if length2 < 0 {
+			iter.ReportError("ReadListHeader", "invalid data length")
+			return protocol.STOP, 0
+		}
+		length = int(length2)
+	}
+	elemType := TCompactType(lenAndType).ToTType()
+	return elemType, length
 }
 
 func (iter *Iterator) ReadMapHeader() (protocol.TType, protocol.TType, int) {
