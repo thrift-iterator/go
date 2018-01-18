@@ -20,15 +20,9 @@ var decodeSlice = generic.DefineFunc(
 	}).
 	Source(`
 {{ $decodeElem := expand "DecodeAnything" "DT" (.DT|ptrSliceElem) "ST" .ST }}
-originalLen := len(*dst)
 _, length := src.ReadListHeader()
 for i := 0; i < length; i++ {
-	if i < originalLen {
-		elem := &(*dst)[i]
-		{{$decodeElem}}(elem, src)
-	} else {
-		elem := new({{.DT|elem|elem|name}})
-		{{$decodeElem}}(elem, src)
-		*dst = append(*dst, *elem)
-	}
+	elem := new({{.DT|elem|elem|name}})
+	{{$decodeElem}}(elem, src)
+	*dst = append(*dst, *elem)
 }`)

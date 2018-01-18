@@ -18,7 +18,6 @@ func (decoder *funcDecoder) Decode(val interface{}, iter Iterator) {
 }
 
 func (cfg Config) Decode(typ reflect.Type) Config {
-	typ = reflect.PtrTo(typ)
 	iteratorType := reflect.TypeOf((*binary.Iterator)(nil))
 	if cfg.DecodeFromReader {
 		iteratorType = reflect.TypeOf((*sbinary.Iterator)(nil))

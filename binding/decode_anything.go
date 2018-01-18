@@ -8,12 +8,17 @@ import (
 var byteArrayType = reflect.TypeOf(([]byte)(nil))
 
 func dispatch(dstType reflect.Type, srcType reflect.Type) string {
-	dstType = dstType.Elem()
+	if dstType.Kind() != reflect.Map {
+		dstType = dstType.Elem()
+	}
 	if dstType == byteArrayType {
 		return "DecodeBinary"
 	}
-	if dstType.Kind() == reflect.Slice {
+	switch dstType.Kind() {
+	case reflect.Slice:
 		return "DecodeSlice"
+	case reflect.Map:
+		return "DecodeMap"
 	}
 	return "DecodeSimpleValue"
 }

@@ -80,6 +80,28 @@ func Test_decode_map_as_object(t *testing.T) {
 	}
 }
 
+func Test_unmarshal_map(t *testing.T) {
+	should := require.New(t)
+	for _, c := range test.Combinations {
+		buf, proto := c.CreateProtocol()
+		proto.WriteMapBegin(thrift.I32, thrift.I64, 3)
+		proto.WriteI32(1)
+		proto.WriteI64(1)
+		proto.WriteI32(2)
+		proto.WriteI64(2)
+		proto.WriteI32(3)
+		proto.WriteI64(3)
+		proto.WriteMapEnd()
+		val := map[int32]int64{}
+		should.NoError(c.Unmarshal(buf.Bytes(), val))
+		should.Equal(map[int32]int64{
+			int32(1): int64(1),
+			int32(2): int64(2),
+			int32(3): int64(3),
+		}, val)
+	}
+}
+
 func Test_encode_map_from_object(t *testing.T) {
 	should := require.New(t)
 	stream := thrifter.NewStream(nil, nil)

@@ -25,7 +25,7 @@ var Combinations = []Combination{
 		},
 		Unmarshal: func(buf []byte, obj interface{}) error {
 			cfg := thrifter.Config{Protocol: thrifter.ProtocolBinary}
-			cfg = cfg.Decode(reflect.TypeOf(obj).Elem())
+			cfg = cfg.Decode(reflect.TypeOf(obj))
 			return cfg.Froze().Unmarshal(buf, obj)
 		},
 	},
@@ -40,7 +40,7 @@ var Combinations = []Combination{
 		},
 		Unmarshal: func(buf []byte, obj interface{}) error {
 			cfg := thrifter.Config{Protocol: thrifter.ProtocolBinary, DecodeFromReader: true}
-			cfg = cfg.Decode(reflect.TypeOf(obj).Elem())
+			cfg = cfg.Decode(reflect.TypeOf(obj))
 			api := cfg.Froze()
 			decoder := api.NewDecoder(bytes.NewBuffer(buf))
 			return decoder.Decode(obj)
@@ -58,7 +58,7 @@ var Combinations = []Combination{
 		},
 		Unmarshal: func(buf []byte, obj interface{}) error {
 			cfg := thrifter.Config{Protocol: thrifter.ProtocolCompact}
-			cfg = cfg.Decode(reflect.TypeOf(obj).Elem())
+			cfg = cfg.Decode(reflect.TypeOf(obj))
 			return cfg.Froze().Unmarshal(buf, obj)
 		},
 	},

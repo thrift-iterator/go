@@ -1,0 +1,33 @@
+package binding
+
+import (
+	"reflect"
+	"github.com/v2pro/wombat/generic"
+)
+
+func init() {
+	decodeAnything.ImportFunc(decodeMap)
+}
+
+var decodeMap = generic.DefineFunc(
+	"DecodeMap(dst DT, src ST)").
+	Param("DT", "the dst type to copy into").
+	Param("ST", "the src type to copy from").
+	ImportFunc(decodeAnything).
+	Generators(
+	"ptrMapElem", func(typ reflect.Type) reflect.Type {
+		return reflect.PtrTo(typ.Elem())
+	}, "ptrMapKey", func(typ reflect.Type) reflect.Type {
+		return reflect.PtrTo(typ.Key())
+	}).
+	Source(`
+{{ $decodeKey := expand "DecodeAnything" "DT" (.DT|ptrMapKey) "ST" .ST }}
+{{ $decodeElem := expand "DecodeAnything" "DT" (.DT|ptrMapElem) "ST" .ST }}
+_, _, length := src.ReadMapHeader()
+for i := 0; i < length; i++ {
+	newKey := new({{.DT|key|name}})
+	{{$decodeKey}}(newKey, src)
+	newElem := new({{.DT|elem|name}})
+	{{$decodeElem}}(newElem, src)
+	dst[*newKey] = *newElem
+}`)
