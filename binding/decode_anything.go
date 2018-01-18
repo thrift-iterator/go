@@ -8,9 +8,7 @@ import (
 var byteArrayType = reflect.TypeOf(([]byte)(nil))
 
 func dispatch(dstType reflect.Type, srcType reflect.Type) string {
-	if dstType.Kind() != reflect.Map {
-		dstType = dstType.Elem()
-	}
+	dstType = dstType.Elem()
 	if dstType == byteArrayType {
 		return "DecodeBinary"
 	}
@@ -25,7 +23,7 @@ func dispatch(dstType reflect.Type, srcType reflect.Type) string {
 	return "DecodeSimpleValue"
 }
 
-var decodeAnything = generic.DefineFunc("DecodeAnything(dst interface{}, src interface{})").
+var decodeAnything = generic.DefineFunc("DecodeAnything(dst DT, src ST)").
 	Param("DT", "the dst type to copy into").
 	Param("ST", "the src type to copy from").
 	Generators(
@@ -33,5 +31,5 @@ var decodeAnything = generic.DefineFunc("DecodeAnything(dst interface{}, src int
 	Source(`
 {{ $tmpl := dispatch .DT .ST }}
 {{ $decode := expand $tmpl "DT" .DT "ST" .ST }}
-{{$decode}}(dst.({{.DT|name}}), src.({{.ST|name}}))
+{{$decode}}(dst, src)
 `)

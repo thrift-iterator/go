@@ -93,7 +93,7 @@ func Test_unmarshal_map(t *testing.T) {
 		proto.WriteI64(3)
 		proto.WriteMapEnd()
 		val := map[int32]int64{}
-		should.NoError(c.Unmarshal(buf.Bytes(), val))
+		should.NoError(c.Unmarshal(buf.Bytes(), &val))
 		should.Equal(map[int32]int64{
 			int32(1): int64(1),
 			int32(2): int64(2),

@@ -4,9 +4,11 @@ decode/encode thrift message without IDL
 
 Why?
 
-* IDL generated model is ugly, we do not want *int as my field type. We like how json.Unmarshal works, binds data to existing go struct.
-* original thrift library for go is slow, verified in several benchmarks. It is even slower than [json-iterator](https://github.com/json-iterator/go)
-* thrift proxy can not load all possible IDL in advance, we need to decode/encode in a generic way to modify embedded header.
+* because IDL generated model is ugly and inflexible, it is seldom used in application directly. instead we define another model, which leads to bad performance.
+  * bytes need to be copied twice 
+  * more objects to gc
+* thrift proxy can not know all possible IDL in advance, we need to decode/encode in a generic way to modify embedded header.
+* official thrift library for go is slow, verified in several benchmarks. It is even slower than [json-iterator](https://github.com/json-iterator/go)
 
 # unmarshal
 

@@ -48,6 +48,28 @@ func Test_decode_list_of_map(t *testing.T) {
 	}
 }
 
+func Test_unmarshal_list_of_map(t *testing.T) {
+	should := require.New(t)
+	for _, c := range test.Combinations {
+		buf, proto := c.CreateProtocol()
+		proto.WriteListBegin(thrift.MAP, 2)
+		proto.WriteMapBegin(thrift.I32, thrift.I64, 1)
+		proto.WriteI32(1)
+		proto.WriteI64(1)
+		proto.WriteMapEnd()
+		proto.WriteMapBegin(thrift.I32, thrift.I64, 1)
+		proto.WriteI32(2)
+		proto.WriteI64(2)
+		proto.WriteMapEnd()
+		proto.WriteListEnd()
+		var val []map[int32]int64
+		should.NoError(c.Unmarshal(buf.Bytes(), &val))
+		should.Equal([]map[int32]int64{
+			{1:1}, {2:2},
+		}, val)
+	}
+}
+
 func Test_encode_list_of_map(t *testing.T) {
 	should := require.New(t)
 	stream := thrifter.NewStream(nil, nil)
