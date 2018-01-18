@@ -19,6 +19,8 @@ func dispatch(dstType reflect.Type, srcType reflect.Type) string {
 		return "DecodeSlice"
 	case reflect.Map:
 		return "DecodeMap"
+	case reflect.Struct:
+		return "DecodeStruct"
 	}
 	return "DecodeSimpleValue"
 }

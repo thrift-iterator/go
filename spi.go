@@ -36,6 +36,7 @@ type Iterator interface {
 	ReadString() string
 	ReadBinary() []byte
 	SkipBinary(space []byte) []byte
+	Discard(ttype protocol.TType)
 	Read(ttype protocol.TType) interface{}
 	ReaderOf(ttype protocol.TType) func() interface{}
 }

@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/thrift-iterator/go/protocol"
 	"github.com/thrift-iterator/go/test"
+	"github.com/thrift-iterator/go/test/level_1/struct_test"
 )
 
 func Test_decode_struct_by_iterator(t *testing.T) {
@@ -28,6 +29,7 @@ func Test_decode_struct_by_iterator(t *testing.T) {
 			should.Equal(protocol.FieldId(1), fieldId)
 			should.Equal(int64(1024), iter.ReadInt64())
 		})
+		should.NoError(iter.Error())
 		should.True(called)
 	}
 }
@@ -87,6 +89,22 @@ func Test_decode_struct_as_object(t *testing.T) {
 		should.Equal(map[protocol.FieldId]interface{}{
 			protocol.FieldId(1): int64(1024),
 		}, obj)
+	}
+}
+
+func Test_unmarshal_struct(t *testing.T) {
+	should := require.New(t)
+	for _, c := range test.Combinations {
+		buf, proto := c.CreateProtocol()
+		proto.WriteStructBegin("hello")
+		proto.WriteFieldBegin("field1", thrift.I64, 1)
+		proto.WriteI64(1024)
+		proto.WriteFieldEnd()
+		proto.WriteFieldStop()
+		proto.WriteStructEnd()
+		var val struct_test.TestObject
+		should.NoError(c.Unmarshal(buf.Bytes(), &val))
+		should.Equal(struct_test.TestObject{1024}, val)
 	}
 }
 
