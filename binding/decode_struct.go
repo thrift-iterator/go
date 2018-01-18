@@ -5,6 +5,7 @@ import (
 	"github.com/v2pro/wombat/generic"
 	"github.com/thrift-iterator/go/protocol"
 	"strconv"
+	"strings"
 )
 
 func init() {
@@ -24,7 +25,7 @@ var decodeStruct = generic.DefineFunc(
 			srcFieldId := protocol.FieldId(0)
 			thriftTag := dstField.Tag.Get("thrift")
 			if thriftTag != "" {
-				fieldId, err := strconv.Atoi(thriftTag)
+				fieldId, err := strconv.Atoi(strings.Split(thriftTag, ",")[1])
 				if err != nil {
 					panic("thrift tag must be integer")
 				}

@@ -7,7 +7,7 @@ import (
 )
 
 type unframedDecoder struct {
-	cfg *frozenConfig
+	cfg  *frozenConfig
 	iter Iterator
 }
 
@@ -15,12 +15,15 @@ type unframedEncoder struct {
 	stream Stream
 }
 
-func (decoder *unframedDecoder) Decode(obj interface{}) error {
-	valDecoder := decoder.cfg.decoders[reflect.TypeOf(obj)]
-	if valDecoder == nil {
-		valDecoder = msgDecoderInstance
+func (decoder *unframedDecoder) Decode(val interface{}) error {
+	cfg := decoder.cfg
+	valType := reflect.TypeOf(val)
+	valDecoder := cfg.getDecoderFromCache(valType)
+	if decoder == nil {
+		valDecoder = cfg.decoderOf(true, valType)
+		cfg.addDecoderToCache(valType, valDecoder)
 	}
-	valDecoder.Decode(obj, decoder.iter)
+	valDecoder.Decode(val, decoder.iter)
 	if decoder.iter.Error() != nil {
 		return decoder.iter.Error()
 	}
