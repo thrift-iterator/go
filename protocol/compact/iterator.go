@@ -92,12 +92,15 @@ func (iter *Iterator) ReadListHeader() (protocol.TType, int) {
 }
 
 func (iter *Iterator) ReadMapHeader() (protocol.TType, protocol.TType, int) {
-	b := iter.buf
-	keyType := b[0]
-	elemType := b[1]
-	length := uint32(b[5]) | uint32(b[4])<<8 | uint32(b[3])<<16 | uint32(b[2])<<24
-	iter.buf = iter.buf[6:]
-	return protocol.TType(keyType), protocol.TType(elemType), int(length)
+	length := int(iter.readVarInt32())
+	if length == 0 {
+		return protocol.STOP, protocol.STOP, length
+	}
+	keyAndElemType := iter.buf[0]
+	iter.buf = iter.buf[1:]
+	keyType := TCompactType(keyAndElemType >> 4).ToTType()
+	elemType := TCompactType(keyAndElemType & 0xf).ToTType()
+	return keyType, elemType, length
 }
 
 func (iter *Iterator) ReadBool() bool {
