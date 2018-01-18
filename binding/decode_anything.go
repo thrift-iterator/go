@@ -5,7 +5,12 @@ import (
 	"reflect"
 )
 
+var pByteArrayType = reflect.TypeOf((*[]byte)(nil))
+
 func dispatch(dstType reflect.Type, srcType reflect.Type) string {
+	if dstType == pByteArrayType {
+		return "DecodeBinary"
+	}
 	return "DecodeSimpleValue"
 }
 
