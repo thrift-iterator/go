@@ -1,6 +1,8 @@
 package compact
 
-import "github.com/thrift-iterator/go/protocol"
+import (
+	"github.com/thrift-iterator/go/protocol"
+)
 
 func (iter *Iterator) SkipMessage(space []byte) []byte {
 	panic("not implemented")
@@ -8,48 +10,41 @@ func (iter *Iterator) SkipMessage(space []byte) []byte {
 
 func (iter *Iterator) SkipStruct(space []byte) []byte {
 	bufBeforeSkip := iter.buf
-	skippedBytes := 0
+	consumedBeforeSkip := iter.consumed
+	iter.skipStruct()
+	skipped := bufBeforeSkip[:iter.consumed-consumedBeforeSkip]
+	if len(space) > 0 {
+		return append(space, skipped...)
+	}
+	return skipped
+}
+
+func (iter *Iterator) skipStruct() {
+	iter.ReadStructHeader()
 	for {
-		fieldType := protocol.TType(iter.buf[0])
+		fieldType, _ := iter.ReadStructField()
 		if fieldType == 0 {
-			iter.buf = iter.buf[1:]
-			skippedBytes += 1
-			if len(space) > 0 {
-				return append(space, bufBeforeSkip[:skippedBytes]...)
-			}
-			return bufBeforeSkip[:skippedBytes]
+			return
 		}
 		switch fieldType {
 		case protocol.BOOL, protocol.I08:
-			iter.buf = iter.buf[4:]
-			skippedBytes += 4
+			iter.ReadInt8()
 		case protocol.I16:
-			iter.buf = iter.buf[5:]
-			skippedBytes += 5
+			iter.ReadInt16()
 		case protocol.I32:
-			iter.buf = iter.buf[7:]
-			skippedBytes += 7
-		case protocol.I64, protocol.DOUBLE:
-			iter.buf = iter.buf[11:]
-			skippedBytes += 11
+			iter.ReadInt32()
+		case protocol.I64:
+			iter.ReadInt64()
+		case protocol.DOUBLE:
+			iter.ReadFloat64()
 		case protocol.STRING:
-			b := iter.buf
-			size := uint32(b[6]) | uint32(b[5])<<8 | uint32(b[4])<<16 | uint32(b[3])<<24
-			skippedBytes += int(size)
-			skippedBytes += 7
-			iter.buf = bufBeforeSkip[skippedBytes:]
+			iter.skipBinary()
 		case protocol.LIST:
-			iter.buf = iter.buf[3:]
-			skippedBytes += len(iter.SkipList(nil))
-			skippedBytes += 3
-		case protocol.MAP:
-			iter.buf = iter.buf[3:]
-			skippedBytes += len(iter.SkipMap(nil))
-			skippedBytes += 3
+			iter.skipList()
 		case protocol.STRUCT:
-			iter.buf = iter.buf[3:]
-			skippedBytes += len(iter.SkipStruct(nil))
-			skippedBytes += 3
+			iter.skipStruct()
+		case protocol.MAP:
+			iter.skipMap()
 		default:
 			panic("unsupported type")
 		}
@@ -57,149 +52,90 @@ func (iter *Iterator) SkipStruct(space []byte) []byte {
 }
 
 func (iter *Iterator) SkipList(space []byte) []byte {
-	if len(space) > 0 {
-		return append(space, iter.skipList()...)
-	}
-	return iter.skipList()
-}
-
-func (iter *Iterator) skipList() []byte {
 	bufBeforeSkip := iter.buf
 	consumedBeforeSkip := iter.consumed
-	elemType, length := iter.ReadListHeader()
-	switch elemType {
-	case protocol.BOOL, protocol.I08:
-		for i := 0; i < length; i++ {
-			iter.ReadBool()
-		}
-	case protocol.I16:
-		for i := 0; i < length; i++ {
-			iter.ReadInt16()
-		}
-	case protocol.I32:
-		for i := 0; i < length; i++ {
-			iter.ReadInt32()
-		}
-	case protocol.I64:
-		for i := 0; i < length; i++ {
-			iter.ReadInt64()
-		}
-	case protocol.DOUBLE:
-		for i := 0; i < length; i++ {
-			iter.ReadFloat64()
-		}
-	case protocol.STRING:
-		for i := 0; i < length; i++ {
-			iter.ReadBinary()
-		}
-	case protocol.LIST:
-		for i := 0; i < length; i++ {
-			iter.skipList()
-		}
-	case protocol.MAP:
-		for i := 0; i < length; i++ {
-			iter.skipMap()
-		}
-	case protocol.STRUCT:
-		for i := 0; i < length; i++ {
-			iter.SkipStruct(nil)
-		}
-	default:
-		panic("unsupported type")
-	}
-	return bufBeforeSkip[:iter.consumed-consumedBeforeSkip]
-}
-
-func (iter *Iterator) SkipMap(space []byte) []byte {
+	iter.skipList()
+	skipped := bufBeforeSkip[:iter.consumed-consumedBeforeSkip]
 	if len(space) > 0 {
-		return append(space, iter.skipMap()...)
+		return append(space, skipped...)
 	}
-	return iter.skipMap()
-}
-
-func (iter *Iterator) skipMap() []byte {
-	bufBeforeSkip := iter.buf
-	keyType := protocol.TType(bufBeforeSkip[0])
-	elemType := protocol.TType(bufBeforeSkip[1])
-	length := uint32(bufBeforeSkip[5]) | uint32(bufBeforeSkip[4])<<8 | uint32(bufBeforeSkip[3])<<16 | uint32(bufBeforeSkip[2])<<24
-	keySize := getTypeSize(keyType)
-	elemSize := getTypeSize(elemType)
-	if keySize != 0 && elemSize != 0 {
-		size := 6 + int(length)*(elemSize+keySize)
-		skipped := bufBeforeSkip[:size]
-		iter.buf = bufBeforeSkip[size:]
-		return skipped
-	}
-	var skipKey func(space []byte) []byte
-	var skipElem func(space []byte) []byte
-	if keySize != 0 {
-		skipKey = func(space []byte) []byte {
-			skipped := iter.buf[:keySize]
-			iter.buf = iter.buf[keySize:]
-			return skipped
-		}
-	} else {
-		switch keyType {
-		case protocol.STRING:
-			skipKey = iter.SkipBinary
-		default:
-			panic("unsupported type")
-		}
-	}
-	if elemSize != 0 {
-		skipElem = func(space []byte) []byte {
-			skipped := iter.buf[:elemSize]
-			iter.buf = iter.buf[elemSize:]
-			return skipped
-		}
-	} else {
-		switch elemType {
-		case protocol.STRING:
-			skipElem = iter.SkipBinary
-		case protocol.LIST:
-			skipElem = iter.SkipList
-		case protocol.STRUCT:
-			skipElem = iter.SkipStruct
-		case protocol.MAP:
-			skipElem = iter.SkipMap
-		default:
-			panic("unsupported type")
-		}
-	}
-	skippedBytes := 6
-	iter.buf = iter.buf[6:]
-	for i := uint32(0); i < length; i++ {
-		skippedBytes += len(skipKey(nil))
-		skippedBytes += len(skipElem(nil))
-	}
-	return bufBeforeSkip[:skippedBytes]
-}
-
-func (iter *Iterator) SkipBinary(space []byte) []byte {
-	if len(space) > 0 {
-		return append(space, iter.skipBinary()...)
-	}
-	return iter.skipBinary()
-}
-
-func (iter *Iterator) skipBinary() []byte {
-	b := iter.buf
-	size := uint32(b[3]) | uint32(b[2])<<8 | uint32(b[1])<<16 | uint32(b[0])<<24
-	skipped := iter.buf[:4+size]
-	iter.buf = iter.buf[4+size:]
 	return skipped
 }
 
-func getTypeSize(elemType protocol.TType) int {
+func (iter *Iterator) skipList() {
+	elemType, length := iter.ReadListHeader()
+	skipElem := iter.howToSkip(elemType)
+	for i := 0; i < length; i++ {
+		skipElem()
+	}
+}
+
+func (iter *Iterator) SkipMap(space []byte) []byte {
+	bufBeforeSkip := iter.buf
+	consumedBeforeSkip := iter.consumed
+	iter.skipMap()
+	skipped := bufBeforeSkip[:iter.consumed-consumedBeforeSkip]
+	if len(space) > 0 {
+		return append(space, skipped...)
+	}
+	return skipped
+}
+
+func (iter *Iterator) skipMap() {
+	keyType, elemType, length := iter.ReadMapHeader()
+	skipKey := iter.howToSkip(keyType)
+	skipElem := iter.howToSkip(elemType)
+	for i := 0; i < length; i++ {
+		skipKey()
+		skipElem()
+	}
+}
+
+func (iter *Iterator) SkipBinary(space []byte) []byte {
+	bufBeforeSkip := iter.buf
+	consumedBeforeSkip := iter.consumed
+	iter.skipBinary()
+	skipped := bufBeforeSkip[:iter.consumed-consumedBeforeSkip]
+	if len(space) > 0 {
+		return append(space, skipped...)
+	}
+	return skipped
+}
+
+func (iter *Iterator) skipBinary() {
+	iter.ReadBinary()
+}
+
+func (iter *Iterator) howToSkip(elemType protocol.TType) func() {
 	switch elemType {
 	case protocol.BOOL, protocol.I08:
-		return 1
+		return func() {
+			iter.ReadInt8()
+		}
 	case protocol.I16:
-		return 2
+		return func() {
+			iter.ReadInt16()
+		}
 	case protocol.I32:
-		return 4
-	case protocol.I64, protocol.DOUBLE:
-		return 8
+		return func() {
+			iter.ReadInt32()
+		}
+	case protocol.I64:
+		return func() {
+			iter.ReadInt64()
+		}
+	case protocol.DOUBLE:
+		return func() {
+			iter.ReadFloat64()
+		}
+	case protocol.STRING:
+		return iter.skipBinary
+	case protocol.LIST:
+		return iter.skipList
+	case protocol.STRUCT:
+		return iter.skipStruct
+	case protocol.MAP:
+		return iter.skipMap
 	}
-	return 0
+	panic("unsupported type")
 }

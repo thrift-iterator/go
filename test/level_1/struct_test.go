@@ -105,14 +105,15 @@ func Test_encode_struct_from_object(t *testing.T) {
 
 func Test_skip_struct(t *testing.T) {
 	should := require.New(t)
-	buf := thrift.NewTMemoryBuffer()
-	proto := thrift.NewTBinaryProtocol(buf, true, true)
-	proto.WriteStructBegin("hello")
-	proto.WriteFieldBegin("field1", thrift.I64, 1)
-	proto.WriteI64(1024)
-	proto.WriteFieldEnd()
-	proto.WriteFieldStop()
-	proto.WriteStructEnd()
-	iter := thrifter.NewIterator(nil, buf.Bytes())
-	should.Equal(buf.Bytes(), iter.SkipStruct(nil))
+	for _, c := range test.Combinations {
+		buf, proto := c.CreateProtocol()
+		proto.WriteStructBegin("hello")
+		proto.WriteFieldBegin("field1", thrift.I64, 1)
+		proto.WriteI64(1024)
+		proto.WriteFieldEnd()
+		proto.WriteFieldStop()
+		proto.WriteStructEnd()
+		iter := c.CreateIterator(buf.Bytes())
+		should.Equal(buf.Bytes(), iter.SkipStruct(nil))
+	}
 }

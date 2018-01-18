@@ -99,16 +99,17 @@ func Test_encode_map_from_object(t *testing.T) {
 
 func Test_skip_map(t *testing.T) {
 	should := require.New(t)
-	buf := thrift.NewTMemoryBuffer()
-	proto := thrift.NewTBinaryProtocol(buf, true, true)
-	proto.WriteMapBegin(thrift.I32, thrift.I64, 3)
-	proto.WriteI32(1)
-	proto.WriteI64(1)
-	proto.WriteI32(2)
-	proto.WriteI64(2)
-	proto.WriteI32(3)
-	proto.WriteI64(3)
-	proto.WriteMapEnd()
-	iter := thrifter.NewIterator(nil, buf.Bytes())
-	should.Equal(buf.Bytes(), iter.SkipMap(nil))
+	for _, c := range test.Combinations {
+		buf, proto := c.CreateProtocol()
+		proto.WriteMapBegin(thrift.I32, thrift.I64, 3)
+		proto.WriteI32(1)
+		proto.WriteI64(1)
+		proto.WriteI32(2)
+		proto.WriteI64(2)
+		proto.WriteI32(3)
+		proto.WriteI64(3)
+		proto.WriteMapEnd()
+		iter := c.CreateIterator(buf.Bytes())
+		should.Equal(buf.Bytes(), iter.SkipMap(nil))
+	}
 }
