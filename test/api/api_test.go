@@ -50,7 +50,7 @@ func Test_marshal_message(t *testing.T) {
 	should := require.New(t)
 	msg := protocol.Message{
 		MessageHeader: protocol.MessageHeader{
-			MessageType: protocol.CALL,
+			MessageType: protocol.MessageTypeCall,
 			MessageName: "hello",
 			SeqId:       protocol.SeqId(17),
 		},
@@ -110,7 +110,7 @@ func Test_encode_framed_message(t *testing.T) {
 	should := require.New(t)
 	msg := protocol.Message{
 		MessageHeader: protocol.MessageHeader{
-			MessageType: protocol.CALL,
+			MessageType: protocol.MessageTypeCall,
 			MessageName: "hello",
 			SeqId:       protocol.SeqId(17),
 		},
@@ -136,7 +136,7 @@ func Test_encode_unframed_message(t *testing.T) {
 	should := require.New(t)
 	msg := protocol.Message{
 		MessageHeader: protocol.MessageHeader{
-			MessageType: protocol.CALL,
+			MessageType: protocol.MessageTypeCall,
 			MessageName: "hello",
 			SeqId:       protocol.SeqId(17),
 		},

@@ -51,7 +51,7 @@ func (iter *Iterator) SkipMap(space []byte) []byte {
 		}
 	} else {
 		switch keyType {
-		case protocol.STRING:
+		case protocol.TypeString:
 			skipKey = iter.SkipBinary
 		default:
 			panic("unsupported type")
@@ -70,13 +70,13 @@ func (iter *Iterator) SkipMap(space []byte) []byte {
 		}
 	} else {
 		switch elemType {
-		case protocol.STRING:
+		case protocol.TypeString:
 			skipElem = iter.SkipBinary
-		case protocol.LIST:
+		case protocol.TypeList:
 			skipElem = iter.SkipList
-		case protocol.STRUCT:
+		case protocol.TypeStruct:
 			skipElem = iter.SkipStruct
-		case protocol.MAP:
+		case protocol.TypeMap:
 			skipElem = iter.SkipMap
 		default:
 			panic("unsupported type")
@@ -100,9 +100,9 @@ func (iter *Iterator) SkipStruct(space []byte) []byte {
 		fieldType := protocol.TType(tmp[0])
 		space = append(space, tmp[0])
 		switch fieldType {
-		case protocol.STOP:
+		case protocol.TypeStop:
 			return space
-		case protocol.I64, protocol.DOUBLE:
+		case protocol.TypeI64, protocol.TypeDouble:
 			tmp := iter.tmp[:10]
 			_, err := io.ReadFull(iter.reader, tmp)
 			if err != nil {
@@ -110,7 +110,7 @@ func (iter *Iterator) SkipStruct(space []byte) []byte {
 				return nil
 			}
 			space = append(space, tmp...)
-		case protocol.LIST:
+		case protocol.TypeList:
 			tmp := iter.tmp[:2]
 			_, err := io.ReadFull(iter.reader, tmp)
 			if err != nil {
@@ -119,7 +119,7 @@ func (iter *Iterator) SkipStruct(space []byte) []byte {
 			}
 			space = append(space, tmp...)
 			space = iter.SkipList(space)
-		case protocol.MAP:
+		case protocol.TypeMap:
 			tmp := iter.tmp[:2]
 			_, err := io.ReadFull(iter.reader, tmp)
 			if err != nil {
@@ -128,7 +128,7 @@ func (iter *Iterator) SkipStruct(space []byte) []byte {
 			}
 			space = append(space, tmp...)
 			space = iter.SkipMap(space)
-		case protocol.STRING:
+		case protocol.TypeString:
 			tmp := iter.tmp[:2]
 			_, err := io.ReadFull(iter.reader, tmp)
 			if err != nil {
@@ -137,7 +137,7 @@ func (iter *Iterator) SkipStruct(space []byte) []byte {
 			}
 			space = append(space, tmp...)
 			space = iter.SkipBinary(space)
-		case protocol.STRUCT:
+		case protocol.TypeStruct:
 			tmp := iter.tmp[:2]
 			_, err := io.ReadFull(iter.reader, tmp)
 			if err != nil {
@@ -182,9 +182,9 @@ func (iter *Iterator) SkipList(space []byte) []byte {
 	iter.real.Reset(nil, tmp)
 	elemType, length := iter.real.ReadListHeader()
 	switch elemType {
-	case protocol.STOP:
+	case protocol.TypeStop:
 		return nil
-	case protocol.I64, protocol.DOUBLE:
+	case protocol.TypeI64, protocol.TypeDouble:
 		tmp := iter.allocate(length * 8)
 		_, err := io.ReadFull(iter.reader, tmp)
 		if err != nil {
@@ -193,22 +193,22 @@ func (iter *Iterator) SkipList(space []byte) []byte {
 		}
 		space = append(space, tmp...)
 		return space
-	case protocol.STRING:
+	case protocol.TypeString:
 		for i := 0; i < length; i++ {
 			space = iter.SkipBinary(space)
 		}
 		return space
-	case protocol.LIST:
+	case protocol.TypeList:
 		for i := 0; i < length; i++ {
 			space = iter.SkipList(space)
 		}
 		return space
-	case protocol.MAP:
+	case protocol.TypeMap:
 		for i := 0; i < length; i++ {
 			space = iter.SkipMap(space)
 		}
 		return space
-	case protocol.STRUCT:
+	case protocol.TypeStruct:
 		for i := 0; i < length; i++ {
 			space = iter.SkipStruct(space)
 		}

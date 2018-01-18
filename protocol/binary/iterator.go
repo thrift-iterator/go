@@ -31,11 +31,13 @@ func (iter *Iterator) Reset(reader io.Reader, buf []byte) {
 	iter.err = nil
 }
 
+const version1 = 0x80010000
+
 func (iter *Iterator) ReadMessageHeader() protocol.MessageHeader {
 	versionAndMessageType := iter.ReadInt32()
 	messageType := protocol.TMessageType(versionAndMessageType & 0x0ff)
 	version := int64(int64(versionAndMessageType) & 0xffff0000)
-	if version != protocol.VERSION_1 {
+	if version != version1 {
 		iter.ReportError("ReadMessageHeader", "unexpected version")
 		return protocol.MessageHeader{}
 	}
@@ -169,7 +171,7 @@ func (iter *Iterator) ReadStruct() map[protocol.FieldId]interface{} {
 	obj := map[protocol.FieldId]interface{}{}
 	for {
 		fieldType, fieldId := iter.ReadStructField()
-		if fieldType == protocol.STOP {
+		if fieldType == protocol.TypeStop {
 			return obj
 		}
 		obj[fieldId] = iter.Read(fieldType)
@@ -199,25 +201,25 @@ func (iter *Iterator) ReadMap() map[interface{}]interface{} {
 
 func (iter *Iterator) Read(ttype protocol.TType) interface{} {
 	switch ttype {
-	case protocol.BOOL:
+	case protocol.TypeBool:
 		return iter.ReadBool()
-	case protocol.I08:
+	case protocol.TypeI08:
 		return iter.ReadInt8()
-	case protocol.I16:
+	case protocol.TypeI16:
 		return iter.ReadInt16()
-	case protocol.I32:
+	case protocol.TypeI32:
 		return iter.ReadInt32()
-	case protocol.I64:
+	case protocol.TypeI64:
 		return iter.ReadInt64()
-	case protocol.DOUBLE:
+	case protocol.TypeDouble:
 		return iter.ReadFloat64()
-	case protocol.STRING:
+	case protocol.TypeString:
 		return iter.ReadString()
-	case protocol.LIST:
+	case protocol.TypeList:
 		return iter.ReadList()
-	case protocol.MAP:
+	case protocol.TypeMap:
 		return iter.ReadMap()
-	case protocol.STRUCT:
+	case protocol.TypeStruct:
 		return iter.ReadStruct()
 	default:
 		panic("unsupported type")
@@ -226,43 +228,43 @@ func (iter *Iterator) Read(ttype protocol.TType) interface{} {
 
 func (iter *Iterator) ReaderOf(ttype protocol.TType) func() interface{} {
 	switch ttype {
-	case protocol.BOOL:
+	case protocol.TypeBool:
 		return func() interface{} {
 			return iter.ReadBool()
 		}
-	case protocol.I08:
+	case protocol.TypeI08:
 		return func() interface{} {
 			return iter.ReadInt8()
 		}
-	case protocol.I16:
+	case protocol.TypeI16:
 		return func() interface{} {
 			return iter.ReadInt16()
 		}
-	case protocol.I32:
+	case protocol.TypeI32:
 		return func() interface{} {
 			return iter.ReadInt32()
 		}
-	case protocol.I64:
+	case protocol.TypeI64:
 		return func() interface{} {
 			return iter.ReadInt64()
 		}
-	case protocol.DOUBLE:
+	case protocol.TypeDouble:
 		return func() interface{} {
 			return iter.ReadFloat64()
 		}
-	case protocol.STRING:
+	case protocol.TypeString:
 		return func() interface{} {
 			return iter.ReadString()
 		}
-	case protocol.LIST:
+	case protocol.TypeList:
 		return func() interface{} {
 			return iter.ReadList()
 		}
-	case protocol.MAP:
+	case protocol.TypeMap:
 		return func() interface{} {
 			return iter.ReadMap()
 		}
-	case protocol.STRUCT:
+	case protocol.TypeStruct:
 		return func() interface{} {
 			return iter.ReadStruct()
 		}

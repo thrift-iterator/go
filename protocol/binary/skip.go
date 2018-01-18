@@ -20,33 +20,33 @@ func (iter *Iterator) SkipStruct(space []byte) []byte {
 			return bufBeforeSkip[:skippedBytes]
 		}
 		switch fieldType {
-		case protocol.BOOL, protocol.I08:
+		case protocol.TypeBool, protocol.TypeI08:
 			iter.buf = iter.buf[4:]
 			skippedBytes += 4
-		case protocol.I16:
+		case protocol.TypeI16:
 			iter.buf = iter.buf[5:]
 			skippedBytes += 5
-		case protocol.I32:
+		case protocol.TypeI32:
 			iter.buf = iter.buf[7:]
 			skippedBytes += 7
-		case protocol.I64, protocol.DOUBLE:
+		case protocol.TypeI64, protocol.TypeDouble:
 			iter.buf = iter.buf[11:]
 			skippedBytes += 11
-		case protocol.STRING:
+		case protocol.TypeString:
 			b := iter.buf
 			size := uint32(b[6]) | uint32(b[5])<<8 | uint32(b[4])<<16 | uint32(b[3])<<24
 			skippedBytes += int(size)
 			skippedBytes += 7
 			iter.buf = bufBeforeSkip[skippedBytes:]
-		case protocol.LIST:
+		case protocol.TypeList:
 			iter.buf = iter.buf[3:]
 			skippedBytes += len(iter.SkipList(nil))
 			skippedBytes += 3
-		case protocol.MAP:
+		case protocol.TypeMap:
 			iter.buf = iter.buf[3:]
 			skippedBytes += len(iter.SkipMap(nil))
 			skippedBytes += 3
-		case protocol.STRUCT:
+		case protocol.TypeStruct:
 			iter.buf = iter.buf[3:]
 			skippedBytes += len(iter.SkipStruct(nil))
 			skippedBytes += 3
@@ -68,27 +68,27 @@ func (iter *Iterator) skipList() []byte {
 	elemType := protocol.TType(bufBeforeSkip[0])
 	length := uint32(bufBeforeSkip[4]) | uint32(bufBeforeSkip[3])<<8 | uint32(bufBeforeSkip[2])<<16 | uint32(bufBeforeSkip[1])<<24
 	switch elemType {
-	case protocol.BOOL, protocol.I08:
+	case protocol.TypeBool, protocol.TypeI08:
 		size := 5 + length
 		skipped := bufBeforeSkip[:size]
 		iter.buf = bufBeforeSkip[size:]
 		return skipped
-	case protocol.I16:
+	case protocol.TypeI16:
 		size := 5 + length*2
 		skipped := bufBeforeSkip[:size]
 		iter.buf = bufBeforeSkip[size:]
 		return skipped
-	case protocol.I32:
+	case protocol.TypeI32:
 		size := 5 + length*4
 		skipped := bufBeforeSkip[:size]
 		iter.buf = bufBeforeSkip[size:]
 		return skipped
-	case protocol.I64, protocol.DOUBLE:
+	case protocol.TypeI64, protocol.TypeDouble:
 		size := 5 + length*8
 		skipped := bufBeforeSkip[:size]
 		iter.buf = bufBeforeSkip[size:]
 		return skipped
-	case protocol.STRING:
+	case protocol.TypeString:
 		skippedBytes := 5
 		iter.buf = iter.buf[5:]
 		for i := uint32(0); i < length; i++ {
@@ -97,21 +97,21 @@ func (iter *Iterator) skipList() []byte {
 		}
 		iter.buf = bufBeforeSkip[skippedBytes:]
 		return bufBeforeSkip[:skippedBytes]
-	case protocol.LIST:
+	case protocol.TypeList:
 		skippedBytes := 5
 		iter.buf = iter.buf[5:]
 		for i := uint32(0); i < length; i++ {
 			skippedBytes += len(iter.SkipList(nil))
 		}
 		return bufBeforeSkip[:skippedBytes]
-	case protocol.MAP:
+	case protocol.TypeMap:
 		skippedBytes := 5
 		iter.buf = iter.buf[5:]
 		for i := uint32(0); i < length; i++ {
 			skippedBytes += len(iter.SkipMap(nil))
 		}
 		return bufBeforeSkip[:skippedBytes]
-	case protocol.STRUCT:
+	case protocol.TypeStruct:
 		skippedBytes := 5
 		iter.buf = iter.buf[5:]
 		for i := uint32(0); i < length; i++ {
@@ -152,7 +152,7 @@ func (iter *Iterator) skipMap() []byte {
 		}
 	} else {
 		switch keyType {
-		case protocol.STRING:
+		case protocol.TypeString:
 			skipKey = iter.SkipBinary
 		default:
 			panic("unsupported type")
@@ -166,13 +166,13 @@ func (iter *Iterator) skipMap() []byte {
 		}
 	} else {
 		switch elemType {
-		case protocol.STRING:
+		case protocol.TypeString:
 			skipElem = iter.SkipBinary
-		case protocol.LIST:
+		case protocol.TypeList:
 			skipElem = iter.SkipList
-		case protocol.STRUCT:
+		case protocol.TypeStruct:
 			skipElem = iter.SkipStruct
-		case protocol.MAP:
+		case protocol.TypeMap:
 			skipElem = iter.SkipMap
 		default:
 			panic("unsupported type")
@@ -204,13 +204,13 @@ func (iter *Iterator) skipBinary() []byte {
 
 func getTypeSize(elemType protocol.TType) int {
 	switch elemType {
-	case protocol.BOOL, protocol.I08:
+	case protocol.TypeBool, protocol.TypeI08:
 		return 1
-	case protocol.I16:
+	case protocol.TypeI16:
 		return 2
-	case protocol.I32:
+	case protocol.TypeI32:
 		return 4
-	case protocol.I64, protocol.DOUBLE:
+	case protocol.TypeI64, protocol.TypeDouble:
 		return 8
 	}
 	return 0

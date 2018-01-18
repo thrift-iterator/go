@@ -4,23 +4,23 @@ import "github.com/thrift-iterator/go/protocol"
 
 func (iter *Iterator) Discard(ttype protocol.TType) {
 	switch ttype {
-	case protocol.BOOL, protocol.I08:
+	case protocol.TypeBool, protocol.TypeI08:
 		iter.ReadInt8()
-	case protocol.I16:
+	case protocol.TypeI16:
 		iter.ReadInt16()
-	case protocol.I32:
+	case protocol.TypeI32:
 		iter.ReadInt32()
-	case protocol.I64:
+	case protocol.TypeI64:
 		iter.ReadInt64()
-	case protocol.DOUBLE:
+	case protocol.TypeDouble:
 		iter.ReadFloat64()
-	case protocol.STRING:
+	case protocol.TypeString:
 		iter.discardBinary()
-	case protocol.LIST:
+	case protocol.TypeList:
 		iter.discardList()
-	case protocol.STRUCT:
+	case protocol.TypeStruct:
 		iter.discardStruct()
-	case protocol.MAP:
+	case protocol.TypeMap:
 		iter.discardMap()
 	default:
 		panic("unsupported type")
@@ -62,33 +62,33 @@ func (iter *Iterator) discardBinary() {
 
 func (iter *Iterator) howToDiscard(elemType protocol.TType) func() {
 	switch elemType {
-	case protocol.BOOL, protocol.I08:
+	case protocol.TypeBool, protocol.TypeI08:
 		return func() {
 			iter.ReadInt8()
 		}
-	case protocol.I16:
+	case protocol.TypeI16:
 		return func() {
 			iter.ReadInt16()
 		}
-	case protocol.I32:
+	case protocol.TypeI32:
 		return func() {
 			iter.ReadInt32()
 		}
-	case protocol.I64:
+	case protocol.TypeI64:
 		return func() {
 			iter.ReadInt64()
 		}
-	case protocol.DOUBLE:
+	case protocol.TypeDouble:
 		return func() {
 			iter.ReadFloat64()
 		}
-	case protocol.STRING:
+	case protocol.TypeString:
 		return iter.discardBinary
-	case protocol.LIST:
+	case protocol.TypeList:
 		return iter.discardList
-	case protocol.STRUCT:
+	case protocol.TypeStruct:
 		return iter.discardStruct
-	case protocol.MAP:
+	case protocol.TypeMap:
 		return iter.discardMap
 	}
 	panic("unsupported type")

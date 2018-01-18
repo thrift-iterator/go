@@ -25,27 +25,27 @@ const (
 func (t TCompactType) ToTType() protocol.TType {
 	switch TCompactType(byte(t) & 0x0f) {
 	case TypeBooleanFalse, TypeBooleanTrue:
-		return protocol.BOOL
+		return protocol.TypeBool
 	case TypeByte:
-		return protocol.BYTE
+		return protocol.TypeByte
 	case TypeI16:
-		return protocol.I16
+		return protocol.TypeI16
 	case TypeI32:
-		return protocol.I32
+		return protocol.TypeI32
 	case TypeI64:
-		return protocol.I64
+		return protocol.TypeI64
 	case TypeDouble:
-		return protocol.DOUBLE
+		return protocol.TypeDouble
 	case TypeBinary:
-		return protocol.STRING
+		return protocol.TypeString
 	case TypeList:
-		return protocol.LIST
+		return protocol.TypeList
 	case TypeSet:
-		return protocol.SET
+		return protocol.TypeSet
 	case TypeMap:
-		return protocol.MAP
+		return protocol.TypeMap
 	case TypeStruct:
-		return protocol.STRUCT
+		return protocol.TypeStruct
 	}
-	return protocol.STOP
+	return protocol.TypeStop
 }

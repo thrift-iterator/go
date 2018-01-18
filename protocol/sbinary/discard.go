@@ -7,21 +7,21 @@ import (
 
 func (iter *Iterator) Discard(ttype protocol.TType) {
 	switch ttype {
-	case protocol.BOOL, protocol.I08:
+	case protocol.TypeBool, protocol.TypeI08:
 		iter.discard(1)
-	case protocol.I16:
+	case protocol.TypeI16:
 		iter.discard(2)
-	case protocol.I32:
+	case protocol.TypeI32:
 		iter.discard(4)
-	case protocol.I64, protocol.DOUBLE:
+	case protocol.TypeI64, protocol.TypeDouble:
 		iter.discard(8)
-	case protocol.STRING:
+	case protocol.TypeString:
 		iter.discardBinary()
-	case protocol.LIST:
+	case protocol.TypeList:
 		iter.discardList()
-	case protocol.MAP:
+	case protocol.TypeMap:
 		iter.discardMap()
-	case protocol.STRUCT:
+	case protocol.TypeStruct:
 		iter.discardStruct()
 	default:
 		panic("unsupported type")
@@ -62,7 +62,7 @@ func (iter *Iterator) discardMap() {
 		}
 	} else {
 		switch keyType {
-		case protocol.STRING:
+		case protocol.TypeString:
 			discardKey = iter.discardBinary
 		default:
 			panic("unsupported type")
@@ -80,13 +80,13 @@ func (iter *Iterator) discardMap() {
 		}
 	} else {
 		switch elemType {
-		case protocol.STRING:
+		case protocol.TypeString:
 			discardElem = iter.discardBinary
-		case protocol.LIST:
+		case protocol.TypeList:
 			discardElem = iter.discardList
-		case protocol.STRUCT:
+		case protocol.TypeStruct:
 			discardElem = iter.discardStruct
-		case protocol.MAP:
+		case protocol.TypeMap:
 			discardElem = iter.discardMap
 		default:
 			panic("unsupported type")
@@ -109,16 +109,16 @@ func (iter *Iterator) discardStruct() {
 		}
 		fieldType := protocol.TType(tmp[0])
 		switch fieldType {
-		case protocol.STOP:
+		case protocol.TypeStop:
 			return
-		case protocol.I64, protocol.DOUBLE:
+		case protocol.TypeI64, protocol.TypeDouble:
 			tmp := iter.tmp[:10]
 			_, err := io.ReadFull(iter.reader, tmp)
 			if err != nil {
 				iter.ReportError("SkipStruct", err.Error())
 				return
 			}
-		case protocol.LIST:
+		case protocol.TypeList:
 			tmp := iter.tmp[:2]
 			_, err := io.ReadFull(iter.reader, tmp)
 			if err != nil {
@@ -126,7 +126,7 @@ func (iter *Iterator) discardStruct() {
 				return
 			}
 			iter.discardList()
-		case protocol.MAP:
+		case protocol.TypeMap:
 			tmp := iter.tmp[:2]
 			_, err := io.ReadFull(iter.reader, tmp)
 			if err != nil {
@@ -134,7 +134,7 @@ func (iter *Iterator) discardStruct() {
 				return
 			}
 			iter.discardMap()
-		case protocol.STRING:
+		case protocol.TypeString:
 			tmp := iter.tmp[:2]
 			_, err := io.ReadFull(iter.reader, tmp)
 			if err != nil {
@@ -142,7 +142,7 @@ func (iter *Iterator) discardStruct() {
 				return
 			}
 			iter.discardBinary()
-		case protocol.STRUCT:
+		case protocol.TypeStruct:
 			tmp := iter.tmp[:2]
 			_, err := io.ReadFull(iter.reader, tmp)
 			if err != nil {
@@ -166,9 +166,9 @@ func (iter *Iterator) discardList() {
 	iter.real.Reset(nil, tmp)
 	elemType, length := iter.real.ReadListHeader()
 	switch elemType {
-	case protocol.STOP:
+	case protocol.TypeStop:
 		return
-	case protocol.I64, protocol.DOUBLE:
+	case protocol.TypeI64, protocol.TypeDouble:
 		tmp := iter.allocate(length * 8)
 		_, err := io.ReadFull(iter.reader, tmp)
 		if err != nil {
@@ -176,22 +176,22 @@ func (iter *Iterator) discardList() {
 			return
 		}
 		return
-	case protocol.STRING:
+	case protocol.TypeString:
 		for i := 0; i < length; i++ {
 			iter.discardBinary()
 		}
 		return
-	case protocol.LIST:
+	case protocol.TypeList:
 		for i := 0; i < length; i++ {
 			iter.discardList()
 		}
 		return
-	case protocol.MAP:
+	case protocol.TypeMap:
 		for i := 0; i < length; i++ {
 			iter.discardMap()
 		}
 		return
-	case protocol.STRUCT:
+	case protocol.TypeStruct:
 		for i := 0; i < length; i++ {
 			iter.discardStruct()
 		}

@@ -26,7 +26,7 @@ func Test_decode_message_by_iterator(t *testing.T) {
 		iter := c.CreateIterator(buf.Bytes())
 		msg := iter.ReadMessageHeader()
 		should.Equal("hello", msg.MessageName)
-		should.Equal(protocol.CALL, msg.MessageType)
+		should.Equal(protocol.MessageTypeCall, msg.MessageType)
 		should.Equal(protocol.SeqId(17), msg.SeqId)
 	}
 }
@@ -48,7 +48,7 @@ func Test_decode_message_as_object(t *testing.T) {
 		iter := c.CreateIterator(buf.Bytes())
 		msg := iter.ReadMessage()
 		should.Equal("hello", msg.MessageName)
-		should.Equal(protocol.CALL, msg.MessageType)
+		should.Equal(protocol.MessageTypeCall, msg.MessageType)
 		should.Equal(protocol.SeqId(17), msg.SeqId)
 		should.Equal(int64(1), msg.Arguments[protocol.FieldId(1)])
 		should.Equal(int64(2), msg.Arguments[protocol.FieldId(2)])
@@ -60,7 +60,7 @@ func Test_encode_message_as_object(t *testing.T) {
 	stream := thrifter.NewStream(nil, nil)
 	stream.WriteMessage(protocol.Message{
 		MessageHeader: protocol.MessageHeader{
-			MessageType: protocol.CALL,
+			MessageType: protocol.MessageTypeCall,
 			MessageName: "hello",
 			SeqId: protocol.SeqId(17),
 		},
@@ -72,7 +72,7 @@ func Test_encode_message_as_object(t *testing.T) {
 	iter := thrifter.NewIterator(nil,  stream.Buffer())
 	msg := iter.ReadMessage()
 	should.Equal("hello", msg.MessageName)
-	should.Equal(protocol.CALL, msg.MessageType)
+	should.Equal(protocol.MessageTypeCall, msg.MessageType)
 	should.Equal(protocol.SeqId(17), msg.SeqId)
 	should.Equal(int64(1), msg.Arguments[protocol.FieldId(1)])
 	should.Equal(int64(2), msg.Arguments[protocol.FieldId(2)])

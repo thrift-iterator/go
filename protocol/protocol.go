@@ -6,55 +6,50 @@ type TMessageType int32
 type SeqId int32
 type FieldId int16
 
-// TODO: move to binary
-const VERSION_1 = 0x80010000
-
-// TODO: const should not be all upper case
 const (
-	INVALID_TMESSAGE_TYPE TMessageType = 0
-	CALL                  TMessageType = 1
-	REPLY                 TMessageType = 2
-	EXCEPTION             TMessageType = 3
-	ONEWAY                TMessageType = 4
+	MessgeTypeInvalid    TMessageType = 0
+	MessageTypeCall      TMessageType = 1
+	MessageTypeReply     TMessageType = 2
+	MessageTypeException TMessageType = 3
+	MessageTypeOneWay    TMessageType = 4
 )
 
 const (
-	STOP   TType = 0
-	VOID   TType = 1
-	BOOL   TType = 2
-	BYTE   TType = 3
-	I08    TType = 3
-	DOUBLE TType = 4
-	I16    TType = 6
-	I32    TType = 8
-	I64    TType = 10
-	STRING TType = 11
-	UTF7   TType = 11
-	STRUCT TType = 12
-	MAP    TType = 13
-	SET    TType = 14
-	LIST   TType = 15
-	UTF8   TType = 16
-	UTF16  TType = 17
-	//BINARY = 18   wrong and unusued
+	TypeStop   TType = 0
+	TypeVoid   TType = 1
+	TypeBool   TType = 2
+	TypeByte   TType = 3
+	TypeI08    TType = 3
+	TypeDouble TType = 4
+	TypeI16    TType = 6
+	TypeI32    TType = 8
+	TypeI64    TType = 10
+	TypeString TType = 11
+	TypeUTF7   TType = 11
+	TypeStruct TType = 12
+	TypeMap    TType = 13
+	TypeSet    TType = 14
+	TypeList   TType = 15
+	TypeUTF8   TType = 16
+	TypeUTF16  TType = 17
 )
 
 var typeNames = map[TType]string{
-	STOP:   "STOP",
-	VOID:   "VOID",
-	BOOL:   "BOOL",
-	BYTE:   "BYTE",
-	DOUBLE: "DOUBLE",
-	I16:    "I16",
-	I32:    "I32",
-	I64:    "I64",
-	STRING: "STRING",
-	STRUCT: "STRUCT",
-	MAP:    "MAP",
-	SET:    "SET",
-	LIST:   "LIST",
-	UTF8:   "UTF8",
-	UTF16:  "UTF16",
+	TypeStop:   "Stop",
+	TypeVoid:   "Void",
+	TypeBool:   "Bool",
+	TypeByte:   "Byte",
+	TypeDouble: "Double",
+	TypeI16:    "I16",
+	TypeI32:    "I32",
+	TypeI64:    "I64",
+	TypeString: "String",
+	TypeStruct: "Struct",
+	TypeMap:    "Map",
+	TypeSet:    "Set",
+	TypeList:   "List",
+	TypeUTF8:   "UTF8",
+	TypeUTF16:  "UTF16",
 }
 
 func (p TType) String() string {
