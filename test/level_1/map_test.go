@@ -27,11 +27,11 @@ func Test_decode_map_by_iterator(t *testing.T) {
 		should.Equal(protocol.I64, elemType)
 		should.Equal(3, length)
 		should.Equal("k1", iter.ReadString())
-		should.Equal(uint64(1), iter.ReadUInt64())
+		should.Equal(uint64(1), iter.ReadUint64())
 		should.Equal("k2", iter.ReadString())
-		should.Equal(uint64(2), iter.ReadUInt64())
+		should.Equal(uint64(2), iter.ReadUint64())
 		should.Equal("k3", iter.ReadString())
-		should.Equal(uint64(3), iter.ReadUInt64())
+		should.Equal(uint64(3), iter.ReadUint64())
 	}
 }
 
@@ -51,11 +51,11 @@ func Test_encode_map_by_stream(t *testing.T) {
 	should.Equal(protocol.I64, elemType)
 	should.Equal(3, length)
 	should.Equal("k1", iter.ReadString())
-	should.Equal(uint64(1), iter.ReadUInt64())
+	should.Equal(uint64(1), iter.ReadUint64())
 	should.Equal("k2", iter.ReadString())
-	should.Equal(uint64(2), iter.ReadUInt64())
+	should.Equal(uint64(2), iter.ReadUint64())
 	should.Equal("k3", iter.ReadString())
-	should.Equal(uint64(3), iter.ReadUInt64())
+	should.Equal(uint64(3), iter.ReadUint64())
 }
 
 func Test_decode_map_as_object(t *testing.T) {

@@ -364,48 +364,48 @@ func (iter *Iterator) ReadBool() bool {
 }
 
 func (iter *Iterator) ReadInt8() int8 {
-	return int8(iter.ReadUInt8())
+	return int8(iter.ReadUint8())
 }
 
-func (iter *Iterator) ReadUInt8() uint8 {
+func (iter *Iterator) ReadUint8() uint8 {
 	tmp := iter.tmp[:1]
 	_, err := io.ReadFull(iter.reader, tmp)
 	if err != nil {
-		iter.ReportError("ReadUInt8", err.Error())
+		iter.ReportError("ReadUint8", err.Error())
 		return 0
 	}
 	iter.real.Reset(nil, tmp)
-	return iter.real.ReadUInt8()
+	return iter.real.ReadUint8()
 }
 
 func (iter *Iterator) ReadInt16() int16 {
-	return int16(iter.ReadUInt16())
+	return int16(iter.ReadUint16())
 }
 
-func (iter *Iterator) ReadUInt16() uint16 {
+func (iter *Iterator) ReadUint16() uint16 {
 	tmp := iter.tmp[:2]
 	_, err := io.ReadFull(iter.reader, tmp)
 	if err != nil {
-		iter.ReportError("ReadUInt16", err.Error())
+		iter.ReportError("ReadUint16", err.Error())
 		return 0
 	}
 	iter.real.Reset(nil, tmp)
-	return iter.real.ReadUInt16()
+	return iter.real.ReadUint16()
 }
 
 func (iter *Iterator) ReadInt32() int32 {
-	return int32(iter.ReadUInt32())
+	return int32(iter.ReadUint32())
 }
 
-func (iter *Iterator) ReadUInt32() uint32 {
+func (iter *Iterator) ReadUint32() uint32 {
 	tmp := iter.tmp[:4]
 	_, err := io.ReadFull(iter.reader, tmp)
 	if err != nil {
-		iter.ReportError("ReadUInt32", err.Error())
+		iter.ReportError("ReadUint32", err.Error())
 		return 0
 	}
 	iter.real.Reset(nil, tmp)
-	return iter.real.ReadUInt32()
+	return iter.real.ReadUint32()
 }
 
 func (iter *Iterator) ReadInt64() int64 {
@@ -419,15 +419,15 @@ func (iter *Iterator) ReadInt64() int64 {
 	return iter.real.ReadInt64()
 }
 
-func (iter *Iterator) ReadUInt64() uint64 {
+func (iter *Iterator) ReadUint64() uint64 {
 	tmp := iter.tmp[:8]
 	_, err := io.ReadFull(iter.reader, tmp)
 	if err != nil {
-		iter.ReportError("ReadUInt64", err.Error())
+		iter.ReportError("ReadUint64", err.Error())
 		return 0
 	}
 	iter.real.Reset(nil, tmp)
-	return iter.real.ReadUInt64()
+	return iter.real.ReadUint64()
 }
 
 func (iter *Iterator) ReadFloat64() float64 {
@@ -442,7 +442,7 @@ func (iter *Iterator) ReadFloat64() float64 {
 }
 
 func (iter *Iterator) ReadString() string {
-	size := iter.ReadUInt32()
+	size := iter.ReadUint32()
 	tmp := iter.allocate(int(size))
 	_, err := io.ReadFull(iter.reader, tmp)
 	if err != nil {
@@ -453,7 +453,7 @@ func (iter *Iterator) ReadString() string {
 }
 
 func (iter *Iterator) ReadBinary() []byte {
-	size := iter.ReadUInt32()
+	size := iter.ReadUint32()
 	tmp := iter.allocate(int(size))
 	_, err := io.ReadFull(iter.reader, tmp)
 	if err != nil {

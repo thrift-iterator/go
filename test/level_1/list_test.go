@@ -22,9 +22,9 @@ func Test_decode_list_by_iterator(t *testing.T) {
 		elemType, length := iter.ReadListHeader()
 		should.Equal(protocol.I64, elemType)
 		should.Equal(3, length)
-		should.Equal(uint64(1), iter.ReadUInt64())
-		should.Equal(uint64(2), iter.ReadUInt64())
-		should.Equal(uint64(3), iter.ReadUInt64())
+		should.Equal(uint64(1), iter.ReadUint64())
+		should.Equal(uint64(2), iter.ReadUint64())
+		should.Equal(uint64(3), iter.ReadUint64())
 	}
 }
 
@@ -39,9 +39,9 @@ func Test_encode_list_by_stream(t *testing.T) {
 	elemType, length := iter.ReadListHeader()
 	should.Equal(protocol.I64, elemType)
 	should.Equal(3, length)
-	should.Equal(uint64(1), iter.ReadUInt64())
-	should.Equal(uint64(2), iter.ReadUInt64())
-	should.Equal(uint64(3), iter.ReadUInt64())
+	should.Equal(uint64(1), iter.ReadUint64())
+	should.Equal(uint64(2), iter.ReadUint64())
+	should.Equal(uint64(3), iter.ReadUint64())
 }
 
 func Test_decode_list_as_object(t *testing.T) {
@@ -69,9 +69,9 @@ func Test_encode_list_from_object(t *testing.T) {
 	elemType, length := iter.ReadListHeader()
 	should.Equal(protocol.I64, elemType)
 	should.Equal(3, length)
-	should.Equal(uint64(1), iter.ReadUInt64())
-	should.Equal(uint64(2), iter.ReadUInt64())
-	should.Equal(uint64(3), iter.ReadUInt64())
+	should.Equal(uint64(1), iter.ReadUint64())
+	should.Equal(uint64(2), iter.ReadUint64())
+	should.Equal(uint64(3), iter.ReadUint64())
 }
 
 func Test_skip_list(t *testing.T) {

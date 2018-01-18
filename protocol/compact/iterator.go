@@ -157,12 +157,12 @@ func (iter *Iterator) ReadMapHeader() (protocol.TType, protocol.TType, int) {
 
 func (iter *Iterator) ReadBool() bool {
 	if iter.pendingBoolField == 0 {
-		return iter.ReadUInt8() == 1
+		return iter.ReadUint8() == 1
 	}
 	return iter.pendingBoolField == 1
 }
 
-func (iter *Iterator) ReadUInt8() uint8 {
+func (iter *Iterator) ReadUint8() uint8 {
 	b := iter.buf
 	value := b[0]
 	iter.consume(1)
@@ -170,18 +170,18 @@ func (iter *Iterator) ReadUInt8() uint8 {
 }
 
 func (iter *Iterator) ReadInt8() int8 {
-	return int8(iter.ReadUInt8())
+	return int8(iter.ReadUint8())
 }
 
-func (iter *Iterator) ReadUInt16() uint16 {
-	return uint16(iter.ReadUInt32())
+func (iter *Iterator) ReadUint16() uint16 {
+	return uint16(iter.ReadUint32())
 }
 
 func (iter *Iterator) ReadInt16() int16 {
 	return int16(iter.ReadInt32())
 }
 
-func (iter *Iterator) ReadUInt32() uint32 {
+func (iter *Iterator) ReadUint32() uint32 {
 	return uint32(iter.ReadInt32())
 }
 
@@ -201,7 +201,7 @@ func (iter *Iterator) ReadInt64() int64 {
 	return int64(u>>1) ^ -(result & 1)
 }
 
-func (iter *Iterator) ReadUInt64() uint64 {
+func (iter *Iterator) ReadUint64() uint64 {
 	return uint64(iter.ReadInt64())
 }
 

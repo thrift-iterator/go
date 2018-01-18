@@ -99,10 +99,10 @@ func (iter *Iterator) ReadMapHeader() (protocol.TType, protocol.TType, int) {
 }
 
 func (iter *Iterator) ReadBool() bool {
-	return iter.ReadUInt8() == 1
+	return iter.ReadUint8() == 1
 }
 
-func (iter *Iterator) ReadUInt8() uint8 {
+func (iter *Iterator) ReadUint8() uint8 {
 	b := iter.buf
 	value := b[0]
 	iter.buf = iter.buf[1:]
@@ -110,10 +110,10 @@ func (iter *Iterator) ReadUInt8() uint8 {
 }
 
 func (iter *Iterator) ReadInt8() int8 {
-	return int8(iter.ReadUInt8())
+	return int8(iter.ReadUint8())
 }
 
-func (iter *Iterator) ReadUInt16() uint16 {
+func (iter *Iterator) ReadUint16() uint16 {
 	b := iter.buf
 	value := uint16(b[1]) | uint16(b[0])<<8
 	iter.buf = iter.buf[2:]
@@ -121,10 +121,10 @@ func (iter *Iterator) ReadUInt16() uint16 {
 }
 
 func (iter *Iterator) ReadInt16() int16 {
-	return int16(iter.ReadUInt16())
+	return int16(iter.ReadUint16())
 }
 
-func (iter *Iterator) ReadUInt32() uint32 {
+func (iter *Iterator) ReadUint32() uint32 {
 	b := iter.buf
 	value := uint32(b[3]) | uint32(b[2])<<8 | uint32(b[1])<<16 | uint32(b[0])<<24
 	iter.buf = iter.buf[4:]
@@ -132,14 +132,14 @@ func (iter *Iterator) ReadUInt32() uint32 {
 }
 
 func (iter *Iterator) ReadInt32() int32 {
-	return int32(iter.ReadUInt32())
+	return int32(iter.ReadUint32())
 }
 
 func (iter *Iterator) ReadInt64() int64 {
-	return int64(iter.ReadUInt64())
+	return int64(iter.ReadUint64())
 }
 
-func (iter *Iterator) ReadUInt64() uint64 {
+func (iter *Iterator) ReadUint64() uint64 {
 	b := iter.buf
 	value := uint64(b[7]) | uint64(b[6])<<8 | uint64(b[5])<<16 | uint64(b[4])<<24 |
 		uint64(b[3])<<32 | uint64(b[2])<<40 | uint64(b[1])<<48 | uint64(b[0])<<56
@@ -148,18 +148,18 @@ func (iter *Iterator) ReadUInt64() uint64 {
 }
 
 func (iter *Iterator) ReadFloat64() float64 {
-	return math.Float64frombits(iter.ReadUInt64())
+	return math.Float64frombits(iter.ReadUint64())
 }
 
 func (iter *Iterator) ReadString() string {
-	length := iter.ReadUInt32()
+	length := iter.ReadUint32()
 	value := string(iter.buf[:length])
 	iter.buf = iter.buf[length:]
 	return value
 }
 
 func (iter *Iterator) ReadBinary() []byte {
-	length := iter.ReadUInt32()
+	length := iter.ReadUint32()
 	value := iter.buf[:length]
 	iter.buf = iter.buf[length:]
 	return value

@@ -13,7 +13,7 @@ func Test_decode_uint16(t *testing.T) {
 		buf, proto := c.CreateProtocol()
 		proto.WriteI16(1024)
 		iter := c.CreateIterator(buf.Bytes())
-		should.Equal(uint16(1024), iter.ReadUInt16())
+		should.Equal(uint16(1024), iter.ReadUint16())
 	}
 }
 
@@ -22,5 +22,5 @@ func Test_encode_uint16(t *testing.T) {
 	stream := thrifter.NewStream(nil, nil)
 	stream.WriteUInt16(1024)
 	iter := thrifter.NewIterator(nil, stream.Buffer())
-	should.Equal(uint16(1024), iter.ReadUInt16())
+	should.Equal(uint16(1024), iter.ReadUint16())
 }

@@ -13,7 +13,7 @@ func Test_decode_uint8(t *testing.T) {
 		buf, proto := c.CreateProtocol()
 		proto.WriteByte(100)
 		iter := c.CreateIterator(buf.Bytes())
-		should.Equal(uint8(100), iter.ReadUInt8())
+		should.Equal(uint8(100), iter.ReadUint8())
 	}
 }
 
@@ -22,5 +22,5 @@ func Test_encode_uint8(t *testing.T) {
 	stream := thrifter.NewStream(nil, nil)
 	stream.WriteUInt8(100)
 	iter := thrifter.NewIterator(nil, stream.Buffer())
-	should.Equal(uint8(100), iter.ReadUInt8())
+	should.Equal(uint8(100), iter.ReadUint8())
 }

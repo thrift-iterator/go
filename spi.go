@@ -25,13 +25,13 @@ type Iterator interface {
 	SkipMap(space []byte) []byte
 	ReadBool() bool
 	ReadInt8() int8
-	ReadUInt8() uint8
+	ReadUint8() uint8
 	ReadInt16() int16
-	ReadUInt16() uint16
+	ReadUint16() uint16
 	ReadInt32() int32
-	ReadUInt32() uint32
+	ReadUint32() uint32
 	ReadInt64() int64
-	ReadUInt64() uint64
+	ReadUint64() uint64
 	ReadFloat64() float64
 	ReadString() string
 	ReadBinary() []byte
