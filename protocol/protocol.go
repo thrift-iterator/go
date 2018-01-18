@@ -5,9 +5,8 @@ type TType byte
 type TMessageType int32
 type SeqId int32
 type FieldId int16
-type Version uint32
 
-const VERSION_1 Version = 0x80010000
+const VERSION_1 = 0x80010000
 
 const (
 	INVALID_TMESSAGE_TYPE TMessageType = 0
@@ -64,7 +63,6 @@ func (p TType) String() string {
 }
 
 type MessageHeader struct {
-	Version     Version
 	MessageName string
 	MessageType TMessageType
 	SeqId       SeqId
@@ -76,7 +74,6 @@ type Message struct {
 }
 
 func (msg *Message) Set(msgRead *Message) {
-	msg.Version = msgRead.Version
 	msg.MessageType = msgRead.MessageType
 	msg.MessageName = msgRead.MessageName
 	msg.SeqId = msgRead.SeqId

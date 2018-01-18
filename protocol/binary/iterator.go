@@ -34,11 +34,14 @@ func (iter *Iterator) Reset(reader io.Reader, buf []byte) {
 func (iter *Iterator) ReadMessageHeader() protocol.MessageHeader {
 	versionAndMessageType := iter.ReadInt32()
 	messageType := protocol.TMessageType(versionAndMessageType & 0x0ff)
-	version := protocol.Version(int64(int64(versionAndMessageType) & 0xffff0000))
+	version := int64(int64(versionAndMessageType) & 0xffff0000)
+	if version != protocol.VERSION_1 {
+		iter.ReportError("ReadMessageHeader", "unexpected version")
+		return protocol.MessageHeader{}
+	}
 	messageName := iter.ReadString()
 	seqId := protocol.SeqId(iter.ReadInt32())
 	return protocol.MessageHeader{
-		Version:     version,
 		MessageName: messageName,
 		MessageType: messageType,
 		SeqId:       seqId,

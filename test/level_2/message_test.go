@@ -25,7 +25,6 @@ func Test_decode_message_by_iterator(t *testing.T) {
 		proto.WriteMessageEnd()
 		iter := c.CreateIterator(buf.Bytes())
 		msg := iter.ReadMessageHeader()
-		should.Equal(protocol.VERSION_1, msg.Version)
 		should.Equal("hello", msg.MessageName)
 		should.Equal(protocol.CALL, msg.MessageType)
 		should.Equal(protocol.SeqId(17), msg.SeqId)
@@ -48,7 +47,6 @@ func Test_decode_message_as_object(t *testing.T) {
 		proto.WriteMessageEnd()
 		iter := c.CreateIterator(buf.Bytes())
 		msg := iter.ReadMessage()
-		should.Equal(protocol.VERSION_1, msg.Version)
 		should.Equal("hello", msg.MessageName)
 		should.Equal(protocol.CALL, msg.MessageType)
 		should.Equal(protocol.SeqId(17), msg.SeqId)
@@ -62,7 +60,6 @@ func Test_encode_message_as_object(t *testing.T) {
 	stream := thrifter.NewStream(nil, nil)
 	stream.WriteMessage(protocol.Message{
 		MessageHeader: protocol.MessageHeader{
-			Version: protocol.VERSION_1,
 			MessageType: protocol.CALL,
 			MessageName: "hello",
 			SeqId: protocol.SeqId(17),
@@ -74,7 +71,6 @@ func Test_encode_message_as_object(t *testing.T) {
 	})
 	iter := thrifter.NewIterator(nil,  stream.Buffer())
 	msg := iter.ReadMessage()
-	should.Equal(protocol.VERSION_1, msg.Version)
 	should.Equal("hello", msg.MessageName)
 	should.Equal(protocol.CALL, msg.MessageType)
 	should.Equal(protocol.SeqId(17), msg.SeqId)

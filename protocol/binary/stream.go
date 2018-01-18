@@ -53,7 +53,7 @@ func (stream *Stream) Flush() {
 }
 
 func (stream *Stream) WriteMessageHeader(header protocol.MessageHeader) {
-	versionAndMessageType := uint32(header.Version) | uint32(header.MessageType)
+	versionAndMessageType := uint32(protocol.VERSION_1) | uint32(header.MessageType)
 	stream.WriteUInt32(versionAndMessageType)
 	stream.WriteString(header.MessageName)
 	stream.WriteInt32(int32(header.SeqId))

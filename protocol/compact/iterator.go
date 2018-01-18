@@ -41,14 +41,27 @@ func (iter *Iterator) consume(nBytes int) {
 	iter.consumed += nBytes
 }
 
+const compactProtocolId = 0x082
+const compactVersion = 1
+const versionMask = 0x1f
+
 func (iter *Iterator) ReadMessageHeader() protocol.MessageHeader {
-	versionAndMessageType := iter.ReadInt32()
-	messageType := protocol.TMessageType(versionAndMessageType & 0x0ff)
-	version := protocol.Version(int64(int64(versionAndMessageType) & 0xffff0000))
+	protocolId := iter.buf[0]
+	if compactProtocolId != protocolId {
+		iter.ReportError("ReadMessageHeader", "invalid protocol")
+		return protocol.MessageHeader{}
+	}
+	versionAndType := iter.buf[1]
+	iter.consume(2)
+	version := versionAndType & versionMask
+	messageType := protocol.TMessageType((versionAndType >> 5) & 0x07)
+	if version != compactVersion {
+		iter.ReportError("ReadMessageHeader", fmt.Sprintf("Expected version %02x but got %02x", compactVersion, version))
+		return protocol.MessageHeader{}
+	}
+	seqId := protocol.SeqId(iter.readVarInt32())
 	messageName := iter.ReadString()
-	seqId := protocol.SeqId(iter.ReadInt32())
 	return protocol.MessageHeader{
-		Version:     version,
 		MessageName: messageName,
 		MessageType: messageType,
 		SeqId:       seqId,
