@@ -5,7 +5,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/thrift-iterator/go"
 	"github.com/thrift-iterator/go/test"
-	"github.com/v2pro/wombat"
 )
 
 func Test_decode_uint8(t *testing.T) {
@@ -24,8 +23,7 @@ func Test_unmarshal_uint8(t *testing.T) {
 		buf, proto := c.CreateProtocol()
 		proto.WriteByte(100)
 		var val uint8
-		cfg := c.Config.Decode(wombat.Uint8)
-		should.NoError(c.Unmarshal(cfg, buf.Bytes(), &val))
+		should.NoError(c.Unmarshal(buf.Bytes(), &val))
 		should.Equal(uint8(100), val)
 	}
 }

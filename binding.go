@@ -26,7 +26,7 @@ func (cfg Config) Decode(typ reflect.Type) Config {
 	if cfg.Protocol == ProtocolCompact {
 		iteratorType = reflect.TypeOf((*compact.Iterator)(nil))
 	}
-	funcObj := generic.Expand(binding.DecodeAnything,
+	funcObj := generic.Expand(binding.Decode,
 		"ST", iteratorType,
 		"DT", typ)
 	f := funcObj.(func(interface{}, interface{}))

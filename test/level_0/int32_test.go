@@ -5,7 +5,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/thrift-iterator/go"
 	"github.com/thrift-iterator/go/test"
-	"github.com/v2pro/wombat"
 )
 
 func Test_decode_int32(t *testing.T) {
@@ -24,8 +23,7 @@ func Test_unmarshal_int32(t *testing.T) {
 		buf, proto := c.CreateProtocol()
 		proto.WriteI32(-1)
 		var val int32
-		cfg := c.Config.Decode(wombat.Int32)
-		should.NoError(c.Unmarshal(cfg, buf.Bytes(), &val))
+		should.NoError(c.Unmarshal(buf.Bytes(), &val))
 		should.Equal(int32(-1), val)
 	}
 }

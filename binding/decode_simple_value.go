@@ -6,7 +6,7 @@ import (
 )
 
 func init() {
-	DecodeAnything.ImportFunc(decodeSimpleValue)
+	decodeAnything.ImportFunc(decodeSimpleValue)
 }
 
 var decodeSimpleValue = generic.DefineFunc(

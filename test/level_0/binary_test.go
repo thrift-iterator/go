@@ -5,7 +5,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/thrift-iterator/go"
 	"github.com/thrift-iterator/go/test"
-	"reflect"
 )
 
 func Test_decode_binary(t *testing.T) {
@@ -24,8 +23,7 @@ func Test_unmarshal_binary(t *testing.T) {
 		buf, proto := c.CreateProtocol()
 		proto.WriteBinary([]byte("hello"))
 		var val []byte
-		cfg := c.Config.Decode(reflect.TypeOf(([]byte)(nil)))
-		should.NoError(c.Unmarshal(cfg, buf.Bytes(), &val))
+		should.NoError(c.Unmarshal(buf.Bytes(), &val))
 		should.Equal("hello", string(val))
 	}
 }

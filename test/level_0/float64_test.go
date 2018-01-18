@@ -5,7 +5,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/thrift-iterator/go"
 	"github.com/thrift-iterator/go/test"
-	"github.com/v2pro/wombat"
 )
 
 func Test_decode_float64(t *testing.T) {
@@ -24,8 +23,7 @@ func Test_unmarshal_float64(t *testing.T) {
 		buf, proto := c.CreateProtocol()
 		proto.WriteDouble(10.24)
 		var val float64
-		cfg := c.Config.Decode(wombat.Float64)
-		should.NoError(c.Unmarshal(cfg, buf.Bytes(), &val))
+		should.NoError(c.Unmarshal(buf.Bytes(), &val))
 		should.Equal(10.24, val)
 	}
 }

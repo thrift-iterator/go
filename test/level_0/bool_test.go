@@ -5,7 +5,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/thrift-iterator/go"
 	"github.com/thrift-iterator/go/test"
-	"github.com/v2pro/wombat"
 )
 
 func Test_decode_bool(t *testing.T) {
@@ -24,8 +23,7 @@ func Test_unmarshal_bool(t *testing.T) {
 		buf, proto := c.CreateProtocol()
 		proto.WriteBool(true)
 		var val bool
-		cfg := c.Config.Decode(wombat.Bool)
-		should.NoError(c.Unmarshal(cfg, buf.Bytes(), &val))
+		should.NoError(c.Unmarshal(buf.Bytes(), &val))
 		should.Equal(true, val)
 	}
 }
