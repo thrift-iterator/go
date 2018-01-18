@@ -18,7 +18,7 @@ type Iterator struct {
 func NewIterator(reader io.Reader, buf []byte) *Iterator {
 	return &Iterator{
 		reader: reader, real: binary.NewIterator(nil),
-		tmp:    make([]byte, 8),
+		tmp:    make([]byte, 10),
 		space:  buf,
 	}
 }
@@ -95,6 +95,10 @@ func (iter *Iterator) ReadStructCB(cb func(fieldType protocol.TType, fieldId pro
 		}
 		cb(fieldType, fieldId)
 	}
+}
+
+func (iter *Iterator) ReadStructHeader() {
+	// noop
 }
 
 func (iter *Iterator) ReadStructField() (fieldType protocol.TType, fieldId protocol.FieldId) {

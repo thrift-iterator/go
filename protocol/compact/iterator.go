@@ -9,8 +9,11 @@ import (
 )
 
 type Iterator struct {
-	buf []byte
-	err error
+	buf              []byte
+	err              error
+	fieldIdStack     []protocol.FieldId
+	lastFieldId      protocol.FieldId
+	pendingBoolField uint8
 }
 
 func NewIterator(buf []byte) *Iterator {
@@ -55,24 +58,54 @@ func (iter *Iterator) ReadMessage() protocol.Message {
 }
 
 func (iter *Iterator) ReadStructCB(cb func(fieldType protocol.TType, fieldId protocol.FieldId)) {
-	for iter.buf[0] != 0 {
-		fieldType := iter.buf[0]
-		fieldId := uint16(iter.buf[2]) | uint16(iter.buf[1])<<8
-		iter.buf = iter.buf[3:]
-		cb(protocol.TType(fieldType), protocol.FieldId(fieldId))
+	iter.ReadStructHeader()
+	for {
+		fieldType, fieldId := iter.ReadStructField()
+		if fieldType == protocol.STOP {
+			return
+		}
+		cb(fieldType, fieldId)
 	}
-	iter.buf = iter.buf[1:]
+}
+
+func (iter *Iterator) ReadStructHeader() {
+	iter.fieldIdStack = append(iter.fieldIdStack, iter.lastFieldId)
+	iter.lastFieldId = 0
 }
 
 func (iter *Iterator) ReadStructField() (protocol.TType, protocol.FieldId) {
-	fieldType := iter.buf[0]
-	if fieldType == 0 {
-		iter.buf = iter.buf[1:]
-		return protocol.TType(fieldType), 0
+	firstByte := iter.buf[0]
+	iter.buf = iter.buf[1:]
+	if firstByte == 0 {
+		iter.lastFieldId = iter.fieldIdStack[len(iter.fieldIdStack)-1]
+		iter.fieldIdStack = iter.fieldIdStack[:len(iter.fieldIdStack)-1]
+		return protocol.TType(firstByte), 0
 	}
-	fieldId := uint16(iter.buf[2]) | uint16(iter.buf[1])<<8
-	iter.buf = iter.buf[3:]
-	return protocol.TType(fieldType), protocol.FieldId(fieldId)
+	// mask off the 4 MSB of the type header. it could contain a field id delta.
+	modifier := int16((firstByte & 0xf0) >> 4)
+	var fieldId protocol.FieldId
+	if modifier == 0 {
+		// not a delta. look ahead for the zigzag varint field id.
+		fieldId = protocol.FieldId(iter.ReadInt16())
+	} else {
+		// has a delta. add the delta to the last read field id.
+		fieldId = iter.lastFieldId + protocol.FieldId(modifier)
+	}
+	var fieldType protocol.TType
+	if TCompactType(firstByte&0x0f) == TypeBooleanTrue {
+		fieldType = protocol.BOOL
+		iter.pendingBoolField = 1
+	} else if TCompactType(firstByte&0x0f) == TypeBooleanFalse {
+		fieldType = protocol.BOOL
+		iter.pendingBoolField = 2
+	} else {
+		fieldType = TCompactType(firstByte & 0x0f).ToTType()
+		iter.pendingBoolField = 0
+	}
+
+	// push the new field onto the field stack so we can keep the deltas going.
+	iter.lastFieldId = fieldId
+	return fieldType, fieldId
 }
 
 func (iter *Iterator) ReadListHeader() (protocol.TType, int) {
@@ -104,7 +137,10 @@ func (iter *Iterator) ReadMapHeader() (protocol.TType, protocol.TType, int) {
 }
 
 func (iter *Iterator) ReadBool() bool {
-	return iter.ReadUInt8() == 1
+	if iter.pendingBoolField == 0 {
+		return iter.ReadUInt8() == 1
+	}
+	return iter.pendingBoolField == 1
 }
 
 func (iter *Iterator) ReadUInt8() uint8 {
@@ -186,6 +222,7 @@ func (iter *Iterator) ReadBinary() []byte {
 
 func (iter *Iterator) ReadStruct() map[protocol.FieldId]interface{} {
 	obj := map[protocol.FieldId]interface{}{}
+	iter.ReadStructHeader()
 	for {
 		fieldType, fieldId := iter.ReadStructField()
 		if fieldType == protocol.STOP {

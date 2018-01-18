@@ -32,6 +32,29 @@ func Test_decode_struct_by_iterator(t *testing.T) {
 	}
 }
 
+func Test_decode_struct_with_bool_by_iterator(t *testing.T) {
+	should := require.New(t)
+	for _, c := range test.Combinations {
+		buf, proto := c.CreateProtocol()
+		proto.WriteStructBegin("hello")
+		proto.WriteFieldBegin("field1", thrift.BOOL, 1)
+		proto.WriteBool(true)
+		proto.WriteFieldEnd()
+		proto.WriteFieldStop()
+		proto.WriteStructEnd()
+		iter := c.CreateIterator(buf.Bytes())
+		called := false
+		iter.ReadStructCB(func(fieldType protocol.TType, fieldId protocol.FieldId) {
+			should.False(called)
+			called = true
+			should.Equal(protocol.BOOL, fieldType)
+			should.Equal(protocol.FieldId(1), fieldId)
+			should.Equal(true, iter.ReadBool())
+		})
+		should.True(called)
+	}
+}
+
 func Test_encode_struct_by_stream(t *testing.T) {
 	should := require.New(t)
 	stream := thrifter.NewStream(nil, nil)

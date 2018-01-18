@@ -22,6 +22,7 @@ type Iterator interface {
 	ReadMessage() protocol.Message
 	SkipMessage(space []byte) []byte
 	ReadStructCB(func(fieldType protocol.TType, fieldId protocol.FieldId))
+	ReadStructHeader()
 	ReadStructField() (fieldType protocol.TType, fieldId protocol.FieldId)
 	ReadStruct() map[protocol.FieldId]interface{}
 	SkipStruct(space []byte) []byte

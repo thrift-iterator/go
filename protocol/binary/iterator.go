@@ -63,6 +63,10 @@ func (iter *Iterator) ReadStructCB(cb func(fieldType protocol.TType, fieldId pro
 	iter.buf = iter.buf[1:]
 }
 
+func (iter *Iterator) ReadStructHeader() {
+	// noop
+}
+
 func (iter *Iterator) ReadStructField() (protocol.TType, protocol.FieldId) {
 	fieldType := iter.buf[0]
 	if fieldType == 0 {
