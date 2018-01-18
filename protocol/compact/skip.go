@@ -65,61 +65,49 @@ func (iter *Iterator) SkipList(space []byte) []byte {
 
 func (iter *Iterator) skipList() []byte {
 	bufBeforeSkip := iter.buf
-	elemType := protocol.TType(bufBeforeSkip[0])
-	length := uint32(bufBeforeSkip[4]) | uint32(bufBeforeSkip[3])<<8 | uint32(bufBeforeSkip[2])<<16 | uint32(bufBeforeSkip[1])<<24
+	consumedBeforeSkip := iter.consumed
+	elemType, length := iter.ReadListHeader()
 	switch elemType {
 	case protocol.BOOL, protocol.I08:
-		size := 5 + length
-		skipped := bufBeforeSkip[:size]
-		iter.buf = bufBeforeSkip[size:]
-		return skipped
+		for i := 0; i < length; i++ {
+			iter.ReadBool()
+		}
 	case protocol.I16:
-		size := 5 + length*2
-		skipped := bufBeforeSkip[:size]
-		iter.buf = bufBeforeSkip[size:]
-		return skipped
+		for i := 0; i < length; i++ {
+			iter.ReadInt16()
+		}
 	case protocol.I32:
-		size := 5 + length*4
-		skipped := bufBeforeSkip[:size]
-		iter.buf = bufBeforeSkip[size:]
-		return skipped
-	case protocol.I64, protocol.DOUBLE:
-		size := 5 + length*8
-		skipped := bufBeforeSkip[:size]
-		iter.buf = bufBeforeSkip[size:]
-		return skipped
+		for i := 0; i < length; i++ {
+			iter.ReadInt32()
+		}
+	case protocol.I64:
+		for i := 0; i < length; i++ {
+			iter.ReadInt64()
+		}
+	case protocol.DOUBLE:
+		for i := 0; i < length; i++ {
+			iter.ReadFloat64()
+		}
 	case protocol.STRING:
-		skippedBytes := 5
-		iter.buf = iter.buf[5:]
-		for i := uint32(0); i < length; i++ {
-			skippedBytes += len(iter.ReadBinary())
-			skippedBytes += 4
+		for i := 0; i < length; i++ {
+			iter.ReadBinary()
 		}
-		iter.buf = bufBeforeSkip[skippedBytes:]
-		return bufBeforeSkip[:skippedBytes]
 	case protocol.LIST:
-		skippedBytes := 5
-		iter.buf = iter.buf[5:]
-		for i := uint32(0); i < length; i++ {
-			skippedBytes += len(iter.SkipList(nil))
+		for i := 0; i < length; i++ {
+			iter.skipList()
 		}
-		return bufBeforeSkip[:skippedBytes]
 	case protocol.MAP:
-		skippedBytes := 5
-		iter.buf = iter.buf[5:]
-		for i := uint32(0); i < length; i++ {
-			skippedBytes += len(iter.SkipMap(nil))
+		for i := 0; i < length; i++ {
+			iter.skipMap()
 		}
-		return bufBeforeSkip[:skippedBytes]
 	case protocol.STRUCT:
-		skippedBytes := 5
-		iter.buf = iter.buf[5:]
-		for i := uint32(0); i < length; i++ {
-			skippedBytes += len(iter.SkipStruct(nil))
+		for i := 0; i < length; i++ {
+			iter.SkipStruct(nil)
 		}
-		return bufBeforeSkip[:skippedBytes]
+	default:
+		panic("unsupported type")
 	}
-	panic("unsupported type")
+	return bufBeforeSkip[:iter.consumed-consumedBeforeSkip]
 }
 
 func (iter *Iterator) SkipMap(space []byte) []byte {

@@ -13,6 +13,7 @@ type Iterator struct {
 	err              error
 	fieldIdStack     []protocol.FieldId
 	lastFieldId      protocol.FieldId
+	consumed         int
 	pendingBoolField uint8
 }
 
@@ -33,6 +34,11 @@ func (iter *Iterator) ReportError(operation string, err string) {
 func (iter *Iterator) Reset(reader io.Reader, buf []byte) {
 	iter.buf = buf
 	iter.err = nil
+}
+
+func (iter *Iterator) consume(nBytes int) {
+	iter.buf = iter.buf[nBytes:]
+	iter.consumed += nBytes
 }
 
 func (iter *Iterator) ReadMessageHeader() protocol.MessageHeader {
@@ -75,7 +81,7 @@ func (iter *Iterator) ReadStructHeader() {
 
 func (iter *Iterator) ReadStructField() (protocol.TType, protocol.FieldId) {
 	firstByte := iter.buf[0]
-	iter.buf = iter.buf[1:]
+	iter.consume(1)
 	if firstByte == 0 {
 		iter.lastFieldId = iter.fieldIdStack[len(iter.fieldIdStack)-1]
 		iter.fieldIdStack = iter.fieldIdStack[:len(iter.fieldIdStack)-1]
@@ -110,7 +116,7 @@ func (iter *Iterator) ReadStructField() (protocol.TType, protocol.FieldId) {
 
 func (iter *Iterator) ReadListHeader() (protocol.TType, int) {
 	lenAndType := iter.buf[0]
-	iter.buf = iter.buf[1:]
+	iter.consume(1)
 	length := int((lenAndType >> 4) & 0x0f)
 	if length == 15 {
 		length2 := iter.readVarInt32()
@@ -130,7 +136,7 @@ func (iter *Iterator) ReadMapHeader() (protocol.TType, protocol.TType, int) {
 		return protocol.STOP, protocol.STOP, length
 	}
 	keyAndElemType := iter.buf[0]
-	iter.buf = iter.buf[1:]
+	iter.consume(1)
 	keyType := TCompactType(keyAndElemType >> 4).ToTType()
 	elemType := TCompactType(keyAndElemType & 0xf).ToTType()
 	return keyType, elemType, length
@@ -146,7 +152,7 @@ func (iter *Iterator) ReadBool() bool {
 func (iter *Iterator) ReadUInt8() uint8 {
 	b := iter.buf
 	value := b[0]
-	iter.buf = iter.buf[1:]
+	iter.consume(1)
 	return value
 }
 
@@ -192,7 +198,7 @@ func (iter *Iterator) readVarInt64() int64 {
 	for i, b := range iter.buf {
 		result |= int64(b&0x7f) << shift
 		if (b & 0x80) != 0x80 {
-			iter.buf = iter.buf[i+1:]
+			iter.consume(i + 1)
 			break
 		}
 		shift += 7
@@ -202,21 +208,21 @@ func (iter *Iterator) readVarInt64() int64 {
 
 func (iter *Iterator) ReadFloat64() float64 {
 	value := math.Float64frombits(binary.LittleEndian.Uint64(iter.buf))
-	iter.buf = iter.buf[8:]
+	iter.consume(8)
 	return value
 }
 
 func (iter *Iterator) ReadString() string {
 	length := iter.readVarInt32()
 	value := string(iter.buf[:length])
-	iter.buf = iter.buf[length:]
+	iter.consume(int(length))
 	return value
 }
 
 func (iter *Iterator) ReadBinary() []byte {
 	length := iter.readVarInt32()
 	value := iter.buf[:length]
-	iter.buf = iter.buf[length:]
+	iter.consume(int(length))
 	return value
 }
 

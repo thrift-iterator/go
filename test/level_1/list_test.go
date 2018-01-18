@@ -76,13 +76,14 @@ func Test_encode_list_from_object(t *testing.T) {
 
 func Test_skip_list(t *testing.T) {
 	should := require.New(t)
-	buf := thrift.NewTMemoryBuffer()
-	proto := thrift.NewTBinaryProtocol(buf, true, true)
-	proto.WriteListBegin(thrift.I64, 3)
-	proto.WriteI64(1)
-	proto.WriteI64(2)
-	proto.WriteI64(3)
-	proto.WriteListEnd()
-	iter := thrifter.NewIterator(nil, buf.Bytes())
-	should.Equal(buf.Bytes(), iter.SkipList(nil))
+	for _, c := range test.Combinations {
+		buf, proto := c.CreateProtocol()
+		proto.WriteListBegin(thrift.I64, 3)
+		proto.WriteI64(1)
+		proto.WriteI64(2)
+		proto.WriteI64(3)
+		proto.WriteListEnd()
+		iter := c.CreateIterator(buf.Bytes())
+		should.Equal(buf.Bytes(), iter.SkipList(nil))
+	}
 }
