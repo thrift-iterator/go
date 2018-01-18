@@ -5,6 +5,7 @@ import (
 	"github.com/v2pro/wombat/generic"
 	"github.com/thrift-iterator/go/binding"
 	"github.com/thrift-iterator/go/protocol/binary"
+	"github.com/thrift-iterator/go/protocol/compact"
 )
 
 type funcDecoder struct {
@@ -17,8 +18,12 @@ func (decoder *funcDecoder) Decode(val interface{}, iter Iterator) {
 
 func (cfg Config) Decode(typ reflect.Type) Config {
 	typ = reflect.PtrTo(typ)
+	iteratorType := reflect.TypeOf((*binary.Iterator)(nil))
+	if cfg.Protocol == ProtocolCompact {
+		iteratorType = reflect.TypeOf((*compact.Iterator)(nil))
+	}
 	funcObj := generic.Expand(binding.DecodeAnything,
-		"ST", reflect.TypeOf((*binary.Iterator)(nil)),
+		"ST", iteratorType,
 		"DT", typ)
 	f := funcObj.(func(interface{}, interface{}))
 	if cfg.Decoders == nil {
