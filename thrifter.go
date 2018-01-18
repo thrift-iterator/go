@@ -7,77 +7,13 @@ import (
 	"io"
 	"github.com/thrift-iterator/go/protocol/sbinary"
 	"github.com/thrift-iterator/go/protocol/compact"
+	"reflect"
 )
 
 type Protocol int
 
 var ProtocolBinary Protocol = 1
 var ProtocolCompact Protocol = 2
-
-type Iterator interface {
-	Error() error
-	Reset(reader io.Reader, buf []byte)
-	ReportError(operation string, err string)
-	ReadMessageHeader() protocol.MessageHeader
-	ReadMessage() protocol.Message
-	SkipMessage(space []byte) []byte
-	ReadStructCB(func(fieldType protocol.TType, fieldId protocol.FieldId))
-	ReadStructHeader()
-	ReadStructField() (fieldType protocol.TType, fieldId protocol.FieldId)
-	ReadStruct() map[protocol.FieldId]interface{}
-	SkipStruct(space []byte) []byte
-	ReadListHeader() (elemType protocol.TType, size int)
-	ReadList() []interface{}
-	SkipList(space []byte) []byte
-	ReadMapHeader() (keyType protocol.TType, elemType protocol.TType, size int)
-	ReadMap() map[interface{}]interface{}
-	SkipMap(space []byte) []byte
-	ReadBool() bool
-	ReadInt8() int8
-	ReadUInt8() uint8
-	ReadInt16() int16
-	ReadUInt16() uint16
-	ReadInt32() int32
-	ReadUInt32() uint32
-	ReadInt64() int64
-	ReadUInt64() uint64
-	ReadFloat64() float64
-	ReadString() string
-	ReadBinary() []byte
-	SkipBinary(space []byte) []byte
-	Read(ttype protocol.TType) interface{}
-	ReaderOf(ttype protocol.TType) func() interface{}
-}
-
-type Stream interface {
-	Error() error
-	ReportError(operation string, err string)
-	Reset(writer io.Writer)
-	Flush()
-	Buffer() []byte
-	WriteMessageHeader(header protocol.MessageHeader)
-	WriteMessage(message protocol.Message)
-	WriteListHeader(elemType protocol.TType, length int)
-	WriteList(val []interface{})
-	WriteStructField(fieldType protocol.TType, fieldId protocol.FieldId)
-	WriteStructFieldStop()
-	WriteStruct(val map[protocol.FieldId]interface{})
-	WriteMapHeader(keyType protocol.TType, elemType protocol.TType, length int)
-	WriteMap(val map[interface{}]interface{})
-	WriterOf(sample interface{}) (protocol.TType, func(interface{}))
-	WriteBool(val bool)
-	WriteInt8(val int8)
-	WriteUInt8(val uint8)
-	WriteInt16(val int16)
-	WriteUInt16(val uint16)
-	WriteInt32(val int32)
-	WriteUInt32(val uint32)
-	WriteInt64(val int64)
-	WriteUInt64(val uint64)
-	WriteFloat64(val float64)
-	WriteBinary(val []byte)
-	WriteString(val string)
-}
 
 type Decoder interface {
 	Decode(obj interface{}) error
@@ -90,6 +26,8 @@ type Encoder interface {
 type Config struct {
 	Protocol Protocol
 	IsFramed bool
+	Decoders map[reflect.Type]ValDecoder
+	Encoders map[reflect.Type]ValEncoder
 }
 
 type API interface {
@@ -106,10 +44,25 @@ type API interface {
 type frozenConfig struct {
 	protocol Protocol
 	isFramed bool
+	encoders map[reflect.Type]ValEncoder
+	decoders map[reflect.Type]ValDecoder
 }
 
 func (cfg Config) Froze() API {
-	api := &frozenConfig{protocol: cfg.Protocol, isFramed: cfg.IsFramed}
+	decoders := cfg.Decoders
+	if decoders == nil {
+		decoders = map[reflect.Type]ValDecoder{}
+	}
+	encoders := cfg.Encoders
+	if encoders == nil {
+		encoders = map[reflect.Type]ValEncoder{}
+	}
+	api := &frozenConfig{
+		protocol: cfg.Protocol,
+		isFramed: cfg.IsFramed,
+		encoders: encoders,
+		decoders: decoders,
+	}
 	return api
 }
 
@@ -135,20 +88,19 @@ func (cfg *frozenConfig) NewIterator(reader io.Reader, buf []byte) Iterator {
 }
 
 func (cfg *frozenConfig) Unmarshal(buf []byte, obj interface{}) error {
-	msg, _ := obj.(*protocol.Message)
-	if msg == nil {
-		return errors.New("can only unmarshal protocol.Message")
+	decoder := cfg.decoders[reflect.TypeOf(obj)]
+	if decoder == nil {
+		decoder = msgDecoderInstance
 	}
 	if cfg.isFramed {
 		size := uint32(buf[3]) | uint32(buf[2])<<8 | uint32(buf[1])<<16 | uint32(buf[0])<<24
 		buf = buf[4:4+size]
 	}
 	iter := cfg.NewIterator(nil, buf)
-	msgRead := iter.ReadMessage()
+	decoder.Decode(obj, iter)
 	if iter.Error() != nil {
 		return iter.Error()
 	}
-	msg.Set(&msgRead)
 	return nil
 }
 

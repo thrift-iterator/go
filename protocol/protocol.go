@@ -6,8 +6,10 @@ type TMessageType int32
 type SeqId int32
 type FieldId int16
 
+// TODO: move to binary
 const VERSION_1 = 0x80010000
 
+// TODO: const should not be all upper case
 const (
 	INVALID_TMESSAGE_TYPE TMessageType = 0
 	CALL                  TMessageType = 1

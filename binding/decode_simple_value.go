@@ -5,8 +5,12 @@ import (
 	"reflect"
 )
 
+func init() {
+	DecodeAnything.ImportFunc(decodeSimpleValue)
+}
+
 var decodeSimpleValue = generic.DefineFunc(
-	"DecodeSimpleValue(err *error, dst DT, src ST)").
+	"DecodeSimpleValue(dst DT, src ST)").
 	Param("DT", "the dst type to copy into").
 	Param("ST", "the src type to copy from").
 	Generators(
