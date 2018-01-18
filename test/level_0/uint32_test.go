@@ -24,8 +24,8 @@ func Test_unmarshal_uint32(t *testing.T) {
 		buf, proto := c.CreateProtocol()
 		proto.WriteI32(1024)
 		var val uint32
-		api := c.Config.Decode(wombat.Uint32).Froze()
-		should.NoError(api.Unmarshal(buf.Bytes(), &val))
+		cfg := c.Config.Decode(wombat.Uint32)
+		should.NoError(c.Unmarshal(cfg, buf.Bytes(), &val))
 		should.Equal(uint32(1024), val)
 	}
 }

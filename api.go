@@ -24,10 +24,11 @@ type Encoder interface {
 }
 
 type Config struct {
-	Protocol Protocol
-	IsFramed bool
-	Decoders map[reflect.Type]ValDecoder
-	Encoders map[reflect.Type]ValEncoder
+	Protocol         Protocol
+	IsFramed         bool
+	DecodeFromReader bool
+	Decoders         map[reflect.Type]ValDecoder
+	Encoders         map[reflect.Type]ValEncoder
 }
 
 type API interface {
@@ -128,7 +129,7 @@ func (cfg *frozenConfig) NewDecoder(reader io.Reader) Decoder {
 	if cfg.isFramed {
 		return &framedDecoder{reader: reader, iter: cfg.NewIterator(nil, nil)}
 	} else {
-		return &unframedDecoder{iter: cfg.NewIterator(reader, make([]byte, 256))}
+		return &unframedDecoder{cfg: cfg, iter: cfg.NewIterator(reader, make([]byte, 256))}
 	}
 }
 

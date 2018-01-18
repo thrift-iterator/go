@@ -9,6 +9,7 @@ import (
 type Combination struct {
 	CreateProtocol func() (*thrift.TMemoryBuffer, thrift.TProtocol)
 	CreateIterator func(buf []byte) thrifter.Iterator
+	Unmarshal      func(cfg thrifter.Config, buf []byte, obj interface{}) error
 	Config         thrifter.Config
 }
 
@@ -23,9 +24,12 @@ var Combinations = []Combination{
 		CreateIterator: func(buf []byte) thrifter.Iterator {
 			return thrifter.Config{Protocol: thrifter.ProtocolBinary}.Froze().NewIterator(nil, buf)
 		},
+		Unmarshal: func(cfg thrifter.Config, buf []byte, obj interface{}) error {
+			return cfg.Froze().Unmarshal(buf, obj)
+		},
 	},
 	{
-		Config: thrifter.Config{Protocol: thrifter.ProtocolBinary},
+		Config: thrifter.Config{Protocol: thrifter.ProtocolBinary, DecodeFromReader: true},
 		CreateProtocol: func() (*thrift.TMemoryBuffer, thrift.TProtocol) {
 			buf := thrift.NewTMemoryBuffer()
 			proto := thrift.NewTBinaryProtocol(buf, true, true)
@@ -33,6 +37,11 @@ var Combinations = []Combination{
 		},
 		CreateIterator: func(buf []byte) thrifter.Iterator {
 			return thrifter.NewIterator(bytes.NewBuffer(buf), nil)
+		},
+		Unmarshal: func(cfg thrifter.Config, buf []byte, obj interface{}) error {
+			api := cfg.Froze()
+			decoder := api.NewDecoder(bytes.NewBuffer(buf))
+			return decoder.Decode(obj)
 		},
 	},
 	{
@@ -45,6 +54,9 @@ var Combinations = []Combination{
 		CreateIterator: func(buf []byte) thrifter.Iterator {
 			cfg := thrifter.Config{Protocol: thrifter.ProtocolCompact}.Froze()
 			return cfg.NewIterator(nil, buf)
+		},
+		Unmarshal: func(cfg thrifter.Config, buf []byte, obj interface{}) error {
+			return cfg.Froze().Unmarshal(buf, obj)
 		},
 	},
 }

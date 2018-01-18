@@ -3,9 +3,11 @@ package thrifter
 import (
 	"github.com/thrift-iterator/go/protocol"
 	"errors"
+	"reflect"
 )
 
 type unframedDecoder struct {
+	cfg *frozenConfig
 	iter Iterator
 }
 
@@ -14,15 +16,14 @@ type unframedEncoder struct {
 }
 
 func (decoder *unframedDecoder) Decode(obj interface{}) error {
-	msg, _ := obj.(*protocol.Message)
-	if msg == nil {
-		return errors.New("can only unmarshal protocol.Message")
+	valDecoder := decoder.cfg.decoders[reflect.TypeOf(obj)]
+	if valDecoder == nil {
+		valDecoder = msgDecoderInstance
 	}
-	msgRead := decoder.iter.ReadMessage()
+	valDecoder.Decode(obj, decoder.iter)
 	if decoder.iter.Error() != nil {
 		return decoder.iter.Error()
 	}
-	msg.Set(&msgRead)
 	return nil
 }
 

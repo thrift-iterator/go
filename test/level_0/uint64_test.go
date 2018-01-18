@@ -24,8 +24,8 @@ func Test_unmarshal_uint64(t *testing.T) {
 		buf, proto := c.CreateProtocol()
 		proto.WriteI64(1024)
 		var val uint64
-		api := c.Config.Decode(wombat.Uint64).Froze()
-		should.NoError(api.Unmarshal(buf.Bytes(), &val))
+		cfg := c.Config.Decode(wombat.Uint64)
+		should.NoError(c.Unmarshal(cfg, buf.Bytes(), &val))
 		should.Equal(uint64(1024), val)
 	}
 }

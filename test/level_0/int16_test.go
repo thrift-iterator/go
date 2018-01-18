@@ -5,6 +5,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/thrift-iterator/go"
 	"github.com/thrift-iterator/go/test"
+	"github.com/v2pro/wombat"
 )
 
 func Test_decode_int16(t *testing.T) {
@@ -14,6 +15,18 @@ func Test_decode_int16(t *testing.T) {
 		proto.WriteI16(-1)
 		iter := c.CreateIterator(buf.Bytes())
 		should.Equal(int16(-1), iter.ReadInt16())
+	}
+}
+
+func Test_unmarshal_int16(t *testing.T) {
+	should := require.New(t)
+	for _, c := range test.Combinations {
+		buf, proto := c.CreateProtocol()
+		proto.WriteI16(-1)
+		var val int16
+		cfg := c.Config.Decode(wombat.Int16)
+		should.NoError(c.Unmarshal(cfg, buf.Bytes(), &val))
+		should.Equal(int16(-1), val)
 	}
 }
 
