@@ -82,3 +82,10 @@ func (decoder *uint64Decoder) decode(ptr unsafe.Pointer, iter spi.Iterator) {
 	*(*uint64)(ptr) = iter.ReadUint64()
 }
 
+type stringDecoder struct {
+}
+
+func (decoder *stringDecoder) decode(ptr unsafe.Pointer, iter spi.Iterator) {
+	*(*string)(ptr) = iter.ReadString()
+}
+

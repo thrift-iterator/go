@@ -19,7 +19,7 @@ func Test_decode_uint64(t *testing.T) {
 
 func Test_unmarshal_uint64(t *testing.T) {
 	should := require.New(t)
-	for _, c := range test.Combinations {
+	for _, c := range test.UnmarshalCombinations {
 		buf, proto := c.CreateProtocol()
 		proto.WriteI64(1024)
 		var val uint64

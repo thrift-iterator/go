@@ -38,6 +38,8 @@ func decoderOf(prefix string, valType reflect.Type) internalDecoder {
 		return &int64Decoder{}
 	case reflect.Uint64:
 		return &uint64Decoder{}
+	case reflect.String:
+		return &stringDecoder{}
 	}
 	return &unknownDecoder{prefix, valType}
 }

@@ -19,7 +19,7 @@ func Test_decode_uint8(t *testing.T) {
 
 func Test_unmarshal_uint8(t *testing.T) {
 	should := require.New(t)
-	for _, c := range test.Combinations {
+	for _, c := range test.UnmarshalCombinations {
 		buf, proto := c.CreateProtocol()
 		proto.WriteByte(100)
 		var val uint8
