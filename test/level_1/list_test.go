@@ -61,7 +61,7 @@ func Test_decode_list_as_object(t *testing.T) {
 
 func Test_unmarshal_list(t *testing.T) {
 	should := require.New(t)
-	for _, c := range test.Combinations {
+	for _, c := range test.UnmarshalCombinations {
 		buf, proto := c.CreateProtocol()
 		proto.WriteListBegin(thrift.I64, 3)
 		proto.WriteI64(1)

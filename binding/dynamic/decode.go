@@ -9,11 +9,10 @@ import (
 var byteSliceType = reflect.TypeOf(([]byte)(nil))
 
 func DecoderOf(valType reflect.Type) spi.ValDecoder {
-	return &valDecoderAdapter{decoderOf("", valType)}
+	return &valDecoderAdapter{decoderOf("", valType.Elem())}
 }
 
 func decoderOf(prefix string, valType reflect.Type) internalDecoder {
-	valType = valType.Elem()
 	if byteSliceType == valType {
 		return &binaryDecoder{}
 	}
@@ -40,6 +39,12 @@ func decoderOf(prefix string, valType reflect.Type) internalDecoder {
 		return &uint64Decoder{}
 	case reflect.String:
 		return &stringDecoder{}
+	case reflect.Slice:
+		return &sliceDecoder{
+			elemType: valType.Elem(),
+			sliceType: valType,
+			elemDecoder: decoderOf(prefix + " [sliceElem]", valType.Elem()),
+		}
 	}
 	return &unknownDecoder{prefix, valType}
 }
