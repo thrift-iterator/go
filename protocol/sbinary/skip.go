@@ -4,7 +4,6 @@ import (
 	"io"
 )
 
-
 func (iter *Iterator) SkipMessage(space []byte) []byte {
 	space = iter.skip(space, 4)
 	space = iter.SkipBinary(space)
@@ -17,7 +16,7 @@ func (iter *Iterator) SkipMap(space []byte) []byte {
 	if space == nil {
 		iter.recorder = []byte{}
 	} else {
-		iter.recorder = space[:0]
+		iter.recorder = space
 	}
 	iter.discardMap()
 	iter.space = iter.recorder
@@ -29,9 +28,10 @@ func (iter *Iterator) SkipStruct(space []byte) []byte {
 	if space == nil {
 		iter.recorder = []byte{}
 	} else {
-		iter.recorder = space[:0]
+		iter.recorder = space
 	}
 	iter.discardStruct()
+	// reuse buffer next time, save it on iter.space
 	iter.space = iter.recorder
 	iter.recorder = nil
 	return iter.space
@@ -41,7 +41,7 @@ func (iter *Iterator) SkipBinary(space []byte) []byte {
 	if space == nil {
 		iter.recorder = []byte{}
 	} else {
-		iter.recorder = space[:0]
+		iter.recorder = space
 	}
 	iter.discardBinary()
 	iter.space = iter.recorder
@@ -53,7 +53,7 @@ func (iter *Iterator) SkipList(space []byte) []byte {
 	if space == nil {
 		iter.recorder = []byte{}
 	} else {
-		iter.recorder = space[:0]
+		iter.recorder = space
 	}
 	iter.discardList()
 	iter.space = iter.recorder

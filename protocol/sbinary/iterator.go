@@ -10,8 +10,11 @@ import (
 type Iterator struct {
 	real     *binary.Iterator
 	reader   io.Reader
+	// tmp buffer, because recorder is not always on, we can not use recorder to replace this one
 	tmp      []byte
+	// reusable recorder buffer
 	space    []byte
+	// recording read bytes into this buffer if not nil
 	recorder []byte
 	err      error
 }
@@ -103,7 +106,6 @@ func (iter *Iterator) ReadMessage() protocol.Message {
 	if iter.err != nil {
 		return protocol.Message{}
 	}
-	iter.space = buf
 	iter.real.Reset(nil, buf)
 	return iter.real.ReadMessage()
 }
@@ -137,7 +139,6 @@ func (iter *Iterator) ReadStruct() map[protocol.FieldId]interface{} {
 	if iter.err != nil {
 		return nil
 	}
-	iter.space = buf
 	iter.real.Reset(nil, buf)
 	return iter.real.ReadStruct()
 }
@@ -153,10 +154,10 @@ func (iter *Iterator) ReadList() []interface{} {
 	if iter.err != nil {
 		return nil
 	}
-	iter.space = buf
 	iter.real.Reset(nil, buf)
 	return iter.real.ReadList()
 }
+
 func (iter *Iterator) ReadMapHeader() (keyType protocol.TType, elemType protocol.TType, length int) {
 	tmp := iter.readSmall(6)
 	iter.real.Reset(nil, tmp)
@@ -168,7 +169,6 @@ func (iter *Iterator) ReadMap() map[interface{}]interface{} {
 	if iter.err != nil {
 		return nil
 	}
-	iter.space = buf
 	iter.real.Reset(nil, buf)
 	return iter.real.ReadMap()
 }
