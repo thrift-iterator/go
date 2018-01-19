@@ -25,3 +25,17 @@ type float64Decoder struct {
 func (decoder *float64Decoder) decode(ptr unsafe.Pointer, iter spi.Iterator) {
 	*(*float64)(ptr) = iter.ReadFloat64()
 }
+
+type int8Decoder struct {
+}
+
+func (decoder *int8Decoder) decode(ptr unsafe.Pointer, iter spi.Iterator) {
+	*(*int8)(ptr) = iter.ReadInt8()
+}
+
+type uint8Decoder struct {
+}
+
+func (decoder *uint8Decoder) decode(ptr unsafe.Pointer, iter spi.Iterator) {
+	*(*uint8)(ptr) = iter.ReadUint8()
+}
