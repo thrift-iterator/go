@@ -19,7 +19,7 @@ func Test_decode_bool(t *testing.T) {
 
 func Test_unmarshal_bool(t *testing.T) {
 	should := require.New(t)
-	for _, c := range test.Combinations {
+	for _, c := range test.UnmarshalCombinations {
 		buf, proto := c.CreateProtocol()
 		proto.WriteBool(true)
 		var val bool
