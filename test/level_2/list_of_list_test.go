@@ -44,7 +44,7 @@ func Test_decode_list_of_list(t *testing.T) {
 
 func Test_unmarshal_list_of_list(t *testing.T) {
 	should := require.New(t)
-	for _, c := range test.Combinations {
+	for _, c := range test.UnmarshalCombinations {
 		buf, proto := c.CreateProtocol()
 		proto.WriteListBegin(thrift.LIST, 2)
 		proto.WriteListBegin(thrift.I64, 1)

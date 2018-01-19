@@ -94,7 +94,7 @@ func Test_decode_struct_as_object(t *testing.T) {
 
 func Test_unmarshal_struct(t *testing.T) {
 	should := require.New(t)
-	for _, c := range test.Combinations {
+	for _, c := range test.UnmarshalCombinations {
 		buf, proto := c.CreateProtocol()
 		proto.WriteStructBegin("hello")
 		proto.WriteFieldBegin("field1", thrift.I64, 1)

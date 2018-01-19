@@ -7,6 +7,7 @@ import (
 	"git.apache.org/thrift.git/lib/go/thrift"
 	"github.com/thrift-iterator/go/protocol"
 	"github.com/thrift-iterator/go/test"
+	"github.com/thrift-iterator/go/test/level_2/list_of_struct_test"
 )
 
 func Test_skip_list_of_struct(t *testing.T) {
@@ -54,6 +55,32 @@ func Test_decode_list_of_struct(t *testing.T) {
 		should.Equal(map[protocol.FieldId]interface{}{
 			protocol.FieldId(1): int64(1024),
 		}, iter.ReadList()[0])
+	}
+}
+
+func Test_unmarshal_list_of_struct(t *testing.T) {
+	should := require.New(t)
+	for _, c := range test.UnmarshalCombinations {
+		buf, proto := c.CreateProtocol()
+		proto.WriteListBegin(thrift.STRUCT, 2)
+		proto.WriteStructBegin("hello")
+		proto.WriteFieldBegin("field1", thrift.I64, 1)
+		proto.WriteI64(1024)
+		proto.WriteFieldEnd()
+		proto.WriteFieldStop()
+		proto.WriteStructEnd()
+		proto.WriteStructBegin("hello")
+		proto.WriteFieldBegin("field1", thrift.I64, 1)
+		proto.WriteI64(1024)
+		proto.WriteFieldEnd()
+		proto.WriteFieldStop()
+		proto.WriteStructEnd()
+		proto.WriteListEnd()
+		var val []list_of_struct_test.TestObject
+		should.NoError(c.Unmarshal(buf.Bytes(), &val))
+		should.Equal([]list_of_struct_test.TestObject{
+			{1024}, {1024},
+		}, val)
 	}
 }
 

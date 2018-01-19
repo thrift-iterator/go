@@ -75,6 +75,7 @@ func decoderOf(prefix string, valType reflect.Type) internalDecoder {
 			decoderField := structDecoderField{
 				offset: refField.Offset,
 				fieldId: fieldId,
+				decoder: decoderOf(prefix + " " + refField.Name, refField.Type),
 			}
 			decoderFields = append(decoderFields, decoderField)
 			decoderFieldMap[fieldId] = decoderField

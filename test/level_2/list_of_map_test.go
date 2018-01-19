@@ -50,7 +50,7 @@ func Test_decode_list_of_map(t *testing.T) {
 
 func Test_unmarshal_list_of_map(t *testing.T) {
 	should := require.New(t)
-	for _, c := range test.Combinations {
+	for _, c := range test.UnmarshalCombinations {
 		buf, proto := c.CreateProtocol()
 		proto.WriteListBegin(thrift.MAP, 2)
 		proto.WriteMapBegin(thrift.I32, thrift.I64, 1)
