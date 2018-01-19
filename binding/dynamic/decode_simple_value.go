@@ -39,3 +39,18 @@ type uint8Decoder struct {
 func (decoder *uint8Decoder) decode(ptr unsafe.Pointer, iter spi.Iterator) {
 	*(*uint8)(ptr) = iter.ReadUint8()
 }
+
+type int16Decoder struct {
+}
+
+func (decoder *int16Decoder) decode(ptr unsafe.Pointer, iter spi.Iterator) {
+	*(*int16)(ptr) = iter.ReadInt16()
+}
+
+type uint16Decoder struct {
+}
+
+func (decoder *uint16Decoder) decode(ptr unsafe.Pointer, iter spi.Iterator) {
+	*(*uint16)(ptr) = iter.ReadUint16()
+}
+
