@@ -19,7 +19,7 @@ func Test_decode_int32(t *testing.T) {
 
 func Test_unmarshal_int32(t *testing.T) {
 	should := require.New(t)
-	for _, c := range test.Combinations {
+	for _, c := range test.UnmarshalCombinations {
 		buf, proto := c.CreateProtocol()
 		proto.WriteI32(-1)
 		var val int32

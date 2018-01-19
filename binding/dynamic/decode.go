@@ -30,6 +30,10 @@ func decoderOf(prefix string, valType reflect.Type) internalDecoder {
 		return &int16Decoder{}
 	case reflect.Uint16:
 		return &uint16Decoder{}
+	case reflect.Int32:
+		return &int32Decoder{}
+	case reflect.Uint32:
+		return &uint32Decoder{}
 	}
 	return &unknownDecoder{prefix, valType}
 }
