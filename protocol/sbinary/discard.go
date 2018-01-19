@@ -1,20 +1,19 @@
 package sbinary
 
 import (
-	"io"
 	"github.com/thrift-iterator/go/protocol"
 )
 
 func (iter *Iterator) Discard(ttype protocol.TType) {
 	switch ttype {
 	case protocol.TypeBool, protocol.TypeI08:
-		iter.discard(1)
+		iter.readSmall(1)
 	case protocol.TypeI16:
-		iter.discard(2)
+		iter.readSmall(2)
 	case protocol.TypeI32:
-		iter.discard(4)
+		iter.readSmall(4)
 	case protocol.TypeI64, protocol.TypeDouble:
-		iter.discard(8)
+		iter.readSmall(8)
 	case protocol.TypeString:
 		iter.discardBinary()
 	case protocol.TypeList:
@@ -29,35 +28,20 @@ func (iter *Iterator) Discard(ttype protocol.TType) {
 }
 
 func (iter *Iterator) discardMap() {
-	tmp := iter.tmp[:6]
-	_, err := io.ReadFull(iter.reader, tmp)
-	if err != nil {
-		iter.ReportError("discardMap", err.Error())
-		return
-	}
+	tmp := iter.readSmall(6)
 	iter.real.Reset(nil, tmp)
 	keyType, elemType, length := iter.real.ReadMapHeader()
 	keySize := getTypeSize(keyType)
 	elemSize := getTypeSize(elemType)
 	if keySize != 0 && elemSize != 0 {
-		tmp := iter.allocate(length * (keySize + elemSize))
-		_, err := io.ReadFull(iter.reader, tmp)
-		if err != nil {
-			iter.ReportError("discardMap", err.Error())
-			return
-		}
+		iter.readLarge(length * (keySize + elemSize))
 		return
 	}
 	var discardKey func()
 	var discardElem func()
 	if keySize != 0 {
 		discardKey = func() {
-			tmp := iter.tmp[:keySize]
-			_, err := io.ReadFull(iter.reader, tmp)
-			if err != nil {
-				iter.ReportError("discardMap", err.Error())
-				return
-			}
+			iter.readSmall(keySize)
 			return
 		}
 	} else {
@@ -70,12 +54,7 @@ func (iter *Iterator) discardMap() {
 	}
 	if elemSize != 0 {
 		discardElem = func() {
-			tmp := iter.tmp[:elemSize]
-			_, err := io.ReadFull(iter.reader, tmp)
-			if err != nil {
-				iter.ReportError("discardMap", err.Error())
-				return
-			}
+			iter.readSmall(elemSize)
 			return
 		}
 	} else {
@@ -101,54 +80,30 @@ func (iter *Iterator) discardMap() {
 
 func (iter *Iterator) discardStruct() {
 	for {
-		tmp := iter.tmp[:1]
-		_, err := io.ReadFull(iter.reader, tmp)
-		if err != nil {
-			iter.ReportError("SkipStruct", err.Error())
-			return
-		}
+		tmp := iter.readSmall(1)
 		fieldType := protocol.TType(tmp[0])
 		switch fieldType {
 		case protocol.TypeStop:
 			return
+		case protocol.TypeBool, protocol.TypeI08:
+			iter.readSmall(3) // 1 + 2
+		case protocol.TypeI16:
+			iter.readSmall(4) // 2 + 2
+		case protocol.TypeI32:
+			iter.readSmall(6) // 4 + 2
 		case protocol.TypeI64, protocol.TypeDouble:
-			tmp := iter.tmp[:10]
-			_, err := io.ReadFull(iter.reader, tmp)
-			if err != nil {
-				iter.ReportError("SkipStruct", err.Error())
-				return
-			}
+			iter.readSmall(10) // 8 + 2
 		case protocol.TypeList:
-			tmp := iter.tmp[:2]
-			_, err := io.ReadFull(iter.reader, tmp)
-			if err != nil {
-				iter.ReportError("SkipStruct", err.Error())
-				return
-			}
+			iter.readSmall(2)
 			iter.discardList()
 		case protocol.TypeMap:
-			tmp := iter.tmp[:2]
-			_, err := io.ReadFull(iter.reader, tmp)
-			if err != nil {
-				iter.ReportError("SkipStruct", err.Error())
-				return
-			}
+			iter.readSmall(2)
 			iter.discardMap()
 		case protocol.TypeString:
-			tmp := iter.tmp[:2]
-			_, err := io.ReadFull(iter.reader, tmp)
-			if err != nil {
-				iter.ReportError("SkipStruct", err.Error())
-				return
-			}
+			iter.readSmall(2)
 			iter.discardBinary()
 		case protocol.TypeStruct:
-			tmp := iter.tmp[:2]
-			_, err := io.ReadFull(iter.reader, tmp)
-			if err != nil {
-				iter.ReportError("SkipStruct", err.Error())
-				return
-			}
+			iter.readSmall(2)
 			iter.discardStruct()
 		default:
 			panic("unsupported type")
@@ -157,40 +112,31 @@ func (iter *Iterator) discardStruct() {
 }
 
 func (iter *Iterator) discardList() {
-	tmp := iter.tmp[:5]
-	_, err := io.ReadFull(iter.reader, tmp)
-	if err != nil {
-		iter.ReportError("discardList", err.Error())
-		return
-	}
+	tmp := iter.readSmall(5)
 	iter.real.Reset(nil, tmp)
 	elemType, length := iter.real.ReadListHeader()
 	switch elemType {
 	case protocol.TypeStop:
-		return
+	case protocol.TypeBool, protocol.TypeI08:
+		iter.readLarge(length)
+	case protocol.TypeI16:
+		iter.readLarge(length * 2)
+	case protocol.TypeI32:
+		iter.readLarge(length * 4)
 	case protocol.TypeI64, protocol.TypeDouble:
-		tmp := iter.allocate(length * 8)
-		_, err := io.ReadFull(iter.reader, tmp)
-		if err != nil {
-			iter.ReportError("discardList", err.Error())
-			return
-		}
-		return
+		iter.readLarge(length * 8)
 	case protocol.TypeString:
 		for i := 0; i < length; i++ {
 			iter.discardBinary()
 		}
-		return
 	case protocol.TypeList:
 		for i := 0; i < length; i++ {
 			iter.discardList()
 		}
-		return
 	case protocol.TypeMap:
 		for i := 0; i < length; i++ {
 			iter.discardMap()
 		}
-		return
 	case protocol.TypeStruct:
 		for i := 0; i < length; i++ {
 			iter.discardStruct()
@@ -200,26 +146,8 @@ func (iter *Iterator) discardList() {
 	}
 }
 
-func (iter *Iterator) discard(nBytes int) {
-	tmp := iter.tmp[:nBytes]
-	_, err := io.ReadFull(iter.reader, tmp)
-	if err != nil {
-		iter.ReportError("skip", err.Error())
-	}
-}
-
 func (iter *Iterator) discardBinary() {
-	tmp := iter.tmp[:4]
-	_, err := io.ReadFull(iter.reader, tmp)
-	if err != nil {
-		iter.ReportError("discardBinary", err.Error())
-		return
-	}
+	tmp := iter.readSmall(4)
 	size := uint32(tmp[3]) | uint32(tmp[2])<<8 | uint32(tmp[1])<<16 | uint32(tmp[0])<<24
-	tmp = iter.allocate(int(size))
-	_, err = io.ReadFull(iter.reader, tmp)
-	if err != nil {
-		iter.ReportError("discardBinary", err.Error())
-		return
-	}
+	iter.readLarge(int(size))
 }

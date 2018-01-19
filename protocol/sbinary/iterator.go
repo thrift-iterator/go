@@ -8,11 +8,12 @@ import (
 )
 
 type Iterator struct {
-	real   *binary.Iterator
-	reader io.Reader
-	tmp    []byte
-	space  []byte
-	err    error
+	real     *binary.Iterator
+	reader   io.Reader
+	tmp      []byte
+	space    []byte
+	recorder []byte
+	err      error
 }
 
 func NewIterator(reader io.Reader, buf []byte) *Iterator {
@@ -33,6 +34,39 @@ func (iter *Iterator) allocate(nBytes int) []byte {
 		iter.tmp = make([]byte, nBytes)
 	}
 	return iter.tmp[:nBytes]
+}
+
+func (iter *Iterator) readSmall(nBytes int) []byte {
+	tmp := iter.tmp[:nBytes]
+	_, err := io.ReadFull(iter.reader, tmp)
+	if err != nil {
+		iter.handleReadError(err, tmp)
+		return tmp
+	}
+	if iter.recorder != nil {
+		iter.recorder = append(iter.recorder, tmp...)
+	}
+	return tmp
+}
+
+func (iter *Iterator) readLarge(nBytes int) []byte {
+	tmp := iter.allocate(nBytes)
+	_, err := io.ReadFull(iter.reader, tmp)
+	if err != nil {
+		iter.handleReadError(err, tmp)
+		return tmp
+	}
+	if iter.recorder != nil {
+		iter.recorder = append(iter.recorder, tmp...)
+	}
+	return tmp
+}
+
+func (iter *Iterator) handleReadError(err error, tmp []byte) {
+	for i := 0; i < len(tmp); i++ {
+		tmp[i] = 0
+	}
+	iter.ReportError("read", err.Error())
 }
 
 func (iter *Iterator) Error() error {
@@ -89,12 +123,7 @@ func (iter *Iterator) ReadStructHeader() {
 }
 
 func (iter *Iterator) ReadStructField() (protocol.TType, protocol.FieldId) {
-	tmp := iter.tmp[:1]
-	_, err := io.ReadFull(iter.reader, tmp)
-	if err != nil {
-		iter.ReportError("ReadStructField", err.Error())
-		return protocol.TypeStop, 0
-	}
+	tmp := iter.readSmall(1)
 	fieldType := protocol.TType(tmp[0])
 	if fieldType == protocol.TypeStop {
 		return protocol.TypeStop, 0
@@ -114,12 +143,7 @@ func (iter *Iterator) ReadStruct() map[protocol.FieldId]interface{} {
 }
 
 func (iter *Iterator) ReadListHeader() (elemType protocol.TType, length int) {
-	tmp := iter.tmp[:5]
-	_, err := io.ReadFull(iter.reader, tmp)
-	if err != nil {
-		iter.ReportError("ReadListHeader", err.Error())
-		return protocol.TypeStop, 0
-	}
+	tmp := iter.readSmall(5)
 	iter.real.Reset(nil, tmp)
 	return iter.real.ReadListHeader()
 }
@@ -134,12 +158,7 @@ func (iter *Iterator) ReadList() []interface{} {
 	return iter.real.ReadList()
 }
 func (iter *Iterator) ReadMapHeader() (keyType protocol.TType, elemType protocol.TType, length int) {
-	tmp := iter.tmp[:6]
-	_, err := io.ReadFull(iter.reader, tmp)
-	if err != nil {
-		iter.ReportError("ReadMapHeader", err.Error())
-		return protocol.TypeStop, protocol.TypeStop, 0
-	}
+	tmp := iter.readSmall(6)
 	iter.real.Reset(nil, tmp)
 	return iter.real.ReadMapHeader()
 }
@@ -155,12 +174,7 @@ func (iter *Iterator) ReadMap() map[interface{}]interface{} {
 }
 
 func (iter *Iterator) ReadBool() bool {
-	tmp := iter.tmp[:1]
-	_, err := io.ReadFull(iter.reader, tmp)
-	if err != nil {
-		iter.ReportError("ReadBool", err.Error())
-		return false
-	}
+	tmp := iter.readSmall(1)
 	iter.real.Reset(nil, tmp)
 	return iter.real.ReadBool()
 }
@@ -170,12 +184,7 @@ func (iter *Iterator) ReadInt8() int8 {
 }
 
 func (iter *Iterator) ReadUint8() uint8 {
-	tmp := iter.tmp[:1]
-	_, err := io.ReadFull(iter.reader, tmp)
-	if err != nil {
-		iter.ReportError("ReadUint8", err.Error())
-		return 0
-	}
+	tmp := iter.readSmall(1)
 	iter.real.Reset(nil, tmp)
 	return iter.real.ReadUint8()
 }
@@ -185,12 +194,7 @@ func (iter *Iterator) ReadInt16() int16 {
 }
 
 func (iter *Iterator) ReadUint16() uint16 {
-	tmp := iter.tmp[:2]
-	_, err := io.ReadFull(iter.reader, tmp)
-	if err != nil {
-		iter.ReportError("ReadUint16", err.Error())
-		return 0
-	}
+	tmp := iter.readSmall(2)
 	iter.real.Reset(nil, tmp)
 	return iter.real.ReadUint16()
 }
@@ -200,69 +204,38 @@ func (iter *Iterator) ReadInt32() int32 {
 }
 
 func (iter *Iterator) ReadUint32() uint32 {
-	tmp := iter.tmp[:4]
-	_, err := io.ReadFull(iter.reader, tmp)
-	if err != nil {
-		iter.ReportError("ReadUint32", err.Error())
-		return 0
-	}
+	tmp := iter.readSmall(4)
 	iter.real.Reset(nil, tmp)
 	return iter.real.ReadUint32()
 }
 
 func (iter *Iterator) ReadInt64() int64 {
-	tmp := iter.allocate(8)
-	_, err := io.ReadFull(iter.reader, tmp)
-	if err != nil {
-		iter.ReportError("ReadInt64", err.Error())
-		return 0
-	}
+	tmp := iter.readSmall(8)
 	iter.real.Reset(nil, tmp)
 	return iter.real.ReadInt64()
 }
 
 func (iter *Iterator) ReadUint64() uint64 {
-	tmp := iter.tmp[:8]
-	_, err := io.ReadFull(iter.reader, tmp)
-	if err != nil {
-		iter.ReportError("ReadUint64", err.Error())
-		return 0
-	}
+	tmp := iter.readSmall(8)
 	iter.real.Reset(nil, tmp)
 	return iter.real.ReadUint64()
 }
 
 func (iter *Iterator) ReadFloat64() float64 {
-	tmp := iter.tmp[:8]
-	_, err := io.ReadFull(iter.reader, tmp)
-	if err != nil {
-		iter.ReportError("ReadFloat64", err.Error())
-		return 0
-	}
+	tmp := iter.readSmall(8)
 	iter.real.Reset(nil, tmp)
 	return iter.real.ReadFloat64()
 }
 
 func (iter *Iterator) ReadString() string {
 	size := iter.ReadUint32()
-	tmp := iter.allocate(int(size))
-	_, err := io.ReadFull(iter.reader, tmp)
-	if err != nil {
-		iter.ReportError("ReadBinary", err.Error())
-		return ""
-	}
+	tmp := iter.readLarge(int(size))
 	return string(tmp)
 }
 
 func (iter *Iterator) ReadBinary() []byte {
 	size := iter.ReadUint32()
-	tmp := iter.allocate(int(size))
-	_, err := io.ReadFull(iter.reader, tmp)
-	if err != nil {
-		iter.ReportError("ReadBinary", err.Error())
-		return nil
-	}
-	return tmp
+	return iter.readLarge(int(size))
 }
 
 func (iter *Iterator) Read(ttype protocol.TType) interface{} {
