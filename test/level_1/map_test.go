@@ -82,7 +82,7 @@ func Test_decode_map_as_object(t *testing.T) {
 
 func Test_unmarshal_map(t *testing.T) {
 	should := require.New(t)
-	for _, c := range test.Combinations {
+	for _, c := range test.UnmarshalCombinations {
 		buf, proto := c.CreateProtocol()
 		proto.WriteMapBegin(thrift.I32, thrift.I64, 3)
 		proto.WriteI32(1)

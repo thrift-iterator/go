@@ -9,6 +9,10 @@ import (
 var byteSliceType = reflect.TypeOf(([]byte)(nil))
 
 func DecoderOf(valType reflect.Type) spi.ValDecoder {
+	if valType.Kind() != reflect.Ptr {
+		return &valDecoderAdapter{&unknownDecoder{
+			prefix: "unmarshal into non-pointer type", valType: valType}}
+	}
 	return &valDecoderAdapter{decoderOf("", valType.Elem())}
 }
 
@@ -41,9 +45,19 @@ func decoderOf(prefix string, valType reflect.Type) internalDecoder {
 		return &stringDecoder{}
 	case reflect.Slice:
 		return &sliceDecoder{
-			elemType: valType.Elem(),
-			sliceType: valType,
-			elemDecoder: decoderOf(prefix + " [sliceElem]", valType.Elem()),
+			elemType:    valType.Elem(),
+			sliceType:   valType,
+			elemDecoder: decoderOf(prefix+" [sliceElem]", valType.Elem()),
+		}
+	case reflect.Map:
+		sampleObj := reflect.New(valType).Interface()
+		return &mapDecoder{
+			keyType:      valType.Key(),
+			keyDecoder:   decoderOf(prefix+" [mapKey]", valType.Key()),
+			elemType:     valType.Elem(),
+			elemDecoder:  decoderOf(prefix+" [mapElem]", valType.Elem()),
+			mapType:      valType,
+			mapInterface: *(*emptyInterface)(unsafe.Pointer(&sampleObj)),
 		}
 	}
 	return &unknownDecoder{prefix, valType}
@@ -55,5 +69,5 @@ type unknownDecoder struct {
 }
 
 func (decoder *unknownDecoder) decode(ptr unsafe.Pointer, iterator spi.Iterator) {
-	iterator.ReportError("decode " + decoder.prefix, "do not know how to decode "+decoder.valType.String())
+	iterator.ReportError("decode "+decoder.prefix, "do not know how to decode "+decoder.valType.String())
 }
