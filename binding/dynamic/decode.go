@@ -17,6 +17,12 @@ func decoderOf(prefix string, valType reflect.Type) internalDecoder {
 	if byteSliceType == valType {
 		return &binaryDecoder{}
 	}
+	switch valType.Kind() {
+	case reflect.Bool:
+		return &boolDecoder{}
+	case reflect.Float64:
+		return &float64Decoder{}
+	}
 	return &unknownDecoder{prefix, valType}
 }
 
