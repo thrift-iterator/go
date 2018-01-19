@@ -19,7 +19,7 @@ func Test_decode_binary(t *testing.T) {
 
 func Test_unmarshal_binary(t *testing.T) {
 	should := require.New(t)
-	for _, c := range test.Combinations {
+	for _, c := range test.UnmarshalCombinations {
 		buf, proto := c.CreateProtocol()
 		proto.WriteBinary([]byte("hello"))
 		var val []byte

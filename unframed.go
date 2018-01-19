@@ -4,22 +4,23 @@ import (
 	"github.com/thrift-iterator/go/protocol"
 	"errors"
 	"reflect"
+	"github.com/thrift-iterator/go/spi"
 )
 
 type unframedDecoder struct {
 	cfg  *frozenConfig
-	iter Iterator
+	iter spi.Iterator
 }
 
 type unframedEncoder struct {
-	stream Stream
+	stream spi.Stream
 }
 
 func (decoder *unframedDecoder) Decode(val interface{}) error {
 	cfg := decoder.cfg
 	valType := reflect.TypeOf(val)
 	valDecoder := cfg.getDecoderFromCache(valType)
-	if decoder == nil {
+	if valDecoder == nil {
 		valDecoder = cfg.decoderOf(true, valType)
 		cfg.addDecoderToCache(valType, valDecoder)
 	}

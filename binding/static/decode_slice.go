@@ -1,4 +1,4 @@
-package binding
+package static
 
 import (
 	"reflect"

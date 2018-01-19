@@ -1,4 +1,4 @@
-package binding
+package static
 
 import (
 	"github.com/v2pro/wombat/generic"

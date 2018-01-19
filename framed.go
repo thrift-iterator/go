@@ -5,17 +5,18 @@ import (
 	"encoding/binary"
 	"github.com/thrift-iterator/go/protocol"
 	"errors"
+	"github.com/thrift-iterator/go/spi"
 )
 
 type framedDecoder struct {
 	reader io.Reader
-	iter   Iterator
+	iter   spi.Iterator
 	tmp    []byte
 }
 
 type framedEncoder struct {
 	writer io.Writer
-	stream Stream
+	stream spi.Stream
 }
 
 func (decoder *framedDecoder) Decode(obj interface{}) error {

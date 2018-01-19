@@ -1,4 +1,4 @@
-package binding
+package static
 
 import (
 	"github.com/v2pro/wombat/generic"
@@ -6,11 +6,11 @@ import (
 )
 
 func init() {
-	decodeAnything.ImportFunc(decodeSimpleValue)
+	decodeAnything.ImportFunc(decodingBinary)
 }
 
-var decodeSimpleValue = generic.DefineFunc(
-	"DecodeSimpleValue(dst DT, src ST)").
+var decodingBinary = generic.DefineFunc(
+	"DecodeBinary(dst DT, src ST)").
 	Param("DT", "the dst type to copy into").
 	Param("ST", "the src type to copy from").
 	Generators(
@@ -18,5 +18,5 @@ var decodeSimpleValue = generic.DefineFunc(
 		return simpleValueMap[typ.Kind()]
 	}).
 	Source(`
-*dst = src.Read{{.DT|elem|opFuncName}}()
+*dst = src.ReadBinary()
 	`)

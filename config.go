@@ -11,32 +11,36 @@ import (
 	"github.com/thrift-iterator/go/protocol"
 	"errors"
 	"github.com/v2pro/wombat/generic"
-	"github.com/thrift-iterator/go/binding"
+	"github.com/thrift-iterator/go/spi"
+	"github.com/thrift-iterator/go/binding/static"
+	"github.com/thrift-iterator/go/binding/dynamic"
 )
 
 type frozenConfig struct {
-	protocol     Protocol
-	isFramed     bool
-	decoderCache unsafe.Pointer
-	encoderCache unsafe.Pointer
+	protocol       Protocol
+	decoderCache   unsafe.Pointer
+	encoderCache   unsafe.Pointer
+	isFramed       bool
+	dynamicCodegen bool
 }
 
 func (cfg Config) Froze() API {
 	api := &frozenConfig{
 		protocol: cfg.Protocol,
 		isFramed: cfg.IsFramed,
+		dynamicCodegen: cfg.DynamicCodegen,
 	}
-	atomic.StorePointer(&api.decoderCache, unsafe.Pointer(&map[reflect.Type]ValDecoder{}))
-	atomic.StorePointer(&api.encoderCache, unsafe.Pointer(&map[reflect.Type]ValEncoder{}))
+	atomic.StorePointer(&api.decoderCache, unsafe.Pointer(&map[reflect.Type]spi.ValDecoder{}))
+	atomic.StorePointer(&api.encoderCache, unsafe.Pointer(&map[reflect.Type]spi.ValEncoder{}))
 	return api
 }
 
-func (cfg *frozenConfig) addDecoderToCache(cacheKey reflect.Type, decoder ValDecoder) {
+func (cfg *frozenConfig) addDecoderToCache(cacheKey reflect.Type, decoder spi.ValDecoder) {
 	done := false
 	for !done {
 		ptr := atomic.LoadPointer(&cfg.decoderCache)
-		cache := *(*map[reflect.Type]ValDecoder)(ptr)
-		copied := map[reflect.Type]ValDecoder{}
+		cache := *(*map[reflect.Type]spi.ValDecoder)(ptr)
+		copied := map[reflect.Type]spi.ValDecoder{}
 		for k, v := range cache {
 			copied[k] = v
 		}
@@ -45,12 +49,12 @@ func (cfg *frozenConfig) addDecoderToCache(cacheKey reflect.Type, decoder ValDec
 	}
 }
 
-func (cfg *frozenConfig) addEncoderToCache(cacheKey reflect.Type, encoder ValEncoder) {
+func (cfg *frozenConfig) addEncoderToCache(cacheKey reflect.Type, encoder spi.ValEncoder) {
 	done := false
 	for !done {
 		ptr := atomic.LoadPointer(&cfg.encoderCache)
-		cache := *(*map[reflect.Type]ValEncoder)(ptr)
-		copied := map[reflect.Type]ValEncoder{}
+		cache := *(*map[reflect.Type]spi.ValEncoder)(ptr)
+		copied := map[reflect.Type]spi.ValEncoder{}
 		for k, v := range cache {
 			copied[k] = v
 		}
@@ -59,19 +63,19 @@ func (cfg *frozenConfig) addEncoderToCache(cacheKey reflect.Type, encoder ValEnc
 	}
 }
 
-func (cfg *frozenConfig) getDecoderFromCache(cacheKey reflect.Type) ValDecoder {
+func (cfg *frozenConfig) getDecoderFromCache(cacheKey reflect.Type) spi.ValDecoder {
 	ptr := atomic.LoadPointer(&cfg.decoderCache)
-	cache := *(*map[reflect.Type]ValDecoder)(ptr)
+	cache := *(*map[reflect.Type]spi.ValDecoder)(ptr)
 	return cache[cacheKey]
 }
 
-func (cfg *frozenConfig) getEncoderFromCache(cacheKey reflect.Type) ValEncoder {
+func (cfg *frozenConfig) getEncoderFromCache(cacheKey reflect.Type) spi.ValEncoder {
 	ptr := atomic.LoadPointer(&cfg.encoderCache)
-	cache := *(*map[reflect.Type]ValEncoder)(ptr)
+	cache := *(*map[reflect.Type]spi.ValEncoder)(ptr)
 	return cache[cacheKey]
 }
 
-func (cfg *frozenConfig) NewStream(writer io.Writer, buf []byte) Stream {
+func (cfg *frozenConfig) NewStream(writer io.Writer, buf []byte) spi.Stream {
 	switch cfg.protocol {
 	case ProtocolBinary:
 		return binary.NewStream(writer, buf)
@@ -79,7 +83,7 @@ func (cfg *frozenConfig) NewStream(writer io.Writer, buf []byte) Stream {
 	panic("unsupported protocol")
 }
 
-func (cfg *frozenConfig) NewIterator(reader io.Reader, buf []byte) Iterator {
+func (cfg *frozenConfig) NewIterator(reader io.Reader, buf []byte) spi.Iterator {
 	switch cfg.protocol {
 	case ProtocolBinary:
 		if reader != nil {
@@ -92,9 +96,12 @@ func (cfg *frozenConfig) NewIterator(reader io.Reader, buf []byte) Iterator {
 	panic("unsupported protocol")
 }
 
-func (cfg *frozenConfig) decoderOf(decodeFromReader bool, valType reflect.Type) ValDecoder {
+func (cfg *frozenConfig) decoderOf(decodeFromReader bool, valType reflect.Type) spi.ValDecoder {
 	if valType == reflect.TypeOf((*protocol.Message)(nil)) {
 		return msgDecoderInstance
+	}
+	if cfg.dynamicCodegen {
+		return dynamic.DecoderOf(valType)
 	}
 	iteratorType := reflect.TypeOf((*binary.Iterator)(nil))
 	if decodeFromReader {
@@ -103,7 +110,7 @@ func (cfg *frozenConfig) decoderOf(decodeFromReader bool, valType reflect.Type) 
 	if cfg.protocol == ProtocolCompact {
 		iteratorType = reflect.TypeOf((*compact.Iterator)(nil))
 	}
-	funcObj := generic.Expand(binding.Decode,
+	funcObj := generic.Expand(static.Decode,
 		"ST", iteratorType,
 		"DT", valType)
 	f := funcObj.(func(interface{}, interface{}))
@@ -114,7 +121,7 @@ type funcDecoder struct {
 	f func(dst interface{}, src interface{})
 }
 
-func (decoder *funcDecoder) Decode(val interface{}, iter Iterator) {
+func (decoder *funcDecoder) Decode(val interface{}, iter spi.Iterator) {
 	decoder.f(val, iter)
 }
 

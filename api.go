@@ -2,6 +2,7 @@ package thrifter
 
 import (
 	"io"
+	"github.com/thrift-iterator/go/spi"
 )
 
 type Protocol int
@@ -18,28 +19,29 @@ type Encoder interface {
 }
 
 type Config struct {
-	Protocol         Protocol
-	IsFramed         bool
+	Protocol       Protocol
+	IsFramed       bool
+	DynamicCodegen bool
 }
 
 type API interface {
 	// NewStream is low level streaming api
-	NewStream(writer io.Writer, buf []byte) Stream
+	NewStream(writer io.Writer, buf []byte) spi.Stream
 	// NewIterator is low level streaming api
-	NewIterator(reader io.Reader, buf []byte) Iterator
+	NewIterator(reader io.Reader, buf []byte) spi.Iterator
 	Unmarshal(buf []byte, obj interface{}) error
 	Marshal(obj interface{}) ([]byte, error)
 	NewDecoder(reader io.Reader) Decoder
 	NewEncoder(writer io.Writer) Encoder
 }
 
-var DefaultConfig = Config{Protocol: ProtocolBinary, IsFramed: true}.Froze()
+var DefaultConfig = Config{Protocol: ProtocolBinary, IsFramed: true, DynamicCodegen: true}.Froze()
 
-func NewStream(writer io.Writer, buf []byte) Stream {
+func NewStream(writer io.Writer, buf []byte) spi.Stream {
 	return DefaultConfig.NewStream(writer, buf)
 }
 
-func NewIterator(reader io.Reader, buf []byte) Iterator {
+func NewIterator(reader io.Reader, buf []byte) spi.Iterator {
 	return DefaultConfig.NewIterator(reader, buf)
 }
 

@@ -1,4 +1,4 @@
-package thrifter
+package spi
 
 import (
 	"io"
@@ -78,21 +78,3 @@ type ValEncoder interface {
 type ValDecoder interface {
 	Decode(val interface{}, iter Iterator)
 }
-
-type msgDecoder struct {
-}
-
-func (decoder *msgDecoder) Decode(val interface{}, iter Iterator) {
-	msg, _ := val.(*protocol.Message)
-	if msg == nil {
-		iter.ReportError("MsgDecoder", "can only unmarshal protocol.Message")
-		return
-	}
-	msgRead := iter.ReadMessage()
-	if iter.Error() != nil {
-		return
-	}
-	msg.Set(&msgRead)
-}
-
-var msgDecoderInstance = &msgDecoder{}
