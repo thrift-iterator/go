@@ -4,6 +4,10 @@ import (
 	"reflect"
 	"github.com/thrift-iterator/go/spi"
 	"unsafe"
+	"github.com/thrift-iterator/go/protocol"
+	"strings"
+	"unicode"
+	"strconv"
 )
 
 var byteSliceType = reflect.TypeOf(([]byte)(nil))
@@ -59,8 +63,47 @@ func decoderOf(prefix string, valType reflect.Type) internalDecoder {
 			mapType:      valType,
 			mapInterface: *(*emptyInterface)(unsafe.Pointer(&sampleObj)),
 		}
+	case reflect.Struct:
+		decoderFields := make([]structDecoderField, 0, valType.NumField())
+		decoderFieldMap := map[protocol.FieldId]structDecoderField{}
+		for i := 0; i < valType.NumField(); i++ {
+			refField := valType.Field(i)
+			fieldId := parseFieldId(refField)
+			if fieldId == 0 {
+				continue
+			}
+			decoderField := structDecoderField{
+				offset: refField.Offset,
+				fieldId: fieldId,
+			}
+			decoderFields = append(decoderFields, decoderField)
+			decoderFieldMap[fieldId] = decoderField
+		}
+		return &structDecoder{
+			fields: decoderFields,
+			fieldMap: decoderFieldMap,
+		}
 	}
 	return &unknownDecoder{prefix, valType}
+}
+
+func parseFieldId(refField reflect.StructField) protocol.FieldId {
+	if !unicode.IsUpper(rune(refField.Name[0])) {
+		return 0
+	}
+	thriftTag := refField.Tag.Get("thrift")
+	if thriftTag == "" {
+		return 0
+	}
+	parts := strings.Split(thriftTag, ",")
+	if len(parts) < 2 {
+		return 0
+	}
+	fieldId, err := strconv.Atoi(parts[1])
+	if err != nil {
+		return 0
+	}
+	return protocol.FieldId(fieldId)
 }
 
 type unknownDecoder struct {

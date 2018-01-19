@@ -25,11 +25,14 @@ var decodeStruct = generic.DefineFunc(
 			srcFieldId := protocol.FieldId(0)
 			thriftTag := dstField.Tag.Get("thrift")
 			if thriftTag != "" {
-				fieldId, err := strconv.Atoi(strings.Split(thriftTag, ",")[1])
-				if err != nil {
-					panic("thrift tag must be integer")
+				parts := strings.Split(thriftTag, ",")
+				if len(parts) >= 2 {
+					fieldId, err := strconv.Atoi(parts[1])
+					if err != nil {
+						panic("thrift tag must be integer")
+					}
+					srcFieldId = protocol.FieldId(fieldId)
 				}
-				srcFieldId = protocol.FieldId(fieldId)
 			}
 			bindings = append(bindings, map[string]interface{}{
 				"srcFieldId": srcFieldId,
