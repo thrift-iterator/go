@@ -79,6 +79,8 @@ func (cfg *frozenConfig) NewStream(writer io.Writer, buf []byte) spi.Stream {
 	switch cfg.protocol {
 	case ProtocolBinary:
 		return binary.NewStream(writer, buf)
+	case ProtocolCompact:
+		return compact.NewStream(writer, buf)
 	}
 	panic("unsupported protocol")
 }
