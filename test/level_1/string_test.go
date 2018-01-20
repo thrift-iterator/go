@@ -3,7 +3,6 @@ package test
 import (
 	"testing"
 	"github.com/stretchr/testify/require"
-	"github.com/thrift-iterator/go"
 	"github.com/thrift-iterator/go/test"
 )
 
@@ -30,8 +29,10 @@ func Test_unmarshal_string(t *testing.T) {
 
 func Test_encode_string(t *testing.T) {
 	should := require.New(t)
-	stream := thrifter.NewStream(nil, nil)
-	stream.WriteString("hello")
-	iter := thrifter.NewIterator(nil, stream.Buffer())
-	should.Equal("hello", iter.ReadString())
+	for _, c := range test.Combinations {
+		stream := c.CreateStream()
+		stream.WriteString("hello")
+		iter := c.CreateIterator(stream.Buffer())
+		should.Equal("hello", iter.ReadString())
+	}
 }

@@ -3,7 +3,6 @@ package test
 import (
 	"testing"
 	"github.com/stretchr/testify/require"
-	"github.com/thrift-iterator/go"
 	"github.com/thrift-iterator/go/test"
 )
 
@@ -30,8 +29,10 @@ func Test_unmarshal_int64(t *testing.T) {
 
 func Test_encode_int64(t *testing.T) {
 	should := require.New(t)
-	stream := thrifter.NewStream(nil, nil)
-	stream.WriteInt64(-1)
-	iter := thrifter.NewIterator(nil, stream.Buffer())
-	should.Equal(int64(-1), iter.ReadInt64())
+	for _, c := range test.Combinations {
+		stream := c.CreateStream()
+		stream.WriteInt64(-1)
+		iter := c.CreateIterator(stream.Buffer())
+		should.Equal(int64(-1), iter.ReadInt64())
+	}
 }

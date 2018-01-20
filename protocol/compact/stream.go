@@ -183,29 +183,55 @@ func (stream *Stream) WriteUInt8(val uint8) {
 }
 
 func (stream *Stream) WriteInt16(val int16) {
-	stream.WriteUInt16(uint16(val))
+	stream.WriteInt32(int32(val))
 }
 
 func (stream *Stream) WriteUInt16(val uint16) {
-	stream.buf = append(stream.buf, byte(val>>8), byte(val))
+	stream.WriteInt32(int32(val))
 }
 
 func (stream *Stream) WriteInt32(val int32) {
-	stream.WriteUInt32(uint32(val))
+	stream.writeVarInt32((val << 1) ^ (val >> 31))
 }
 
 func (stream *Stream) WriteUInt32(val uint32) {
-	stream.buf = append(stream.buf, byte(val>>24), byte(val>>16), byte(val>>8), byte(val))
+	stream.WriteInt32(int32(val))
+}
+
+// Write an i32 as a varint. Results in 1-5 bytes on the wire.
+func (stream *Stream) writeVarInt32(n int32) {
+	for {
+		if (n & ^0x7F) == 0 {
+			stream.buf = append(stream.buf, byte(n))
+			break
+		} else {
+			stream.buf = append(stream.buf, byte((n & 0x7F) | 0x80))
+			u := uint64(n)
+			n = int32(u >> 7)
+		}
+	}
 }
 
 func (stream *Stream) WriteInt64(val int64) {
-	stream.WriteUInt64(uint64(val))
+	stream.writeVarInt64((val << 1) ^ (val >> 63))
+}
+
+// Write an i64 as a varint. Results in 1-10 bytes on the wire.
+func (stream *Stream) writeVarInt64(n int64) {
+	for {
+		if (n & ^0x7F) == 0 {
+			stream.buf = append(stream.buf, byte(n))
+			break
+		} else {
+			stream.buf = append(stream.buf, byte((n & 0x7F) | 0x80))
+			u := uint64(n)
+			n = int64(u >> 7)
+		}
+	}
 }
 
 func (stream *Stream) WriteUInt64(val uint64) {
-	stream.buf = append(stream.buf,
-		byte(val>>56), byte(val>>48), byte(val>>40), byte(val>>32),
-		byte(val>>24), byte(val>>16), byte(val>>8), byte(val))
+	stream.WriteInt64(int64(val))
 }
 
 func (stream *Stream) WriteInt(val int) {
@@ -231,12 +257,12 @@ func (stream *Stream) WriteFloat64(val float64) {
 }
 
 func (stream *Stream) WriteBinary(val []byte) {
-	stream.WriteUInt32(uint32(len(val)))
+	stream.writeVarInt32(int32(len(val)))
 	stream.buf = append(stream.buf, val...)
 }
 
 func (stream *Stream) WriteString(val string) {
-	stream.WriteUInt32(uint32(len(val)))
+	stream.writeVarInt32(int32(len(val)))
 	stream.buf = append(stream.buf, val...)
 }
 
