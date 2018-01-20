@@ -4,10 +4,8 @@ import (
 	"testing"
 	"github.com/stretchr/testify/require"
 	"git.apache.org/thrift.git/lib/go/thrift"
-	"github.com/thrift-iterator/go"
 	"github.com/thrift-iterator/go/test/api/binding_test"
 )
-
 
 func Test_binding(t *testing.T) {
 	should := require.New(t)
@@ -22,6 +20,6 @@ func Test_binding(t *testing.T) {
 	proto.WriteStructEnd()
 	transport.Flush()
 	var val binding_test.TestObject
-	should.NoError(thrifter.Unmarshal(buf.Bytes(), &val))
+	should.NoError(api.Unmarshal(buf.Bytes(), &val))
 	should.Equal(int64(1024), val.Field1)
 }

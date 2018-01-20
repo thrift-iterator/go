@@ -97,6 +97,9 @@ func (cfg *frozenConfig) NewIterator(reader io.Reader, buf []byte) spi.Iterator 
 }
 
 func (cfg *frozenConfig) WillDecodeFromBuffer(samples ...interface{}) {
+	if cfg.dynamicCodegen {
+		panic("this config is using dynamic codegen, can not do static codegen")
+	}
 	for _, sample := range samples {
 		cfg.staticDecoderOf(false, reflect.TypeOf(sample))
 	}

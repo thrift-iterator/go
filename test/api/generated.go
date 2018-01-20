@@ -1,8 +1,8 @@
 
 package test
-import "github.com/thrift-iterator/go/protocol/binary"
 import "github.com/v2pro/wombat/generic"
 import "github.com/thrift-iterator/go/test/api/binding_test"
+import "github.com/thrift-iterator/go/protocol/binary"
 func init() {
 generic.RegisterExpandedFunc("Decode_DT_ptr_binding_test__TestObject_ST_ptr_binary__Iterator",Decode_DT_ptr_binding_test__TestObject_ST_ptr_binary__Iterator)}
 func DecodeSimpleValue_DT_ptr_int64_ST_ptr_binary__Iterator(dst *int64,src *binary.Iterator){
