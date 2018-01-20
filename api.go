@@ -34,6 +34,7 @@ type API interface {
 	Marshal(obj interface{}) ([]byte, error)
 	NewDecoder(reader io.Reader, buf []byte) Decoder
 	NewEncoder(writer io.Writer) Encoder
+	WillDecodeFromBuffer(sample ...interface{})
 }
 
 var DefaultConfig = Config{Protocol: ProtocolBinary, IsFramed: true, DynamicCodegen: true}.Froze()

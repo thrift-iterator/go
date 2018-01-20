@@ -10,6 +10,8 @@ import (
 //go:generate $GOPATH/bin/wombat-codegen -pkg github.com/thrift-iterator/go/test/api
 func init() {
 	generic.Declare(func() {
-		thrifter.Unmarshal(nil, (*binding_test.TestObject)(nil))
+		thrifter.DefaultConfig.WillDecodeFromBuffer(
+			(*binding_test.TestObject)(nil),
+		)
 	})
 }

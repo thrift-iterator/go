@@ -9,6 +9,7 @@ import (
 )
 
 type unframedDecoder struct {
+	decodeFromReader bool
 	cfg  *frozenConfig
 	iter spi.Iterator
 }
@@ -22,7 +23,7 @@ func (decoder *unframedDecoder) Decode(val interface{}) error {
 	valType := reflect.TypeOf(val)
 	valDecoder := cfg.getDecoderFromCache(valType)
 	if valDecoder == nil {
-		valDecoder = cfg.decoderOf(true, valType)
+		valDecoder = cfg.decoderOf(decoder.decodeFromReader, valType)
 		cfg.addDecoderToCache(valType, valDecoder)
 	}
 	valDecoder.Decode(val, decoder.iter)

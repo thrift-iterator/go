@@ -80,7 +80,7 @@ func Test_decode_framed_message(t *testing.T) {
 		byte(size >> 24), byte(size >> 16), byte(size >> 8), byte(size),
 	}, input...)
 	reader := bytes.NewBuffer(input)
-	decoder := thrifter.NewDecoder(reader)
+	decoder := thrifter.NewDecoder(reader, nil)
 	var msg protocol.Message
 	should.NoError(decoder.Decode(&msg))
 	fmt.Println(msg.MessageType)
@@ -96,7 +96,7 @@ func Test_decode_unframed_message(t *testing.T) {
 	should.NoError(err)
 	reader := bytes.NewBuffer(input)
 	cfg := thrifter.Config{Protocol: thrifter.ProtocolBinary, IsFramed: false}.Froze()
-	decoder := cfg.NewDecoder(reader)
+	decoder := cfg.NewDecoder(reader, nil)
 	var msg protocol.Message
 	should.NoError(decoder.Decode(&msg))
 	fmt.Println(msg.MessageType)

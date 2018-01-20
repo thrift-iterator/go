@@ -96,6 +96,12 @@ func (cfg *frozenConfig) NewIterator(reader io.Reader, buf []byte) spi.Iterator 
 	panic("unsupported protocol")
 }
 
+func (cfg *frozenConfig) WillDecodeFromBuffer(samples ...interface{}) {
+	for _, sample := range samples {
+		cfg.staticDecoderOf(false, reflect.TypeOf(sample))
+	}
+}
+
 func (cfg *frozenConfig) decoderOf(decodeFromReader bool, valType reflect.Type) spi.ValDecoder {
 	if valType == reflect.TypeOf((*protocol.Message)(nil)) {
 		return msgDecoderInstance
@@ -103,6 +109,10 @@ func (cfg *frozenConfig) decoderOf(decodeFromReader bool, valType reflect.Type) 
 	if cfg.dynamicCodegen {
 		return dynamic.DecoderOf(valType)
 	}
+	return cfg.staticDecoderOf(decodeFromReader, valType)
+}
+
+func (cfg *frozenConfig) staticDecoderOf(decodeFromReader bool, valType reflect.Type) spi.ValDecoder {
 	iteratorType := reflect.TypeOf((*binary.Iterator)(nil))
 	if decodeFromReader {
 		iteratorType = reflect.TypeOf((*sbinary.Iterator)(nil))
@@ -171,7 +181,7 @@ func (cfg *frozenConfig) NewDecoder(reader io.Reader, buf []byte) Decoder {
 	if cfg.isFramed {
 		return &framedDecoder{reader: reader, iter: cfg.NewIterator(nil, nil)}
 	} else {
-		return &unframedDecoder{cfg: cfg, iter: cfg.NewIterator(reader, make([]byte, 256))}
+		return &unframedDecoder{cfg: cfg, iter: cfg.NewIterator(reader, buf), decodeFromReader: reader != nil}
 	}
 }
 
