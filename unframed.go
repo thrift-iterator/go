@@ -5,6 +5,7 @@ import (
 	"errors"
 	"reflect"
 	"github.com/thrift-iterator/go/spi"
+	"io"
 )
 
 type unframedDecoder struct {
@@ -29,6 +30,10 @@ func (decoder *unframedDecoder) Decode(val interface{}) error {
 		return decoder.iter.Error()
 	}
 	return nil
+}
+
+func (decoder *unframedDecoder) Reset(reader io.Reader, buf []byte) {
+	decoder.iter.Reset(reader, buf)
 }
 
 func (encoder *unframedEncoder) Encode(obj interface{}) error {

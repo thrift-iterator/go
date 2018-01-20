@@ -40,7 +40,7 @@ var Combinations = []Combination{
 		Unmarshal: func(buf []byte, obj interface{}) error {
 			cfg := thrifter.Config{Protocol: thrifter.ProtocolBinary}
 			api := cfg.Froze()
-			decoder := api.NewDecoder(bytes.NewBuffer(buf))
+			decoder := api.NewDecoder(bytes.NewBuffer(buf), nil)
 			return decoder.Decode(obj)
 		},
 	},
@@ -62,6 +62,17 @@ var Combinations = []Combination{
 }
 
 var UnmarshalCombinations = append(Combinations,
+	Combination{
+		CreateProtocol: func() (*thrift.TMemoryBuffer, thrift.TProtocol) {
+			buf := thrift.NewTMemoryBuffer()
+			proto := thrift.NewTBinaryProtocol(buf, true, true)
+			return buf, proto
+		},
+		Unmarshal: func(buf []byte, obj interface{}) error {
+			cfg := thrifter.Config{Protocol: thrifter.ProtocolBinary, DynamicCodegen: true}
+			return cfg.Froze().Unmarshal(buf, obj)
+		},
+	},
 	Combination{
 		CreateProtocol: func() (*thrift.TMemoryBuffer, thrift.TProtocol) {
 			buf := thrift.NewTMemoryBuffer()

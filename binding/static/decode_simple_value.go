@@ -18,5 +18,5 @@ var decodeSimpleValue = generic.DefineFunc(
 		return simpleValueMap[typ.Kind()]
 	}).
 	Source(`
-*dst = src.Read{{.DT|elem|opFuncName}}()
+*dst = {{.DT|elem|name}}(src.Read{{.DT|elem|opFuncName}}())
 	`)

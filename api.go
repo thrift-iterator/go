@@ -12,6 +12,7 @@ var ProtocolCompact Protocol = 2
 
 type Decoder interface {
 	Decode(obj interface{}) error
+	Reset(reader io.Reader, buf []byte)
 }
 
 type Encoder interface {
@@ -31,7 +32,7 @@ type API interface {
 	NewIterator(reader io.Reader, buf []byte) spi.Iterator
 	Unmarshal(buf []byte, obj interface{}) error
 	Marshal(obj interface{}) ([]byte, error)
-	NewDecoder(reader io.Reader) Decoder
+	NewDecoder(reader io.Reader, buf []byte) Decoder
 	NewEncoder(writer io.Writer) Encoder
 }
 
@@ -53,8 +54,8 @@ func Marshal(obj interface{}) ([]byte, error) {
 	return DefaultConfig.Marshal(obj)
 }
 
-func NewDecoder(reader io.Reader) Decoder {
-	return DefaultConfig.NewDecoder(reader)
+func NewDecoder(reader io.Reader, buf []byte) Decoder {
+	return DefaultConfig.NewDecoder(reader, buf)
 }
 
 func NewEncoder(writer io.Writer) Encoder {

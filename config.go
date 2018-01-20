@@ -167,7 +167,7 @@ func (cfg *frozenConfig) Marshal(obj interface{}) ([]byte, error) {
 	return buf, nil
 }
 
-func (cfg *frozenConfig) NewDecoder(reader io.Reader) Decoder {
+func (cfg *frozenConfig) NewDecoder(reader io.Reader, buf []byte) Decoder {
 	if cfg.isFramed {
 		return &framedDecoder{reader: reader, iter: cfg.NewIterator(nil, nil)}
 	} else {

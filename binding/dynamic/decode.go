@@ -24,6 +24,9 @@ func decoderOf(prefix string, valType reflect.Type) internalDecoder {
 	if byteSliceType == valType {
 		return &binaryDecoder{}
 	}
+	if isEnumType(valType) {
+		return &int32Decoder{}
+	}
 	switch valType.Kind() {
 	case reflect.Bool:
 		return &boolDecoder{}
@@ -95,6 +98,14 @@ func decoderOf(prefix string, valType reflect.Type) internalDecoder {
 		}
 	}
 	return &unknownDecoder{prefix, valType}
+}
+
+func isEnumType(valType reflect.Type) bool {
+	if valType.Kind() != reflect.Int64 {
+		return false
+	}
+	_, hasStringMethod := valType.MethodByName("String")
+	return hasStringMethod
 }
 
 func parseFieldId(refField reflect.StructField) protocol.FieldId {

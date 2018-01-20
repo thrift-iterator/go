@@ -12,6 +12,9 @@ func dispatch(dstType reflect.Type, srcType reflect.Type) string {
 	if dstType == byteArrayType {
 		return "DecodeBinary"
 	}
+	if isEnumType(dstType) {
+		return "DecodeEnum"
+	}
 	switch dstType.Kind() {
 	case reflect.Slice:
 		return "DecodeSlice"
@@ -23,6 +26,14 @@ func dispatch(dstType reflect.Type, srcType reflect.Type) string {
 		return "DecodePointer"
 	}
 	return "DecodeSimpleValue"
+}
+
+func isEnumType(valType reflect.Type) bool {
+	if valType.Kind() != reflect.Int64 {
+		return false
+	}
+	_, hasStringMethod := valType.MethodByName("String")
+	return hasStringMethod
 }
 
 var decodeAnything = generic.DefineFunc("DecodeAnything(dst DT, src ST)").

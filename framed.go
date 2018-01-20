@@ -25,7 +25,7 @@ func (decoder *framedDecoder) Decode(obj interface{}) error {
 		return errors.New("can only unmarshal protocol.Message")
 	}
 	if len(decoder.tmp) < 4 {
-		decoder.tmp = make([]byte, 64)
+		decoder.tmp = make([]byte, 4)
 	}
 	tmp := decoder.tmp[:4]
 	_, err := io.ReadFull(decoder.reader, tmp)
@@ -47,10 +47,14 @@ func (decoder *framedDecoder) Decode(obj interface{}) error {
 	return nil
 }
 
+func (decoder *framedDecoder) Reset(reader io.Reader, buf []byte) {
+	decoder.reader = reader
+}
+
 func (encoder *framedEncoder) Encode(obj interface{}) error {
 	msg, isMsg := obj.(protocol.Message)
 	if !isMsg {
-		return errors.New("can only unmarshal protocol.Message")
+		return errors.New("can only marshal protocol.Message")
 	}
 	encoder.stream.Reset(nil)
 	encoder.stream.WriteMessage(msg)
