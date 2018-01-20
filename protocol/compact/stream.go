@@ -144,8 +144,12 @@ func (stream *Stream) WriteStruct(val map[protocol.FieldId]interface{}) {
 }
 
 func (stream *Stream) WriteMapHeader(keyType protocol.TType, elemType protocol.TType, length int) {
-	stream.buf = append(stream.buf, byte(keyType), byte(elemType),
-		byte(length>>24), byte(length>>16), byte(length>>8), byte(length))
+	if length == 0 {
+		stream.WriteUint8(0)
+		return
+	}
+	stream.writeVarInt32(int32(length))
+	stream.WriteUint8(uint8(compactTypes[keyType]<<4 | TCompactType(compactTypes[elemType])))
 }
 
 func (stream *Stream) WriteMap(val map[interface{}]interface{}) {
@@ -209,7 +213,7 @@ func (stream *Stream) writeVarInt32(n int32) {
 			stream.buf = append(stream.buf, byte(n))
 			break
 		} else {
-			stream.buf = append(stream.buf, byte((n & 0x7F) | 0x80))
+			stream.buf = append(stream.buf, byte((n&0x7F)|0x80))
 			u := uint64(n)
 			n = int32(u >> 7)
 		}
@@ -227,7 +231,7 @@ func (stream *Stream) writeVarInt64(n int64) {
 			stream.buf = append(stream.buf, byte(n))
 			break
 		} else {
-			stream.buf = append(stream.buf, byte((n & 0x7F) | 0x80))
+			stream.buf = append(stream.buf, byte((n&0x7F)|0x80))
 			u := uint64(n)
 			n = int64(u >> 7)
 		}
@@ -250,13 +254,13 @@ func (stream *Stream) WriteFloat64(val float64) {
 	bits := math.Float64bits(val)
 	stream.buf = append(stream.buf,
 		byte(bits),
-		byte(bits >> 8),
-		byte(bits >> 16),
-		byte(bits >> 24),
-		byte(bits >> 32),
-		byte(bits >> 40),
-		byte(bits >> 48),
-		byte(bits >> 56),
+		byte(bits>>8),
+		byte(bits>>16),
+		byte(bits>>24),
+		byte(bits>>32),
+		byte(bits>>40),
+		byte(bits>>48),
+		byte(bits>>56),
 	)
 }
 
@@ -332,4 +336,3 @@ func (stream *Stream) WriterOf(sample interface{}) (protocol.TType, func(interfa
 		panic("unsupported type")
 	}
 }
-

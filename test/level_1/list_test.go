@@ -3,7 +3,6 @@ package test
 import (
 	"testing"
 	"github.com/stretchr/testify/require"
-	"github.com/thrift-iterator/go"
 	"git.apache.org/thrift.git/lib/go/thrift"
 	"github.com/thrift-iterator/go/protocol"
 	"github.com/thrift-iterator/go/test"
@@ -78,17 +77,19 @@ func Test_unmarshal_list(t *testing.T) {
 
 func Test_encode_list_from_object(t *testing.T) {
 	should := require.New(t)
-	stream := thrifter.NewStream(nil, nil)
-	stream.WriteList([]interface{}{
-		int64(1), int64(2), int64(3),
-	})
-	iter := thrifter.NewIterator(nil, stream.Buffer())
-	elemType, length := iter.ReadListHeader()
-	should.Equal(protocol.TypeI64, elemType)
-	should.Equal(3, length)
-	should.Equal(uint64(1), iter.ReadUint64())
-	should.Equal(uint64(2), iter.ReadUint64())
-	should.Equal(uint64(3), iter.ReadUint64())
+	for _, c := range test.Combinations {
+		stream := c.CreateStream()
+		stream.WriteList([]interface{}{
+			int64(1), int64(2), int64(3),
+		})
+		iter := c.CreateIterator(stream.Buffer())
+		elemType, length := iter.ReadListHeader()
+		should.Equal(protocol.TypeI64, elemType)
+		should.Equal(3, length)
+		should.Equal(uint64(1), iter.ReadUint64())
+		should.Equal(uint64(2), iter.ReadUint64())
+		should.Equal(uint64(3), iter.ReadUint64())
+	}
 }
 
 func Test_skip_list(t *testing.T) {
