@@ -30,18 +30,20 @@ func Test_decode_list_by_iterator(t *testing.T) {
 
 func Test_encode_list_by_stream(t *testing.T) {
 	should := require.New(t)
-	stream := thrifter.NewStream(nil, nil)
-	stream.WriteListHeader(protocol.TypeI64, 3)
-	stream.WriteUInt64(1)
-	stream.WriteUInt64(2)
-	stream.WriteUInt64(3)
-	iter := thrifter.NewIterator(nil, stream.Buffer())
-	elemType, length := iter.ReadListHeader()
-	should.Equal(protocol.TypeI64, elemType)
-	should.Equal(3, length)
-	should.Equal(uint64(1), iter.ReadUint64())
-	should.Equal(uint64(2), iter.ReadUint64())
-	should.Equal(uint64(3), iter.ReadUint64())
+	for _, c := range test.Combinations {
+		stream := c.CreateStream()
+		stream.WriteListHeader(protocol.TypeI64, 3)
+		stream.WriteUint64(1)
+		stream.WriteUint64(2)
+		stream.WriteUint64(3)
+		iter := c.CreateIterator(stream.Buffer())
+		elemType, length := iter.ReadListHeader()
+		should.Equal(protocol.TypeI64, elemType)
+		should.Equal(3, length)
+		should.Equal(uint64(1), iter.ReadUint64())
+		should.Equal(uint64(2), iter.ReadUint64())
+		should.Equal(uint64(3), iter.ReadUint64())
+	}
 }
 
 func Test_decode_list_as_object(t *testing.T) {

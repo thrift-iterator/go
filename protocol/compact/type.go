@@ -7,6 +7,7 @@ import (
 type TCompactType byte
 
 const (
+	TypeStop         TCompactType = 0x00
 	TypeBooleanTrue  TCompactType = 0x01
 	TypeBooleanFalse TCompactType = 0x02
 	TypeByte         TCompactType = 0x03
@@ -20,6 +21,21 @@ const (
 	TypeMap          TCompactType = 0x0B
 	TypeStruct       TCompactType = 0x0C
 )
+
+var compactTypes = map[protocol.TType]TCompactType{
+	protocol.TypeStop:   TypeStop,
+	protocol.TypeBool:   TypeBooleanTrue,
+	protocol.TypeByte:   TypeByte,
+	protocol.TypeI16:    TypeI16,
+	protocol.TypeI32:    TypeI32,
+	protocol.TypeI64:    TypeI64,
+	protocol.TypeDouble: TypeDouble,
+	protocol.TypeString: TypeBinary,
+	protocol.TypeList:   TypeList,
+	protocol.TypeSet:    TypeSet,
+	protocol.TypeMap:    TypeMap,
+	protocol.TypeStruct: TypeStruct,
+}
 
 // TType value.
 func (t TCompactType) ToTType() protocol.TType {

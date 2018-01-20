@@ -31,7 +31,7 @@ func Test_encode_uint64(t *testing.T) {
 	should := require.New(t)
 	for _, c := range test.Combinations {
 		stream := c.CreateStream()
-		stream.WriteUInt64(1024)
+		stream.WriteUint64(1024)
 		iter := c.CreateIterator(stream.Buffer())
 		should.Equal(uint64(1024), iter.ReadUint64())
 	}

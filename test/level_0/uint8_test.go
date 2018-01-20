@@ -31,7 +31,7 @@ func Test_encode_uint8(t *testing.T) {
 	should := require.New(t)
 	for _, c := range test.Combinations {
 		stream := c.CreateStream()
-		stream.WriteUInt8(100)
+		stream.WriteUint8(100)
 		iter := c.CreateIterator(stream.Buffer())
 		should.Equal(uint8(100), iter.ReadUint8())
 	}

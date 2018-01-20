@@ -54,7 +54,7 @@ func (stream *Stream) Flush() {
 
 func (stream *Stream) WriteMessageHeader(header protocol.MessageHeader) {
 	versionAndMessageType := uint32(version1) | uint32(header.MessageType)
-	stream.WriteUInt32(versionAndMessageType)
+	stream.WriteUint32(versionAndMessageType)
 	stream.WriteString(header.MessageName)
 	stream.WriteInt32(int32(header.SeqId))
 }
@@ -100,25 +100,25 @@ func (stream *Stream) WriteStruct(val map[protocol.FieldId]interface{}) {
 			stream.WriteInt8(typedElem)
 		case uint8:
 			stream.WriteStructField(protocol.TypeI08, key)
-			stream.WriteUInt8(typedElem)
+			stream.WriteUint8(typedElem)
 		case int16:
 			stream.WriteStructField(protocol.TypeI16, key)
 			stream.WriteInt16(typedElem)
 		case uint16:
 			stream.WriteStructField(protocol.TypeI16, key)
-			stream.WriteUInt16(typedElem)
+			stream.WriteUint16(typedElem)
 		case int32:
 			stream.WriteStructField(protocol.TypeI32, key)
 			stream.WriteInt32(typedElem)
 		case uint32:
 			stream.WriteStructField(protocol.TypeI32, key)
-			stream.WriteUInt32(typedElem)
+			stream.WriteUint32(typedElem)
 		case int64:
 			stream.WriteStructField(protocol.TypeI64, key)
 			stream.WriteInt64(typedElem)
 		case uint64:
 			stream.WriteStructField(protocol.TypeI64, key)
-			stream.WriteUInt64(typedElem)
+			stream.WriteUint64(typedElem)
 		case float64:
 			stream.WriteStructField(protocol.TypeDouble, key)
 			stream.WriteFloat64(typedElem)
@@ -171,41 +171,41 @@ func takeSampleFromMap(val map[interface{}]interface{}) (bool, interface{}, inte
 
 func (stream *Stream) WriteBool(val bool) {
 	if val {
-		stream.WriteUInt8(1)
+		stream.WriteUint8(1)
 	} else {
-		stream.WriteUInt8(0)
+		stream.WriteUint8(0)
 	}
 }
 
 func (stream *Stream) WriteInt8(val int8) {
-	stream.WriteUInt8(uint8(val))
+	stream.WriteUint8(uint8(val))
 }
 
-func (stream *Stream) WriteUInt8(val uint8) {
+func (stream *Stream) WriteUint8(val uint8) {
 	stream.buf = append(stream.buf, byte(val))
 }
 
 func (stream *Stream) WriteInt16(val int16) {
-	stream.WriteUInt16(uint16(val))
+	stream.WriteUint16(uint16(val))
 }
 
-func (stream *Stream) WriteUInt16(val uint16) {
+func (stream *Stream) WriteUint16(val uint16) {
 	stream.buf = append(stream.buf, byte(val>>8), byte(val))
 }
 
 func (stream *Stream) WriteInt32(val int32) {
-	stream.WriteUInt32(uint32(val))
+	stream.WriteUint32(uint32(val))
 }
 
-func (stream *Stream) WriteUInt32(val uint32) {
+func (stream *Stream) WriteUint32(val uint32) {
 	stream.buf = append(stream.buf, byte(val>>24), byte(val>>16), byte(val>>8), byte(val))
 }
 
 func (stream *Stream) WriteInt64(val int64) {
-	stream.WriteUInt64(uint64(val))
+	stream.WriteUint64(uint64(val))
 }
 
-func (stream *Stream) WriteUInt64(val uint64) {
+func (stream *Stream) WriteUint64(val uint64) {
 	stream.buf = append(stream.buf,
 		byte(val>>56), byte(val>>48), byte(val>>40), byte(val>>32),
 		byte(val>>24), byte(val>>16), byte(val>>8), byte(val))
@@ -215,21 +215,21 @@ func (stream *Stream) WriteInt(val int) {
 	stream.WriteInt64(int64(val))
 }
 
-func (stream *Stream) WriteUInt(val uint) {
-	stream.WriteUInt64(uint64(val))
+func (stream *Stream) WriteUint(val uint) {
+	stream.WriteUint64(uint64(val))
 }
 
 func (stream *Stream) WriteFloat64(val float64) {
-	stream.WriteUInt64(math.Float64bits(val))
+	stream.WriteUint64(math.Float64bits(val))
 }
 
 func (stream *Stream) WriteBinary(val []byte) {
-	stream.WriteUInt32(uint32(len(val)))
+	stream.WriteUint32(uint32(len(val)))
 	stream.buf = append(stream.buf, val...)
 }
 
 func (stream *Stream) WriteString(val string) {
-	stream.WriteUInt32(uint32(len(val)))
+	stream.WriteUint32(uint32(len(val)))
 	stream.buf = append(stream.buf, val...)
 }
 
@@ -245,7 +245,7 @@ func (stream *Stream) WriterOf(sample interface{}) (protocol.TType, func(interfa
 		}
 	case uint8:
 		return protocol.TypeI08, func(val interface{}) {
-			stream.WriteUInt8(val.(uint8))
+			stream.WriteUint8(val.(uint8))
 		}
 	case int16:
 		return protocol.TypeI16, func(val interface{}) {
@@ -253,7 +253,7 @@ func (stream *Stream) WriterOf(sample interface{}) (protocol.TType, func(interfa
 		}
 	case uint16:
 		return protocol.TypeI16, func(val interface{}) {
-			stream.WriteUInt16(val.(uint16))
+			stream.WriteUint16(val.(uint16))
 		}
 	case int32:
 		return protocol.TypeI32, func(val interface{}) {
@@ -261,7 +261,7 @@ func (stream *Stream) WriterOf(sample interface{}) (protocol.TType, func(interfa
 		}
 	case uint32:
 		return protocol.TypeI32, func(val interface{}) {
-			stream.WriteUInt32(val.(uint32))
+			stream.WriteUint32(val.(uint32))
 		}
 	case int64:
 		return protocol.TypeI64, func(val interface{}) {
@@ -269,7 +269,7 @@ func (stream *Stream) WriterOf(sample interface{}) (protocol.TType, func(interfa
 		}
 	case uint64:
 		return protocol.TypeI64, func(val interface{}) {
-			stream.WriteUInt64(val.(uint64))
+			stream.WriteUint64(val.(uint64))
 		}
 	case float64:
 		return protocol.TypeDouble, func(val interface{}) {
