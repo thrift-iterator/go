@@ -12,7 +12,6 @@ type Iterator interface {
 	ReadMessageHeader() protocol.MessageHeader
 	ReadMessage() protocol.Message
 	SkipMessage(space []byte) []byte
-	ReadStructCB(func(fieldType protocol.TType, fieldId protocol.FieldId))
 	ReadStructHeader()
 	ReadStructField() (fieldType protocol.TType, fieldId protocol.FieldId)
 	ReadStruct() map[protocol.FieldId]interface{}
@@ -53,6 +52,7 @@ type Stream interface {
 	WriteMessage(message protocol.Message)
 	WriteListHeader(elemType protocol.TType, length int)
 	WriteList(val []interface{})
+	WriteStructHeader()
 	WriteStructField(fieldType protocol.TType, fieldId protocol.FieldId)
 	WriteStructFieldStop()
 	WriteStruct(val map[protocol.FieldId]interface{})

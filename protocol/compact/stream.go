@@ -8,9 +8,12 @@ import (
 )
 
 type Stream struct {
-	writer io.Writer
-	buf    []byte
-	err    error
+	writer           io.Writer
+	buf              []byte
+	err              error
+	fieldIdStack     []protocol.FieldId
+	lastFieldId      protocol.FieldId
+	pendingBoolField protocol.FieldId
 }
 
 func NewStream(writer io.Writer, buf []byte) *Stream {
@@ -82,15 +85,36 @@ func (stream *Stream) WriteList(val []interface{}) {
 	}
 }
 
+func (stream *Stream) WriteStructHeader() {
+	stream.fieldIdStack = append(stream.fieldIdStack, stream.lastFieldId)
+	stream.lastFieldId = 0
+}
+
 func (stream *Stream) WriteStructField(fieldType protocol.TType, fieldId protocol.FieldId) {
-	stream.buf = append(stream.buf, byte(fieldType), byte(fieldId>>8), byte(fieldId))
+	if fieldType == protocol.TypeBool {
+		stream.pendingBoolField = fieldId
+		return
+	}
+	compactType := uint8(compactTypes[fieldType])
+	// check if we can use delta encoding for the field id
+	if fieldId > stream.lastFieldId && fieldId-stream.lastFieldId <= 15 {
+		stream.WriteUint8(uint8((fieldId-stream.lastFieldId)<<4) | compactType)
+	} else {
+		stream.WriteUint8(compactType)
+		stream.WriteInt16(int16(fieldId))
+	}
+	stream.lastFieldId = fieldId
 }
 
 func (stream *Stream) WriteStructFieldStop() {
 	stream.buf = append(stream.buf, byte(protocol.TypeStop))
+	stream.lastFieldId = stream.fieldIdStack[len(stream.fieldIdStack)-1]
+	stream.fieldIdStack = stream.fieldIdStack[:len(stream.fieldIdStack)-1]
+	stream.pendingBoolField = 0
 }
 
 func (stream *Stream) WriteStruct(val map[protocol.FieldId]interface{}) {
+	stream.WriteStructHeader()
 	for key, elem := range val {
 		switch typedElem := elem.(type) {
 		case bool:
@@ -175,11 +199,29 @@ func takeSampleFromMap(val map[interface{}]interface{}) (bool, interface{}, inte
 }
 
 func (stream *Stream) WriteBool(val bool) {
-	if val {
-		stream.WriteUint8(1)
-	} else {
-		stream.WriteUint8(0)
+	if stream.pendingBoolField == 0 {
+		if val {
+			stream.WriteUint8(1)
+		} else {
+			stream.WriteUint8(0)
+		}
+		return
 	}
+	var compactType TCompactType
+	if val {
+		compactType = TypeBooleanTrue
+	} else {
+		compactType = TypeBooleanFalse
+	}
+	fieldId := stream.pendingBoolField
+	// check if we can use delta encoding for the field id
+	if fieldId > stream.lastFieldId && fieldId-stream.lastFieldId <= 15 {
+		stream.WriteUint8(uint8((fieldId-stream.lastFieldId)<<4) | uint8(compactType))
+	} else {
+		stream.WriteUint8(uint8(compactType))
+		stream.WriteInt16(int16(fieldId))
+	}
+	stream.lastFieldId = fieldId
 }
 
 func (stream *Stream) WriteInt8(val int8) {

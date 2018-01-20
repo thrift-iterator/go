@@ -58,16 +58,6 @@ func (iter *Iterator) ReadMessage() protocol.Message {
 	}
 }
 
-func (iter *Iterator) ReadStructCB(cb func(fieldType protocol.TType, fieldId protocol.FieldId)) {
-	for iter.buf[0] != 0 {
-		fieldType := iter.buf[0]
-		fieldId := uint16(iter.buf[2]) | uint16(iter.buf[1])<<8
-		iter.buf = iter.buf[3:]
-		cb(protocol.TType(fieldType), protocol.FieldId(fieldId))
-	}
-	iter.buf = iter.buf[1:]
-}
-
 func (iter *Iterator) ReadStructHeader() {
 	// noop
 }

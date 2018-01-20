@@ -81,6 +81,9 @@ func (stream *Stream) WriteList(val []interface{}) {
 	}
 }
 
+func (stream *Stream) WriteStructHeader() {
+}
+
 func (stream *Stream) WriteStructField(fieldType protocol.TType, fieldId protocol.FieldId) {
 	stream.buf = append(stream.buf, byte(fieldType), byte(fieldId>>8), byte(fieldId))
 }
@@ -90,6 +93,7 @@ func (stream *Stream) WriteStructFieldStop() {
 }
 
 func (stream *Stream) WriteStruct(val map[protocol.FieldId]interface{}) {
+	stream.WriteStructHeader()
 	for key, elem := range val {
 		switch typedElem := elem.(type) {
 		case bool:

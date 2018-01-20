@@ -76,17 +76,6 @@ func (iter *Iterator) ReadMessage() protocol.Message {
 	}
 }
 
-func (iter *Iterator) ReadStructCB(cb func(fieldType protocol.TType, fieldId protocol.FieldId)) {
-	iter.ReadStructHeader()
-	for {
-		fieldType, fieldId := iter.ReadStructField()
-		if fieldType == protocol.TypeStop {
-			return
-		}
-		cb(fieldType, fieldId)
-	}
-}
-
 func (iter *Iterator) ReadStructHeader() {
 	iter.fieldIdStack = append(iter.fieldIdStack, iter.lastFieldId)
 	iter.lastFieldId = 0
@@ -98,6 +87,7 @@ func (iter *Iterator) ReadStructField() (protocol.TType, protocol.FieldId) {
 	if firstByte == 0 {
 		iter.lastFieldId = iter.fieldIdStack[len(iter.fieldIdStack)-1]
 		iter.fieldIdStack = iter.fieldIdStack[:len(iter.fieldIdStack)-1]
+		iter.pendingBoolField = 0
 		return protocol.TType(firstByte), 0
 	}
 	// mask off the 4 MSB of the type header. it could contain a field id delta.

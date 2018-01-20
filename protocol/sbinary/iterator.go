@@ -110,16 +110,6 @@ func (iter *Iterator) ReadMessage() protocol.Message {
 	return iter.real.ReadMessage()
 }
 
-func (iter *Iterator) ReadStructCB(cb func(fieldType protocol.TType, fieldId protocol.FieldId)) {
-	for {
-		fieldType, fieldId := iter.ReadStructField()
-		if fieldType == protocol.TypeStop {
-			return
-		}
-		cb(fieldType, fieldId)
-	}
-}
-
 func (iter *Iterator) ReadStructHeader() {
 	// noop
 }
