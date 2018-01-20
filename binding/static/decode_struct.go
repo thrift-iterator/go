@@ -34,6 +34,9 @@ var decodeStruct = generic.DefineFunc(
 					srcFieldId = protocol.FieldId(fieldId)
 				}
 			}
+			if srcFieldId == 0 {
+				continue
+			}
 			bindings = append(bindings, map[string]interface{}{
 				"srcFieldId": srcFieldId,
 				"srcType": srcType,
