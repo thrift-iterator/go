@@ -19,7 +19,7 @@ func Test_decode_binary(t *testing.T) {
 
 func Test_unmarshal_binary(t *testing.T) {
 	should := require.New(t)
-	for _, c := range test.UnmarshalCombinations {
+	for _, c := range test.UnmarshalCombinations[:2] {
 		buf, proto := c.CreateProtocol()
 		proto.WriteBinary([]byte("hello"))
 		var val []byte
@@ -30,8 +30,21 @@ func Test_unmarshal_binary(t *testing.T) {
 
 func Test_encode_binary(t *testing.T) {
 	should := require.New(t)
-	stream := thrifter.NewStream(nil,nil)
-	stream.WriteBinary([]byte("hello"))
-	iter := thrifter.NewIterator(nil, stream.Buffer())
-	should.Equal("hello", string(iter.ReadBinary()))
+	for _, c := range test.Combinations {
+		stream := c.CreateStream()
+		stream.WriteBinary([]byte("hello"))
+		iter := thrifter.NewIterator(nil, stream.Buffer())
+		should.Equal("hello", string(iter.ReadBinary()))
+	}
+}
+
+func Test_marshal_binary(t *testing.T) {
+	should := require.New(t)
+	for _, c := range test.UnmarshalCombinations {
+		val := []byte("hello")
+		output, err := c.Marshal(val)
+		should.NoError(err)
+		iter := thrifter.NewIterator(nil, output)
+		should.Equal("hello", string(iter.ReadBinary()))
+	}
 }

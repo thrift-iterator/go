@@ -17,6 +17,8 @@ type Decoder interface {
 
 type Encoder interface {
 	Encode(obj interface{}) error
+	Reset(writer io.Writer)
+	Buffer() []byte
 }
 
 type Config struct {

@@ -72,3 +72,11 @@ func (encoder *framedEncoder) Encode(obj interface{}) error {
 	}
 	return nil
 }
+
+func (encoder *framedEncoder) Reset(writer io.Writer) {
+	encoder.writer = writer
+}
+
+func (encoder *framedEncoder) Buffer() []byte {
+	return encoder.stream.Buffer()
+}

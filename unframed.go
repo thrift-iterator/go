@@ -10,8 +10,8 @@ import (
 
 type unframedDecoder struct {
 	decodeFromReader bool
-	cfg  *frozenConfig
-	iter spi.Iterator
+	cfg              *frozenConfig
+	iter             spi.Iterator
 }
 
 type unframedEncoder struct {
@@ -48,4 +48,12 @@ func (encoder *unframedEncoder) Encode(obj interface{}) error {
 		return encoder.stream.Error()
 	}
 	return nil
+}
+
+func (encoder *unframedEncoder) Reset(writer io.Writer) {
+	encoder.stream.Reset(writer)
+}
+
+func (encoder *unframedEncoder) Buffer() []byte {
+	return encoder.stream.Buffer()
 }
