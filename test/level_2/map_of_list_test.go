@@ -40,6 +40,24 @@ func Test_decode_map_of_list(t *testing.T) {
 	}
 }
 
+func Test_unmarshal_map_of_list(t *testing.T) {
+	should := require.New(t)
+	for _, c := range test.UnmarshalCombinations {
+		buf, proto := c.CreateProtocol()
+		proto.WriteMapBegin(thrift.I64, thrift.LIST, 1)
+		proto.WriteI64(1)
+		proto.WriteListBegin(thrift.I64, 1)
+		proto.WriteI64(1)
+		proto.WriteListEnd()
+		proto.WriteMapEnd()
+		var val map[int64][]int64
+		should.NoError(c.Unmarshal(buf.Bytes(), &val))
+		should.Equal(map[int64][]int64{
+			1: {1},
+		}, val)
+	}
+}
+
 func Test_encode_map_of_list(t *testing.T) {
 	should := require.New(t)
 	stream := thrifter.NewStream(nil, nil)

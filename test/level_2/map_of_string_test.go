@@ -49,6 +49,22 @@ func Test_decode_map_of_string_key(t *testing.T) {
 	}
 }
 
+func Test_unmarshal_map_of_string_key(t *testing.T) {
+	should := require.New(t)
+	for _, c := range test.UnmarshalCombinations {
+		buf, proto := c.CreateProtocol()
+		proto.WriteMapBegin(thrift.STRING, thrift.I64, 1)
+		proto.WriteString("1")
+		proto.WriteI64(1)
+		proto.WriteMapEnd()
+		var val map[string]int64
+		should.NoError(c.Unmarshal(buf.Bytes(), &val))
+		should.Equal(map[string]int64{
+			"1": 1,
+		}, val)
+	}
+}
+
 func Test_encode_map_of_string_key(t *testing.T) {
 	should := require.New(t)
 	stream := thrifter.NewStream(nil, nil)
