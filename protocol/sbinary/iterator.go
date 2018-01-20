@@ -221,6 +221,14 @@ func (iter *Iterator) ReadUint64() uint64 {
 	return iter.real.ReadUint64()
 }
 
+func (iter *Iterator) ReadInt() int {
+	return int(iter.ReadInt64())
+}
+
+func (iter *Iterator) ReadUint() uint {
+	return uint(iter.ReadUint64())
+}
+
 func (iter *Iterator) ReadFloat64() float64 {
 	tmp := iter.readSmall(8)
 	iter.real.Reset(nil, tmp)

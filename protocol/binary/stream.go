@@ -211,6 +211,14 @@ func (stream *Stream) WriteUInt64(val uint64) {
 		byte(val>>24), byte(val>>16), byte(val>>8), byte(val))
 }
 
+func (stream *Stream) WriteInt(val int) {
+	stream.WriteInt64(int64(val))
+}
+
+func (stream *Stream) WriteUInt(val uint) {
+	stream.WriteUInt64(uint64(val))
+}
+
 func (stream *Stream) WriteFloat64(val float64) {
 	stream.WriteUInt64(math.Float64bits(val))
 }

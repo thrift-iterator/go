@@ -219,6 +219,14 @@ func (iter *Iterator) readVarInt64() int64 {
 	return result
 }
 
+func (iter *Iterator) ReadInt() int {
+	return int(iter.ReadInt64())
+}
+
+func (iter *Iterator) ReadUint() uint {
+	return uint(iter.ReadUint64())
+}
+
 func (iter *Iterator) ReadFloat64() float64 {
 	value := math.Float64frombits(binary.LittleEndian.Uint64(iter.buf))
 	iter.consume(8)

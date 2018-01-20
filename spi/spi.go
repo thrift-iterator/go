@@ -24,6 +24,8 @@ type Iterator interface {
 	ReadMap() map[interface{}]interface{}
 	SkipMap(space []byte) []byte
 	ReadBool() bool
+	ReadInt() int
+	ReadUint() uint
 	ReadInt8() int8
 	ReadUint8() uint8
 	ReadInt16() int16
@@ -58,6 +60,8 @@ type Stream interface {
 	WriteMap(val map[interface{}]interface{})
 	WriterOf(sample interface{}) (protocol.TType, func(interface{}))
 	WriteBool(val bool)
+	WriteInt(val int)
+	WriteUInt(val uint)
 	WriteInt8(val int8)
 	WriteUInt8(val uint8)
 	WriteInt16(val int16)

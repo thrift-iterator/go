@@ -149,6 +149,14 @@ func (iter *Iterator) ReadUint64() uint64 {
 	return value
 }
 
+func (iter *Iterator) ReadInt() int {
+	return int(iter.ReadInt64())
+}
+
+func (iter *Iterator) ReadUint() uint {
+	return uint(iter.ReadUint64())
+}
+
 func (iter *Iterator) ReadFloat64() float64 {
 	return math.Float64frombits(iter.ReadUint64())
 }
