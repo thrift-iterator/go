@@ -51,6 +51,11 @@ func decoderOf(prefix string, valType reflect.Type) internalDecoder {
 		return &uint64Decoder{}
 	case reflect.String:
 		return &stringDecoder{}
+	case reflect.Ptr:
+		return &pointerDecoder{
+			valType: valType.Elem(),
+			valDecoder: decoderOf(prefix+" [ptrElem]", valType.Elem()),
+		}
 	case reflect.Slice:
 		return &sliceDecoder{
 			elemType:    valType.Elem(),
