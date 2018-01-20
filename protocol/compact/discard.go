@@ -27,6 +27,13 @@ func (iter *Iterator) Discard(ttype protocol.TType) {
 	}
 }
 
+func (iter *Iterator) discardMessage() {
+	iter.consume(2)
+	iter.readVarInt32()
+	iter.discardBinary()
+	iter.discardStruct()
+}
+
 func (iter *Iterator) discardStruct() {
 	iter.ReadStructHeader()
 	for {
