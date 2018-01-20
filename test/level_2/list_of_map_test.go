@@ -3,7 +3,6 @@ package test
 import (
 	"testing"
 	"github.com/stretchr/testify/require"
-	"github.com/thrift-iterator/go"
 	"git.apache.org/thrift.git/lib/go/thrift"
 	"github.com/thrift-iterator/go/test"
 )
@@ -72,17 +71,19 @@ func Test_unmarshal_list_of_map(t *testing.T) {
 
 func Test_encode_list_of_map(t *testing.T) {
 	should := require.New(t)
-	stream := thrifter.NewStream(nil, nil)
-	stream.WriteList([]interface{}{
-		map[interface{}]interface{} {
+	for _, c := range test.Combinations {
+		stream := c.CreateStream()
+		stream.WriteList([]interface{}{
+			map[interface{}]interface{} {
+				int32(1): int64(1),
+			},
+			map[interface{}]interface{} {
+				int32(2): int64(2),
+			},
+		})
+		iter := c.CreateIterator(stream.Buffer())
+		should.Equal(map[interface{}]interface{}{
 			int32(1): int64(1),
-		},
-		map[interface{}]interface{} {
-			int32(2): int64(2),
-		},
-	})
-	iter := thrifter.NewIterator(nil,  stream.Buffer())
-	should.Equal(map[interface{}]interface{}{
-		int32(1): int64(1),
-	}, iter.ReadList()[0])
+		}, iter.ReadList()[0])
+	}
 }

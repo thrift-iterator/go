@@ -3,7 +3,6 @@ package test
 import (
 	"testing"
 	"github.com/stretchr/testify/require"
-	"github.com/thrift-iterator/go"
 	"git.apache.org/thrift.git/lib/go/thrift"
 	"github.com/thrift-iterator/go/protocol"
 	"github.com/thrift-iterator/go/test"
@@ -83,14 +82,16 @@ func Test_unmarshal_struct_of_struct(t *testing.T) {
 
 func Test_encode_struct_of_struct(t *testing.T) {
 	should := require.New(t)
-	stream := thrifter.NewStream(nil, nil)
-	stream.WriteStruct(map[protocol.FieldId]interface{}{
-		protocol.FieldId(1): map[protocol.FieldId]interface{}{
+	for _, c := range test.Combinations {
+		stream := c.CreateStream()
+		stream.WriteStruct(map[protocol.FieldId]interface{}{
+			protocol.FieldId(1): map[protocol.FieldId]interface{}{
+				protocol.FieldId(1): "abc",
+			},
+		})
+		iter := c.CreateIterator(stream.Buffer())
+		should.Equal(map[protocol.FieldId]interface{}{
 			protocol.FieldId(1): "abc",
-		},
-	})
-	iter := thrifter.NewIterator(nil,  stream.Buffer())
-	should.Equal(map[protocol.FieldId]interface{}{
-		protocol.FieldId(1): "abc",
-	}, iter.ReadStruct()[protocol.FieldId(1)])
+		}, iter.ReadStruct()[protocol.FieldId(1)])
+	}
 }
