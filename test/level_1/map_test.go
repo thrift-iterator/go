@@ -138,3 +138,22 @@ func Test_skip_map(t *testing.T) {
 		should.Equal(buf.Bytes(), iter.SkipMap(nil))
 	}
 }
+
+func Test_marshal_map(t *testing.T) {
+	should := require.New(t)
+	for _, c := range test.MarshalCombinations {
+		output, err := c.Marshal(map[string]int64{
+			"k1": int64(1),
+			"k2": int64(2),
+			"k3": int64(3),
+		})
+		should.NoError(err)
+		iter := c.CreateIterator(output)
+		obj := iter.ReadMap()
+		should.Equal(map[interface{}]interface{}{
+			"k1": int64(1),
+			"k2": int64(2),
+			"k3": int64(3),
+		}, obj)
+	}
+}

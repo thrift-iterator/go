@@ -53,6 +53,13 @@ func encoderOf(prefix string, valType reflect.Type) internalEncoder {
 			elemType: valType.Elem(),
 			elemEncoder: encoderOf(prefix + " [sliceElem]", valType.Elem()),
 		}
+	case reflect.Map:
+		sampleObj := reflect.New(valType).Elem().Interface()
+		return &mapEncoder{
+			keyEncoder:   encoderOf(prefix+" [mapKey]", valType.Key()),
+			elemEncoder:  encoderOf(prefix+" [mapElem]", valType.Elem()),
+			mapInterface: *(*emptyInterface)(unsafe.Pointer(&sampleObj)),
+		}
 	}
 	return &unknownEncoder{prefix, valType}
 }
