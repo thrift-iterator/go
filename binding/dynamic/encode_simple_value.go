@@ -5,6 +5,13 @@ import (
 	"github.com/thrift-iterator/go/spi"
 )
 
+type binaryEncoder struct {
+}
+
+func (encoder *binaryEncoder) encode(ptr unsafe.Pointer, iter spi.Stream) {
+	iter.WriteBinary(*(*[]byte)(ptr))
+}
+
 type boolEncoder struct {
 }
 

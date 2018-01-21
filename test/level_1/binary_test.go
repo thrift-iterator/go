@@ -3,7 +3,6 @@ package test
 import (
 	"testing"
 	"github.com/stretchr/testify/require"
-	"github.com/thrift-iterator/go"
 	"github.com/thrift-iterator/go/test"
 )
 
@@ -40,11 +39,11 @@ func Test_encode_binary(t *testing.T) {
 
 func Test_marshal_binary(t *testing.T) {
 	should := require.New(t)
-	for _, c := range test.UnmarshalCombinations {
+	for _, c := range test.MarshalCombinations {
 		val := []byte("hello")
 		output, err := c.Marshal(val)
 		should.NoError(err)
-		iter := thrifter.NewIterator(nil, output)
+		iter := c.CreateIterator(output)
 		should.Equal("hello", string(iter.ReadBinary()))
 	}
 }
