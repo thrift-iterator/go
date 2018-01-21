@@ -1,8 +1,6 @@
 package thrifter
 
 import (
-	"github.com/thrift-iterator/go/protocol"
-	"errors"
 	"reflect"
 	"github.com/thrift-iterator/go/spi"
 	"io"
@@ -15,6 +13,7 @@ type unframedDecoder struct {
 }
 
 type unframedEncoder struct {
+	cfg    *frozenConfig
 	stream spi.Stream
 }
 
@@ -37,12 +36,15 @@ func (decoder *unframedDecoder) Reset(reader io.Reader, buf []byte) {
 	decoder.iter.Reset(reader, buf)
 }
 
-func (encoder *unframedEncoder) Encode(obj interface{}) error {
-	msg, isMsg := obj.(protocol.Message)
-	if !isMsg {
-		return errors.New("can only marshal protocol.Message")
+func (encoder *unframedEncoder) Encode(val interface{}) error {
+	cfg := encoder.cfg
+	valType := reflect.TypeOf(val)
+	valEncoder := cfg.getEncoderFromCache(valType)
+	if valEncoder == nil {
+		valEncoder = cfg.encoderOf(valType)
+		cfg.addEncoderToCache(valType, valEncoder)
 	}
-	encoder.stream.WriteMessage(msg)
+	valEncoder.Encode(val, encoder.stream)
 	encoder.stream.Flush()
 	if encoder.stream.Error() != nil {
 		return encoder.stream.Error()

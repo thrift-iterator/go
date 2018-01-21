@@ -36,3 +36,13 @@ func Test_encode_bool(t *testing.T) {
 		should.Equal(true, iter.ReadBool())
 	}
 }
+
+func Test_marshal_bool(t *testing.T) {
+	should := require.New(t)
+	for _, c := range test.MarshalCombinations {
+		output, err := c.Marshal(true)
+		should.NoError(err)
+		iter := c.CreateIterator(output)
+		should.Equal(true, iter.ReadBool())
+	}
+}

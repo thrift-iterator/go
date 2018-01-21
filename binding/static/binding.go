@@ -2,6 +2,8 @@ package static
 
 import "reflect"
 
+var byteArrayType = reflect.TypeOf(([]byte)(nil))
+
 var simpleValueMap = map[reflect.Kind]string{
 	reflect.Int: "Int",
 	reflect.Int8: "Int8",
@@ -17,4 +19,12 @@ var simpleValueMap = map[reflect.Kind]string{
 	reflect.Float64: "Float64",
 	reflect.String: "String",
 	reflect.Bool: "Bool",
+}
+
+func isEnumType(valType reflect.Type) bool {
+	if valType.Kind() != reflect.Int64 {
+		return false
+	}
+	_, hasStringMethod := valType.MethodByName("String")
+	return hasStringMethod
 }

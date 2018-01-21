@@ -6,11 +6,11 @@ import (
 )
 
 func init() {
-	decodeAnything.ImportFunc(decodeSimpleValue)
+	encodeAnything.ImportFunc(encodeSimpleValue)
 }
 
-var decodeSimpleValue = generic.DefineFunc(
-	"DecodeSimpleValue(dst DT, src ST)").
+var encodeSimpleValue = generic.DefineFunc(
+	"EncodeSimpleValue(dst DT, src ST)").
 	Param("DT", "the dst type to copy into").
 	Param("ST", "the src type to copy from").
 	Generators(
@@ -22,5 +22,5 @@ var decodeSimpleValue = generic.DefineFunc(
 		return funName
 	}).
 	Source(`
-*dst = {{.DT|elem|name}}(src.Read{{.DT|elem|opFuncName}}())
+dst.Write{{.ST|opFuncName}}(src)
 	`)

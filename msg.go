@@ -9,11 +9,7 @@ type msgDecoder struct {
 }
 
 func (decoder *msgDecoder) Decode(val interface{}, iter spi.Iterator) {
-	msg, _ := val.(*protocol.Message)
-	if msg == nil {
-		iter.ReportError("MsgDecoder", "can only unmarshal protocol.Message")
-		return
-	}
+	msg := val.(*protocol.Message)
 	msgRead := iter.ReadMessage()
 	if iter.Error() != nil {
 		return
@@ -22,3 +18,13 @@ func (decoder *msgDecoder) Decode(val interface{}, iter spi.Iterator) {
 }
 
 var msgDecoderInstance = &msgDecoder{}
+
+type msgEncoder struct {
+}
+
+func (encoder *msgEncoder) Encode(val interface{}, stream spi.Stream) {
+	msg := val.(protocol.Message)
+	stream.WriteMessage(msg)
+}
+
+var msgEncoderInstance = &msgEncoder{}

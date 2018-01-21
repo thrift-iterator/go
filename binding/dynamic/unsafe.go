@@ -18,6 +18,19 @@ func (decoder *valDecoderAdapter) Decode(val interface{}, iter spi.Iterator) {
 	decoder.decoder.decode(ptr, iter)
 }
 
+type internalEncoder interface {
+	encode(ptr unsafe.Pointer, stream spi.Stream)
+}
+
+type valEncoderAdapter struct {
+	encoder internalEncoder
+}
+
+func (encoder *valEncoderAdapter) Encode(val interface{}, stream spi.Stream) {
+	ptr := (*emptyInterface)(unsafe.Pointer(&val)).word
+	encoder.encoder.encode(ptr, stream)
+}
+
 // emptyInterface is the header for an interface{} value.
 type emptyInterface struct {
 	typ  unsafe.Pointer

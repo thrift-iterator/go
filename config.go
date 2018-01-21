@@ -132,12 +132,43 @@ func (cfg *frozenConfig) staticDecoderOf(decodeFromReader bool, valType reflect.
 	return &funcDecoder{f}
 }
 
+func (cfg *frozenConfig) encoderOf(valType reflect.Type) spi.ValEncoder {
+	if valType == reflect.TypeOf((*protocol.Message)(nil)) {
+		return msgEncoderInstance
+	}
+	if cfg.dynamicCodegen {
+		return dynamic.EncoderOf(valType)
+	}
+	return cfg.staticEncoderOf(valType)
+}
+
+
+func (cfg *frozenConfig) staticEncoderOf(valType reflect.Type) spi.ValEncoder {
+	streamType := reflect.TypeOf((*binary.Stream)(nil))
+	if cfg.protocol == ProtocolCompact {
+		streamType = reflect.TypeOf((*compact.Stream)(nil))
+	}
+	funcObj := generic.Expand(static.Encode,
+		"ST", valType,
+		"DT", streamType)
+	f := funcObj.(func(interface{}, interface{}))
+	return &funcEncoder{f}
+}
+
 type funcDecoder struct {
 	f func(dst interface{}, src interface{})
 }
 
 func (decoder *funcDecoder) Decode(val interface{}, iter spi.Iterator) {
 	decoder.f(val, iter)
+}
+
+type funcEncoder struct {
+	f func(dst interface{}, src interface{})
+}
+
+func (encoder *funcEncoder) Encode(val interface{}, stream spi.Stream) {
+	encoder.f(stream, val)
 }
 
 func (cfg *frozenConfig) Unmarshal(buf []byte, val interface{}) error {
@@ -162,13 +193,15 @@ func (cfg *frozenConfig) Unmarshal(buf []byte, val interface{}) error {
 	return nil
 }
 
-func (cfg *frozenConfig) Marshal(obj interface{}) ([]byte, error) {
-	msg, isMsg := obj.(protocol.Message)
-	if !isMsg {
-		return nil, errors.New("can only unmarshal protocol.Message")
+func (cfg *frozenConfig) Marshal(val interface{}) ([]byte, error) {
+	valType := reflect.TypeOf(val)
+	encoder := cfg.getEncoderFromCache(valType)
+	if encoder == nil {
+		encoder = cfg.encoderOf(valType)
+		cfg.addEncoderToCache(valType, encoder)
 	}
 	stream := cfg.NewStream(nil, nil)
-	stream.WriteMessage(msg)
+	encoder.Encode(val, stream)
 	if stream.Error() != nil {
 		return nil, stream.Error()
 	}
@@ -194,6 +227,6 @@ func (cfg *frozenConfig) NewEncoder(writer io.Writer) Encoder {
 	if cfg.isFramed {
 		return &framedEncoder{writer: writer, stream: cfg.NewStream(nil, nil)}
 	} else {
-		return &unframedEncoder{stream: cfg.NewStream(writer, nil)}
+		return &unframedEncoder{cfg: cfg, stream: cfg.NewStream(writer, nil)}
 	}
 }

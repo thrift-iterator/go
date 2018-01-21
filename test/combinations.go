@@ -11,8 +11,8 @@ type Combination struct {
 	CreateProtocol func() (*thrift.TMemoryBuffer, thrift.TProtocol)
 	CreateStream   func() spi.Stream
 	CreateIterator func(buf []byte) spi.Iterator
-	Unmarshal      func(buf []byte, obj interface{}) error
-	Marshal        func(obj interface{}) ([]byte, error)
+	Unmarshal      func(buf []byte, val interface{}) error
+	Marshal        func(val interface{}) ([]byte, error)
 }
 
 var binaryCfg = thrifter.Config{Protocol: thrifter.ProtocolBinary}
@@ -28,11 +28,11 @@ var binary = Combination{
 	CreateIterator: func(buf []byte) spi.Iterator {
 		return binaryCfg.Froze().NewIterator(nil, buf)
 	},
-	Unmarshal: func(buf []byte, obj interface{}) error {
-		return binaryCfg.Froze().Unmarshal(buf, obj)
+	Unmarshal: func(buf []byte, val interface{}) error {
+		return binaryCfg.Froze().Unmarshal(buf, val)
 	},
-	Marshal: func(obj interface{}) ([]byte, error) {
-		return binaryCfg.Froze().Marshal(obj)
+	Marshal: func(val interface{}) ([]byte, error) {
+		return binaryCfg.Froze().Marshal(val)
 	},
 }
 
@@ -48,13 +48,13 @@ var binaryEncoderDecoder = Combination{
 	CreateIterator: func(buf []byte) spi.Iterator {
 		return binaryCfg.Froze().NewIterator(bytes.NewBuffer(buf), nil)
 	},
-	Unmarshal: func(buf []byte, obj interface{}) error {
+	Unmarshal: func(buf []byte, val interface{}) error {
 		decoder := binaryCfg.Froze().NewDecoder(bytes.NewBuffer(buf), nil)
-		return decoder.Decode(obj)
+		return decoder.Decode(val)
 	},
-	Marshal: func(obj interface{}) ([]byte, error) {
+	Marshal: func(val interface{}) ([]byte, error) {
 		encoder := binaryCfg.Froze().NewEncoder(nil)
-		err := encoder.Encode(obj)
+		err := encoder.Encode(val)
 		if err != nil {
 			return nil, err
 		}
@@ -75,11 +75,11 @@ var compact = Combination{
 	CreateIterator: func(buf []byte) spi.Iterator {
 		return compactCfg.Froze().NewIterator(nil, buf)
 	},
-	Unmarshal: func(buf []byte, obj interface{}) error {
-		return compactCfg.Froze().Unmarshal(buf, obj)
+	Unmarshal: func(buf []byte, val interface{}) error {
+		return compactCfg.Froze().Unmarshal(buf, val)
 	},
-	Marshal: func(obj interface{}) ([]byte, error) {
-		return compactCfg.Froze().Marshal(obj)
+	Marshal: func(val interface{}) ([]byte, error) {
+		return compactCfg.Froze().Marshal(val)
 	},
 }
 var binaryDynamicCfg = thrifter.Config{Protocol: thrifter.ProtocolBinary, DynamicCodegen: true}
@@ -89,8 +89,14 @@ var binaryDynamic = Combination{
 		proto := thrift.NewTBinaryProtocol(buf, true, true)
 		return buf, proto
 	},
-	Unmarshal: func(buf []byte, obj interface{}) error {
-		return binaryDynamicCfg.Froze().Unmarshal(buf, obj)
+	CreateIterator: func(buf []byte) spi.Iterator {
+		return binaryDynamicCfg.Froze().NewIterator(nil, buf)
+	},
+	Unmarshal: func(buf []byte, val interface{}) error {
+		return binaryDynamicCfg.Froze().Unmarshal(buf, val)
+	},
+	Marshal: func(val interface{}) ([]byte, error) {
+		return binaryDynamicCfg.Froze().Marshal(val)
 	},
 }
 var compactDynamicCfg = thrifter.Config{Protocol: thrifter.ProtocolCompact, DynamicCodegen: true}
@@ -100,8 +106,14 @@ var compactDynamic = Combination{
 		proto := thrift.NewTCompactProtocol(buf)
 		return buf, proto
 	},
-	Unmarshal: func(buf []byte, obj interface{}) error {
-		return compactDynamicCfg.Froze().Unmarshal(buf, obj)
+	CreateIterator: func(buf []byte) spi.Iterator {
+		return compactDynamicCfg.Froze().NewIterator(nil, buf)
+	},
+	Unmarshal: func(buf []byte, val interface{}) error {
+		return compactDynamicCfg.Froze().Unmarshal(buf, val)
+	},
+	Marshal: func(val interface{}) ([]byte, error) {
+		return compactDynamicCfg.Froze().Marshal(val)
 	},
 }
 
