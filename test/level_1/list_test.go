@@ -105,3 +105,18 @@ func Test_skip_list(t *testing.T) {
 		should.Equal(buf.Bytes(), iter.SkipList(nil))
 	}
 }
+
+func Test_marshal_list(t *testing.T) {
+	should := require.New(t)
+	for _, c := range test.MarshalCombinations {
+		output, err := c.Marshal([]int64{1, 2, 3})
+		should.NoError(err)
+		iter := c.CreateIterator(output)
+		elemType, length := iter.ReadListHeader()
+		should.Equal(protocol.TypeI64, elemType)
+		should.Equal(3, length)
+		should.Equal(uint64(1), iter.ReadUint64())
+		should.Equal(uint64(2), iter.ReadUint64())
+		should.Equal(uint64(3), iter.ReadUint64())
+	}
+}

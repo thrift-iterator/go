@@ -1,6 +1,9 @@
 package static
 
-import "reflect"
+import (
+	"reflect"
+	"github.com/thrift-iterator/go/protocol"
+)
 
 var byteArrayType = reflect.TypeOf(([]byte)(nil))
 
@@ -19,6 +22,23 @@ var simpleValueMap = map[reflect.Kind]string{
 	reflect.Float64: "Float64",
 	reflect.String: "String",
 	reflect.Bool: "Bool",
+}
+
+var thriftTypeMap = map[reflect.Kind]protocol.TType {
+	reflect.Int: protocol.TypeI64,
+	reflect.Int8: protocol.TypeI08,
+	reflect.Int16: protocol.TypeI16,
+	reflect.Int32: protocol.TypeI32,
+	reflect.Int64: protocol.TypeI64,
+	reflect.Uint: protocol.TypeI64,
+	reflect.Uint8: protocol.TypeI08,
+	reflect.Uint16: protocol.TypeI16,
+	reflect.Uint32: protocol.TypeI32,
+	reflect.Uint64: protocol.TypeI64,
+	reflect.Float32: protocol.TypeDouble,
+	reflect.Float64: protocol.TypeDouble,
+	reflect.String: protocol.TypeString,
+	reflect.Bool: protocol.TypeBool,
 }
 
 func isEnumType(valType reflect.Type) bool {

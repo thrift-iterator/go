@@ -5,7 +5,7 @@ import (
 	"reflect"
 )
 
-func dispatchDecode(dstType reflect.Type, srcType reflect.Type) string {
+func dispatchDecode(dstType reflect.Type) string {
 	dstType = dstType.Elem()
 	if dstType == byteArrayType {
 		return "DecodeBinary"
@@ -32,7 +32,7 @@ var decodeAnything = generic.DefineFunc("DecodeAnything(dst DT, src ST)").
 	Generators(
 	"dispatchDecode", dispatchDecode).
 	Source(`
-{{ $tmpl := dispatchDecode .DT .ST }}
+{{ $tmpl := dispatchDecode .DT }}
 {{ $decode := expand $tmpl "DT" .DT "ST" .ST }}
 {{$decode}}(dst, src)
 `)

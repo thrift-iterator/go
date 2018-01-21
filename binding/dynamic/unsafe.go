@@ -3,6 +3,7 @@ package dynamic
 import (
 	"unsafe"
 	"github.com/thrift-iterator/go/spi"
+	"github.com/thrift-iterator/go/protocol"
 )
 
 type internalDecoder interface {
@@ -20,6 +21,7 @@ func (decoder *valDecoderAdapter) Decode(val interface{}, iter spi.Iterator) {
 
 type internalEncoder interface {
 	encode(ptr unsafe.Pointer, stream spi.Stream)
+	thriftType() protocol.TType
 }
 
 type valEncoderAdapter struct {
