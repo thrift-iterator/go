@@ -2,6 +2,53 @@ package binary
 
 import "github.com/thrift-iterator/go/protocol"
 
+
+func (iter *Iterator) Skip(ttype protocol.TType, space []byte) []byte {
+	switch ttype {
+	case protocol.TypeBool, protocol.TypeI08:
+		skipped := iter.buf[:1]
+		iter.buf = iter.buf[1:]
+		if len(space) > 0 {
+			space = append(space, skipped...)
+			return space
+		}
+		return skipped
+	case protocol.TypeI16:
+		skipped := iter.buf[:2]
+		iter.buf = iter.buf[2:]
+		if len(space) > 0 {
+			space = append(space, skipped...)
+			return space
+		}
+		return skipped
+	case protocol.TypeI32:
+		skipped := iter.buf[:4]
+		iter.buf = iter.buf[4:]
+		if len(space) > 0 {
+			space = append(space, skipped...)
+			return space
+		}
+		return skipped
+	case protocol.TypeI64, protocol.TypeDouble:
+		skipped := iter.buf[:8]
+		iter.buf = iter.buf[8:]
+		if len(space) > 0 {
+			space = append(space, skipped...)
+			return space
+		}
+		return skipped
+	case protocol.TypeString:
+		return iter.SkipBinary(space)
+	case protocol.TypeList:
+		return iter.SkipList(space)
+	case protocol.TypeMap:
+		return iter.SkipMap(space)
+	case protocol.TypeStruct:
+		return iter.SkipStruct(space)
+	default:
+		panic("unsupported type")
+	}
+}
 func (iter *Iterator) SkipMessage(space []byte) []byte {
 	bufBeforeSkip := iter.buf
 	iter.buf = iter.buf[4:]

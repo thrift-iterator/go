@@ -55,6 +55,12 @@ func (stream *Stream) Flush() {
 	stream.buf = stream.buf[:0]
 }
 
+func (stream *Stream) Write(buf []byte) error {
+	stream.buf = append(stream.buf, buf...)
+	stream.Flush()
+	return stream.Error()
+}
+
 func (stream *Stream) WriteMessageHeader(header protocol.MessageHeader) {
 	panic("not implemented")
 }

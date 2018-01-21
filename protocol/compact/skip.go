@@ -1,5 +1,18 @@
 package compact
 
+import "github.com/thrift-iterator/go/protocol"
+
+func (iter *Iterator) Skip(ttype protocol.TType, space []byte) []byte {
+	bufBeforeSkip := iter.buf
+	consumedBeforeSkip := iter.consumed
+	iter.Discard(ttype)
+	skipped := bufBeforeSkip[:iter.consumed-consumedBeforeSkip]
+	if len(space) > 0 {
+		return append(space, skipped...)
+	}
+	return skipped
+}
+
 func (iter *Iterator) SkipMessage(space []byte) []byte {
 	bufBeforeSkip := iter.buf
 	consumedBeforeSkip := iter.consumed
@@ -54,4 +67,3 @@ func (iter *Iterator) SkipBinary(space []byte) []byte {
 	}
 	return skipped
 }
-

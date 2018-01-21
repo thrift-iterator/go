@@ -37,6 +37,7 @@ type Iterator interface {
 	ReadString() string
 	ReadBinary() []byte
 	SkipBinary(space []byte) []byte
+	Skip(ttype protocol.TType, space []byte) []byte
 	Discard(ttype protocol.TType)
 	Read(ttype protocol.TType) interface{}
 	ReaderOf(ttype protocol.TType) func() interface{}
@@ -48,6 +49,7 @@ type Stream interface {
 	Reset(writer io.Writer)
 	Flush()
 	Buffer() []byte
+	Write(buf []byte) error
 	WriteMessageHeader(header protocol.MessageHeader)
 	WriteMessage(message protocol.Message)
 	WriteListHeader(elemType protocol.TType, length int)
