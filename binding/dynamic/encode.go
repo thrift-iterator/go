@@ -8,6 +8,12 @@ import (
 )
 
 func EncoderOf(valType reflect.Type) spi.ValEncoder {
+	isPtr := valType.Kind() == reflect.Ptr
+	isOneElementArray := valType.Kind() == reflect.Array && valType.Len() == 1
+	isOneFieldStruct := valType.Kind() == reflect.Struct && valType.NumField() == 1
+	if isPtr || isOneElementArray || isOneFieldStruct {
+		return &ptrEncoderAdapter{encoderOf("", valType)}
+	}
 	return &valEncoderAdapter{encoderOf("", valType)}
 }
 
@@ -49,9 +55,9 @@ func encoderOf(prefix string, valType reflect.Type) internalEncoder {
 		return &float64Encoder{}
 	case reflect.Slice:
 		return &sliceEncoder{
-			sliceType: valType,
-			elemType: valType.Elem(),
-			elemEncoder: encoderOf(prefix + " [sliceElem]", valType.Elem()),
+			sliceType:   valType,
+			elemType:    valType.Elem(),
+			elemEncoder: encoderOf(prefix+" [sliceElem]", valType.Elem()),
 		}
 	case reflect.Map:
 		sampleObj := reflect.New(valType).Elem().Interface()
@@ -59,6 +65,10 @@ func encoderOf(prefix string, valType reflect.Type) internalEncoder {
 			keyEncoder:   encoderOf(prefix+" [mapKey]", valType.Key()),
 			elemEncoder:  encoderOf(prefix+" [mapElem]", valType.Elem()),
 			mapInterface: *(*emptyInterface)(unsafe.Pointer(&sampleObj)),
+		}
+	case reflect.Ptr:
+		return &pointerEncoder{
+			valEncoder: encoderOf(prefix+" [ptrElem]", valType.Elem()),
 		}
 	}
 	return &unknownEncoder{prefix, valType}

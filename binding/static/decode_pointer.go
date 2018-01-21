@@ -5,10 +5,10 @@ import (
 )
 
 func init() {
-	decodeAnything.ImportFunc(decodingPointer)
+	decodeAnything.ImportFunc(decodePointer)
 }
 
-var decodingPointer = generic.DefineFunc(
+var decodePointer = generic.DefineFunc(
 	"DecodePointer(dst DT, src ST)").
 	Param("DT", "the dst type to copy into").
 	Param("ST", "the src type to copy from").
@@ -18,4 +18,4 @@ var decodingPointer = generic.DefineFunc(
 defDst := new({{ .DT|elem|elem|name }})
 {{$decode}}(defDst, src)
 *dst = defDst
-return`)
+`)

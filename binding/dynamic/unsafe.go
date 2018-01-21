@@ -33,6 +33,15 @@ func (encoder *valEncoderAdapter) Encode(val interface{}, stream spi.Stream) {
 	encoder.encoder.encode(ptr, stream)
 }
 
+type ptrEncoderAdapter struct {
+	encoder internalEncoder
+}
+
+func (encoder *ptrEncoderAdapter) Encode(val interface{}, stream spi.Stream) {
+	ptr := (*emptyInterface)(unsafe.Pointer(&val)).word
+	encoder.encoder.encode(unsafe.Pointer(&ptr), stream)
+}
+
 // emptyInterface is the header for an interface{} value.
 type emptyInterface struct {
 	typ  unsafe.Pointer
