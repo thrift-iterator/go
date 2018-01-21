@@ -39,7 +39,7 @@ func Test_encode_uint16(t *testing.T) {
 
 func Test_marshal_uint16(t *testing.T) {
 	should := require.New(t)
-	for _, c := range test.Combinations {
+	for _, c := range test.MarshalCombinations {
 		output, err := c.Marshal(uint16(1024))
 		should.NoError(err)
 		iter := c.CreateIterator(output)

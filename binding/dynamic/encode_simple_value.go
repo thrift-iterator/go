@@ -12,6 +12,13 @@ func (encoder *binaryEncoder) encode(ptr unsafe.Pointer, iter spi.Stream) {
 	iter.WriteBinary(*(*[]byte)(ptr))
 }
 
+type stringEncoder struct {
+}
+
+func (encoder *stringEncoder) encode(ptr unsafe.Pointer, iter spi.Stream) {
+	iter.WriteString(*(*string)(ptr))
+}
+
 type boolEncoder struct {
 }
 

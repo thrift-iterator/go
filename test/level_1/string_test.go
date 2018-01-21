@@ -36,3 +36,13 @@ func Test_encode_string(t *testing.T) {
 		should.Equal("hello", iter.ReadString())
 	}
 }
+
+func Test_marshal_string(t *testing.T) {
+	should := require.New(t)
+	for _, c := range test.MarshalCombinations {
+		output, err := c.Marshal("hello")
+		should.NoError(err)
+		iter := c.CreateIterator(output)
+		should.Equal("hello", iter.ReadString())
+	}
+}

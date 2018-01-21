@@ -39,7 +39,7 @@ func Test_encode_int64(t *testing.T) {
 
 func Test_marshal_int64(t *testing.T) {
 	should := require.New(t)
-	for _, c := range test.Combinations {
+	for _, c := range test.MarshalCombinations {
 		output, err := c.Marshal(int64(-1))
 		should.NoError(err)
 		iter := c.CreateIterator(output)
