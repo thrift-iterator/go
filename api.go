@@ -36,7 +36,12 @@ type API interface {
 	Marshal(obj interface{}) ([]byte, error)
 	NewDecoder(reader io.Reader, buf []byte) Decoder
 	NewEncoder(writer io.Writer) Encoder
+	// WillDecodeFromBuffer should only be used in generic.Declare
 	WillDecodeFromBuffer(sample ...interface{})
+	// WillDecodeFromReader should only be used in generic.Declare
+	WillDecodeFromReader(sample ...interface{})
+	// WillEncode should only be used in generic.Declare
+	WillEncode(sample ...interface{})
 }
 
 var DefaultConfig = Config{Protocol: ProtocolBinary, IsFramed: true, DynamicCodegen: true}.Froze()

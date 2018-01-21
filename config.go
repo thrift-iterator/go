@@ -26,8 +26,8 @@ type frozenConfig struct {
 
 func (cfg Config) Froze() API {
 	api := &frozenConfig{
-		protocol: cfg.Protocol,
-		isFramed: cfg.IsFramed,
+		protocol:       cfg.Protocol,
+		isFramed:       cfg.IsFramed,
 		dynamicCodegen: cfg.DynamicCodegen,
 	}
 	atomic.StorePointer(&api.decoderCache, unsafe.Pointer(&map[reflect.Type]spi.ValDecoder{}))
@@ -107,9 +107,30 @@ func (cfg *frozenConfig) WillDecodeFromBuffer(samples ...interface{}) {
 	}
 }
 
+func (cfg *frozenConfig) WillDecodeFromReader(samples ...interface{}) {
+	if cfg.dynamicCodegen {
+		panic("this config is using dynamic codegen, can not do static codegen")
+	}
+	for _, sample := range samples {
+		cfg.staticDecoderOf(true, reflect.TypeOf(sample))
+	}
+}
+
+func (cfg *frozenConfig) WillEncode(samples ...interface{}) {
+	if cfg.dynamicCodegen {
+		panic("this config is using dynamic codegen, can not do static codegen")
+	}
+	for _, sample := range samples {
+		cfg.staticEncoderOf(reflect.TypeOf(sample))
+	}
+}
+
 func (cfg *frozenConfig) decoderOf(decodeFromReader bool, valType reflect.Type) spi.ValDecoder {
-	if valType == reflect.TypeOf((*protocol.Message)(nil)) {
+	switch valType {
+	case reflect.TypeOf((*protocol.Message)(nil)):
 		return msgDecoderInstance
+	case reflect.TypeOf((*protocol.MessageHeader)(nil)):
+		return msgHeaderDecoderInstance
 	}
 	if cfg.dynamicCodegen {
 		return dynamic.DecoderOf(valType)
@@ -133,15 +154,17 @@ func (cfg *frozenConfig) staticDecoderOf(decodeFromReader bool, valType reflect.
 }
 
 func (cfg *frozenConfig) encoderOf(valType reflect.Type) spi.ValEncoder {
-	if valType == reflect.TypeOf((*protocol.Message)(nil)) {
+	switch valType {
+	case reflect.TypeOf((*protocol.Message)(nil)).Elem():
 		return msgEncoderInstance
+	case reflect.TypeOf((*protocol.MessageHeader)(nil)).Elem():
+		return msgHeaderEncoderInstance
 	}
 	if cfg.dynamicCodegen {
 		return dynamic.EncoderOf(valType)
 	}
 	return cfg.staticEncoderOf(valType)
 }
-
 
 func (cfg *frozenConfig) staticEncoderOf(valType reflect.Type) spi.ValEncoder {
 	streamType := reflect.TypeOf((*binary.Stream)(nil))
@@ -217,16 +240,32 @@ func (cfg *frozenConfig) Marshal(val interface{}) ([]byte, error) {
 
 func (cfg *frozenConfig) NewDecoder(reader io.Reader, buf []byte) Decoder {
 	if cfg.isFramed {
-		return &framedDecoder{reader: reader, iter: cfg.NewIterator(nil, nil)}
+		return &framedDecoder{
+			cfg:               cfg,
+			shouldDecodeFrame: true,
+			reader:            reader,
+			iter:              cfg.NewIterator(nil, nil),
+		}
 	} else {
-		return &unframedDecoder{cfg: cfg, iter: cfg.NewIterator(reader, buf), decodeFromReader: reader != nil}
+		return &unframedDecoder{
+			cfg:              cfg,
+			iter:             cfg.NewIterator(reader, buf),
+			decodeFromReader: reader != nil,
+		}
 	}
 }
 
 func (cfg *frozenConfig) NewEncoder(writer io.Writer) Encoder {
 	if cfg.isFramed {
-		return &framedEncoder{writer: writer, stream: cfg.NewStream(nil, nil)}
+		return &framedEncoder{
+			cfg:    cfg,
+			writer: writer,
+			stream: cfg.NewStream(nil, nil),
+		}
 	} else {
-		return &unframedEncoder{cfg: cfg, stream: cfg.NewStream(writer, nil)}
+		return &unframedEncoder{
+			cfg:    cfg,
+			stream: cfg.NewStream(writer, nil),
+		}
 	}
 }

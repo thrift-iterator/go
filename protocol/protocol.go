@@ -65,14 +65,18 @@ type MessageHeader struct {
 	SeqId       SeqId
 }
 
+func (msg *MessageHeader) Set(msgRead *MessageHeader) {
+	msg.MessageType = msgRead.MessageType
+	msg.MessageName = msgRead.MessageName
+	msg.SeqId = msgRead.SeqId
+}
+
 type Message struct {
 	MessageHeader
 	Arguments map[FieldId]interface{}
 }
 
 func (msg *Message) Set(msgRead *Message) {
-	msg.MessageType = msgRead.MessageType
-	msg.MessageName = msgRead.MessageName
-	msg.SeqId = msgRead.SeqId
+	msg.MessageHeader.Set(&msgRead.MessageHeader)
 	msg.Arguments = msgRead.Arguments
 }

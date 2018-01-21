@@ -4,71 +4,99 @@ import (
 	"io"
 	"encoding/binary"
 	"github.com/thrift-iterator/go/protocol"
-	"errors"
 	"github.com/thrift-iterator/go/spi"
+	"reflect"
 )
 
 type framedDecoder struct {
-	reader io.Reader
-	iter   spi.Iterator
-	tmp    []byte
+	cfg               *frozenConfig
+	reader            io.Reader
+	iter              spi.Iterator
+	tmp               []byte
+	shouldDecodeFrame bool
 }
 
-type framedEncoder struct {
-	writer io.Writer
-	stream spi.Stream
-}
-
-func (decoder *framedDecoder) Decode(obj interface{}) error {
-	msg, _ := obj.(*protocol.Message)
-	if msg == nil {
-		return errors.New("can only unmarshal protocol.Message")
+func (decoder *framedDecoder) Decode(val interface{}) error {
+	if decoder.shouldDecodeFrame {
+		if len(decoder.tmp) < 4 {
+			decoder.tmp = make([]byte, 4)
+		}
+		tmp := decoder.tmp[:4]
+		_, err := io.ReadFull(decoder.reader, tmp)
+		if err != nil {
+			return err
+		}
+		size := int(binary.BigEndian.Uint32(tmp))
+		if len(decoder.tmp) < size {
+			decoder.tmp = make([]byte, size)
+		}
+		tmp = decoder.tmp[:size]
+		_, err = io.ReadFull(decoder.reader, tmp)
+		if err != nil {
+			return err
+		}
+		decoder.iter.Reset(nil, tmp)
+		_, isMsg := val.(*protocol.Message)
+		if !isMsg {
+			decoder.shouldDecodeFrame = false
+		}
+	} else {
+		decoder.shouldDecodeFrame = true
 	}
-	if len(decoder.tmp) < 4 {
-		decoder.tmp = make([]byte, 4)
+	cfg := decoder.cfg
+	valType := reflect.TypeOf(val)
+	valDecoder := cfg.getDecoderFromCache(valType)
+	if valDecoder == nil {
+		valDecoder = cfg.decoderOf(true, valType)
+		cfg.addDecoderToCache(valType, valDecoder)
 	}
-	tmp := decoder.tmp[:4]
-	_, err := io.ReadFull(decoder.reader, tmp)
-	if err != nil {
-		return err
-	}
-	size := int(binary.BigEndian.Uint32(tmp))
-	if len(decoder.tmp) < size {
-		decoder.tmp = make([]byte, size)
-	}
-	tmp = decoder.tmp[:size]
-	_, err = io.ReadFull(decoder.reader, tmp)
-	if err != nil {
-		return err
-	}
-	decoder.iter.Reset(nil, tmp)
-	msgRead := decoder.iter.ReadMessage()
-	msg.Set(&msgRead)
-	return nil
+	valDecoder.Decode(val, decoder.iter)
+	return decoder.iter.Error()
 }
 
 func (decoder *framedDecoder) Reset(reader io.Reader, buf []byte) {
 	decoder.reader = reader
 }
 
-func (encoder *framedEncoder) Encode(obj interface{}) error {
-	msg, isMsg := obj.(protocol.Message)
-	if !isMsg {
-		return errors.New("can only marshal protocol.Message")
+type framedEncoder struct {
+	cfg               *frozenConfig
+	writer            io.Writer
+	stream            spi.Stream
+	shouldEncodeFrame bool
+}
+
+func (encoder *framedEncoder) Encode(val interface{}) error {
+	cfg := encoder.cfg
+	valType := reflect.TypeOf(val)
+	valEncoder := cfg.getEncoderFromCache(valType)
+	if valEncoder == nil {
+		valEncoder = cfg.encoderOf(valType)
+		cfg.addEncoderToCache(valType, valEncoder)
 	}
-	encoder.stream.Reset(nil)
-	encoder.stream.WriteMessage(msg)
-	buf := encoder.stream.Buffer()
-	size := len(buf)
-	_, err := encoder.writer.Write([]byte{
-		byte(size >> 24), byte(size >> 16), byte(size >> 8), byte(size),
-	})
-	if err != nil {
-		return err
+	valEncoder.Encode(val, encoder.stream)
+	encoder.stream.Flush()
+	if encoder.stream.Error() != nil {
+		return encoder.stream.Error()
 	}
-	_, err = encoder.writer.Write(buf)
-	if err != nil {
-		return err
+	if _, isMsg := val.(*protocol.Message); isMsg {
+		encoder.shouldEncodeFrame = true
+	}
+	if encoder.shouldEncodeFrame {
+		buf := encoder.stream.Buffer()
+		size := len(buf)
+		_, err := encoder.writer.Write([]byte{
+			byte(size >> 24), byte(size >> 16), byte(size >> 8), byte(size),
+		})
+		if err != nil {
+			return err
+		}
+		_, err = encoder.writer.Write(buf)
+		if err != nil {
+			return err
+		}
+		encoder.shouldEncodeFrame = false
+	} else {
+		encoder.shouldEncodeFrame = true
 	}
 	return nil
 }
