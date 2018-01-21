@@ -36,3 +36,13 @@ func Test_encode_float64(t *testing.T) {
 		should.Equal(10.24, iter.ReadFloat64())
 	}
 }
+
+func Test_marshal_float64(t *testing.T) {
+	should := require.New(t)
+	for _, c := range test.MarshalCombinations {
+		output, err := c.Marshal(10.24)
+		should.NoError(err)
+		iter := c.CreateIterator(output)
+		should.Equal(10.24, iter.ReadFloat64())
+	}
+}

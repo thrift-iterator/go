@@ -17,6 +17,8 @@ func encoderOf(prefix string, valType reflect.Type) internalEncoder {
 	switch valType.Kind() {
 	case reflect.Bool:
 		return &boolEncoder{}
+	case reflect.Float64:
+		return &float64Encoder{}
 	}
 	return &unknownEncoder{prefix, valType}
 }
