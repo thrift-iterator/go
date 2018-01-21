@@ -10,8 +10,7 @@ Why?
 * thrift proxy can not know all possible IDL in advance, we need to decode/encode in a generic way to modify embedded header.
 * official thrift library for go is slow, verified in several benchmarks. It is even slower than [json-iterator](https://github.com/json-iterator/go)
 
-
-# marshal without idl
+# marshal without IDL
 
 ```go
 type SampleArgs struct {
@@ -52,7 +51,7 @@ hello
 1 session-id
 ```
 
-# unmarshal without idl
+# unmarshal without IDL
 
 ```go
 type SampleArgs struct {
