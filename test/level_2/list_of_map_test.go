@@ -87,3 +87,17 @@ func Test_encode_list_of_map(t *testing.T) {
 		}, iter.ReadList()[0])
 	}
 }
+
+func Test_marshal_list_of_map(t *testing.T) {
+	should := require.New(t)
+	for _, c := range test.MarshalCombinations {
+		output, err := c.Marshal([]map[int32]int64{
+			{1: 1}, {2: 2},
+		})
+		should.NoError(err)
+		iter := c.CreateIterator(output)
+		should.Equal(map[interface{}]interface{}{
+			int32(1): int64(1),
+		}, iter.ReadList()[0])
+	}
+}

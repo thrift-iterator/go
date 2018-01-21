@@ -83,3 +83,17 @@ func Test_encode_struct_of_map(t *testing.T) {
 		}, iter.ReadStruct()[protocol.FieldId(1)])
 	}
 }
+
+func Test_marshal_struct_of_map(t *testing.T) {
+	should := require.New(t)
+	for _, c := range test.MarshalCombinations {
+		output, err := c.Marshal(struct_of_map_test.TestObject{
+			map[int32]int64{2: 2},
+		})
+		should.NoError(err)
+		iter := c.CreateIterator(output)
+		should.Equal(map[interface{}]interface{}{
+			int32(2): int64(2),
+		}, iter.ReadStruct()[protocol.FieldId(1)])
+	}
+}

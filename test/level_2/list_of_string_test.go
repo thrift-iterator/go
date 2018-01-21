@@ -63,3 +63,13 @@ func Test_encode_list_of_string(t *testing.T) {
 		should.Equal([]interface{}{"a", "b", "c"}, iter.ReadList())
 	}
 }
+
+func Test_marshal_list_of_string(t *testing.T) {
+	should := require.New(t)
+	for _, c := range test.MarshalCombinations {
+		output, err := c.Marshal([]string{"a", "b", "c"})
+		should.NoError(err)
+		iter := c.CreateIterator(output)
+		should.Equal([]interface{}{"a", "b", "c"}, iter.ReadList())
+	}
+}

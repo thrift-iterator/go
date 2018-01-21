@@ -77,3 +77,15 @@ func Test_encode_list_of_list(t *testing.T) {
 		should.Equal([]interface{}{int64(1)}, iter.ReadList()[0])
 	}
 }
+
+func Test_marshal_list_of_list(t *testing.T) {
+	should := require.New(t)
+	for _, c := range test.MarshalCombinations {
+		output, err := c.Marshal([][]int64{
+			{1}, {2},
+		})
+		should.NoError(err)
+		iter := c.CreateIterator(output)
+		should.Equal([]interface{}{int64(1)}, iter.ReadList()[0])
+	}
+}

@@ -76,3 +76,15 @@ func Test_encode_struct_of_list(t *testing.T) {
 		should.Equal([]interface{}{int64(1)}, iter.ReadStruct()[protocol.FieldId(1)])
 	}
 }
+
+func Test_marshal_struct_of_list(t *testing.T) {
+	should := require.New(t)
+	for _, c := range test.MarshalCombinations {
+		output, err := c.Marshal(struct_of_list_test.TestObject{
+			[]int64{1},
+		})
+		should.NoError(err)
+		iter := c.CreateIterator(output)
+		should.Equal([]interface{}{int64(1)}, iter.ReadStruct()[protocol.FieldId(1)])
+	}
+}

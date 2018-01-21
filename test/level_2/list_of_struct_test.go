@@ -101,3 +101,17 @@ func Test_encode_list_of_struct(t *testing.T) {
 		}, iter.ReadList()[0])
 	}
 }
+
+func Test_marshal_list_of_struct(t *testing.T) {
+	should := require.New(t)
+	for _, c := range test.MarshalCombinations {
+		output, err := c.Marshal([]list_of_struct_test.TestObject{
+			{1024}, {1024},
+		})
+		should.NoError(err)
+		iter := c.CreateIterator(output)
+		should.Equal(map[protocol.FieldId]interface{}{
+			protocol.FieldId(1): int64(1024),
+		}, iter.ReadList()[0])
+	}
+}

@@ -95,3 +95,17 @@ func Test_encode_struct_of_struct(t *testing.T) {
 		}, iter.ReadStruct()[protocol.FieldId(1)])
 	}
 }
+
+func Test_marshal_struct_of_struct(t *testing.T) {
+	should := require.New(t)
+	for _, c := range test.MarshalCombinations {
+		output, err := c.Marshal(struct_of_struct_test.TestObject{
+			struct_of_struct_test.EmbeddedObject{"abc"},
+		})
+		should.NoError(err)
+		iter := c.CreateIterator(output)
+		should.Equal(map[protocol.FieldId]interface{}{
+			protocol.FieldId(1): "abc",
+		}, iter.ReadStruct()[protocol.FieldId(1)])
+	}
+}

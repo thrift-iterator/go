@@ -68,3 +68,15 @@ func Test_encode_struct_of_string(t *testing.T) {
 		should.Equal("abc", iter.ReadStruct()[protocol.FieldId(1)])
 	}
 }
+
+func Test_marshal_struct_of_string(t *testing.T) {
+	should := require.New(t)
+	for _, c := range test.MarshalCombinations {
+		output, err := c.Marshal(struct_of_string_test.TestObject{
+			"abc",
+		})
+		should.NoError(err)
+		iter := c.CreateIterator(output)
+		should.Equal("abc", iter.ReadStruct()[protocol.FieldId(1)])
+	}
+}

@@ -70,3 +70,17 @@ func Test_encode_map_of_list(t *testing.T) {
 		}, iter.ReadMap()[int64(1)])
 	}
 }
+
+func Test_marshal_map_of_list(t *testing.T) {
+	should := require.New(t)
+	for _, c := range test.MarshalCombinations {
+		output, err := c.Marshal(map[int64][]int64{
+			1: {1},
+		})
+		should.NoError(err)
+		iter := c.CreateIterator(output)
+		should.Equal([]interface{}{
+			int64(1),
+		}, iter.ReadMap()[int64(1)])
+	}
+}
