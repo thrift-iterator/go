@@ -17,3 +17,13 @@ func Test_unmarshal_enum(t *testing.T) {
 		should.Equal(enum_test.Player_FLASH, val)
 	}
 }
+
+func Test_marshal_enum(t *testing.T) {
+	should := require.New(t)
+	for _, c := range test.MarshalCombinations {
+		output, err := c.Marshal(enum_test.Player_FLASH)
+		should.NoError(err)
+		iter := c.CreateIterator(output)
+		should.Equal(int32(1), iter.ReadInt32())
+	}
+}

@@ -11,6 +11,9 @@ func EncoderOf(valType reflect.Type) spi.ValEncoder {
 }
 
 func encoderOf(prefix string, valType reflect.Type) internalEncoder {
+	if isEnumType(valType) {
+		return &int32Encoder{}
+	}
 	switch valType.Kind() {
 	case reflect.Bool:
 		return &boolEncoder{}
