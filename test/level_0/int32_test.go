@@ -36,3 +36,13 @@ func Test_encode_int32(t *testing.T) {
 		should.Equal(int32(-1), iter.ReadInt32())
 	}
 }
+
+func Test_marshal_int32(t *testing.T) {
+	should := require.New(t)
+	for _, c := range test.Combinations {
+		output, err := c.Marshal(int32(-1))
+		should.NoError(err)
+		iter := c.CreateIterator(output)
+		should.Equal(int32(-1), iter.ReadInt32())
+	}
+}

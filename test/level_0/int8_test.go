@@ -36,3 +36,13 @@ func Test_encode_int8(t *testing.T) {
 		should.Equal(int8(-1), iter.ReadInt8())
 	}
 }
+
+func Test_marshal_int8(t *testing.T) {
+	should := require.New(t)
+	for _, c := range test.Combinations {
+		output, err := c.Marshal(int8(-1))
+		should.NoError(err)
+		iter := c.CreateIterator(output)
+		should.Equal(int8(-1), iter.ReadInt8())
+	}
+}

@@ -36,3 +36,13 @@ func Test_encode_int64(t *testing.T) {
 		should.Equal(int64(-1), iter.ReadInt64())
 	}
 }
+
+func Test_marshal_int64(t *testing.T) {
+	should := require.New(t)
+	for _, c := range test.Combinations {
+		output, err := c.Marshal(int64(-1))
+		should.NoError(err)
+		iter := c.CreateIterator(output)
+		should.Equal(int64(-1), iter.ReadInt64())
+	}
+}

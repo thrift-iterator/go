@@ -36,3 +36,13 @@ func Test_encode_uint(t *testing.T) {
 		should.Equal(uint(1024), iter.ReadUint())
 	}
 }
+
+func Test_marshal_uint(t *testing.T) {
+	should := require.New(t)
+	for _, c := range test.Combinations {
+		output, err := c.Marshal(uint(1024))
+		should.NoError(err)
+		iter := c.CreateIterator(output)
+		should.Equal(uint(1024), iter.ReadUint())
+	}
+}

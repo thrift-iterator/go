@@ -36,3 +36,13 @@ func Test_encode_uint64(t *testing.T) {
 		should.Equal(uint64(1024), iter.ReadUint64())
 	}
 }
+
+func Test_marshal_uint64(t *testing.T) {
+	should := require.New(t)
+	for _, c := range test.Combinations {
+		output, err := c.Marshal(uint64(1024))
+		should.NoError(err)
+		iter := c.CreateIterator(output)
+		should.Equal(uint64(1024), iter.ReadUint64())
+	}
+}
