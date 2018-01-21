@@ -180,3 +180,26 @@ func Test_skip_struct(t *testing.T) {
 		should.Equal(buf.Bytes(), iter.SkipStruct(nil))
 	}
 }
+
+func Test_marshal_struct(t *testing.T) {
+	should := require.New(t)
+	for _, c := range test.MarshalCombinations {
+		output, err := c.Marshal(struct_test.TestObject{1024})
+		should.NoError(err)
+		iter := c.CreateIterator(output)
+		called := false
+		iter.ReadStructHeader()
+		for {
+			fieldType, fieldId := iter.ReadStructField()
+			if fieldType == protocol.TypeStop {
+				break
+			}
+			should.False(called)
+			called = true
+			should.Equal(protocol.TypeI64, fieldType)
+			should.Equal(protocol.FieldId(1), fieldId)
+			should.Equal(int64(1024), iter.ReadInt64())
+		}
+		should.True(called)
+	}
+}

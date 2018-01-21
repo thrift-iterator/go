@@ -9,9 +9,11 @@ import (
 
 func EncoderOf(valType reflect.Type) spi.ValEncoder {
 	isPtr := valType.Kind() == reflect.Ptr
-	isOneElementArray := valType.Kind() == reflect.Array && valType.Len() == 1
-	isOneFieldStruct := valType.Kind() == reflect.Struct && valType.NumField() == 1
-	if isPtr || isOneElementArray || isOneFieldStruct {
+	isOnePtrArray := valType.Kind() == reflect.Array && valType.Len() == 1 &&
+		valType.Elem().Kind() == reflect.Ptr
+	isOnePtrStruct := valType.Kind() == reflect.Struct && valType.NumField() == 1 &&
+		valType.Field(0).Type.Kind() == reflect.Ptr
+	if isPtr || isOnePtrArray || isOnePtrStruct  {
 		return &ptrEncoderAdapter{encoderOf("", valType)}
 	}
 	return &valEncoderAdapter{encoderOf("", valType)}
@@ -65,6 +67,24 @@ func encoderOf(prefix string, valType reflect.Type) internalEncoder {
 			keyEncoder:   encoderOf(prefix+" [mapKey]", valType.Key()),
 			elemEncoder:  encoderOf(prefix+" [mapElem]", valType.Elem()),
 			mapInterface: *(*emptyInterface)(unsafe.Pointer(&sampleObj)),
+		}
+	case reflect.Struct:
+		encoderFields := make([]structEncoderField, 0, valType.NumField())
+		for i := 0; i < valType.NumField(); i++ {
+			refField := valType.Field(i)
+			fieldId := parseFieldId(refField)
+			if fieldId == 0 {
+				continue
+			}
+			encoderField := structEncoderField{
+				offset:  refField.Offset,
+				fieldId: fieldId,
+				encoder: encoderOf(prefix+" "+refField.Name, refField.Type),
+			}
+			encoderFields = append(encoderFields, encoderField)
+		}
+		return &structEncoder{
+			fields: encoderFields,
 		}
 	case reflect.Ptr:
 		return &pointerEncoder{
