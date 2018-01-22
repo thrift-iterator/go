@@ -75,6 +75,21 @@ func Test_unmarshal_list(t *testing.T) {
 	}
 }
 
+func Test_unmarshal_list_of_object(t *testing.T) {
+	should := require.New(t)
+	for _, c := range test.UnmarshalCombinations {
+		buf, proto := c.CreateProtocol()
+		proto.WriteListBegin(thrift.I64, 3)
+		proto.WriteI64(1)
+		proto.WriteI64(2)
+		proto.WriteI64(3)
+		proto.WriteListEnd()
+		var val []interface{}
+		should.NoError(c.Unmarshal(buf.Bytes(), &val))
+		should.Equal([]interface{}{int64(1), int64(2), int64(3)}, val)
+	}
+}
+
 func Test_encode_list_from_object(t *testing.T) {
 	should := require.New(t)
 	for _, c := range test.Combinations {

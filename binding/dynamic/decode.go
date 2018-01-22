@@ -60,6 +60,9 @@ func decoderOf(prefix string, valType reflect.Type) internalDecoder {
 			valDecoder: decoderOf(prefix+" [ptrElem]", valType.Elem()),
 		}
 	case reflect.Slice:
+		if valType.Elem().Kind() == reflect.Interface {
+			return &sliceOfObjectDecoder{}
+		}
 		return &sliceDecoder{
 			elemType:    valType.Elem(),
 			sliceType:   valType,
