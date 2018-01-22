@@ -45,7 +45,7 @@ func Test_encode_list_by_stream(t *testing.T) {
 	}
 }
 
-func Test_decode_list_as_object(t *testing.T) {
+func Test_decode_list_of_object(t *testing.T) {
 	should := require.New(t)
 	for _, c := range test.Combinations {
 		buf, proto := c.CreateProtocol()
@@ -90,7 +90,7 @@ func Test_unmarshal_list_of_object(t *testing.T) {
 	}
 }
 
-func Test_encode_list_from_object(t *testing.T) {
+func Test_encode_list_of_object(t *testing.T) {
 	should := require.New(t)
 	for _, c := range test.Combinations {
 		stream := c.CreateStream()
@@ -125,6 +125,21 @@ func Test_marshal_list(t *testing.T) {
 	should := require.New(t)
 	for _, c := range test.MarshalCombinations {
 		output, err := c.Marshal([]int64{1, 2, 3})
+		should.NoError(err)
+		iter := c.CreateIterator(output)
+		elemType, length := iter.ReadListHeader()
+		should.Equal(protocol.TypeI64, elemType)
+		should.Equal(3, length)
+		should.Equal(uint64(1), iter.ReadUint64())
+		should.Equal(uint64(2), iter.ReadUint64())
+		should.Equal(uint64(3), iter.ReadUint64())
+	}
+}
+
+func Test_marshal_list_of_object(t *testing.T) {
+	should := require.New(t)
+	for _, c := range test.MarshalCombinations {
+		output, err := c.Marshal([]interface{}{int64(1), int64(2), int64(3)})
 		should.NoError(err)
 		iter := c.CreateIterator(output)
 		elemType, length := iter.ReadListHeader()

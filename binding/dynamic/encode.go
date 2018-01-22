@@ -56,6 +56,9 @@ func encoderOf(prefix string, valType reflect.Type) internalEncoder {
 	case reflect.Float64:
 		return &float64Encoder{}
 	case reflect.Slice:
+		if valType.Elem().Kind() == reflect.Interface {
+			return &sliceOfObjectEncoder{}
+		}
 		return &sliceEncoder{
 			sliceType:   valType,
 			elemType:    valType.Elem(),

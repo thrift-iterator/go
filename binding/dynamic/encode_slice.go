@@ -26,3 +26,14 @@ func (encoder *sliceEncoder) encode(ptr unsafe.Pointer, stream spi.Stream) {
 func (encoder *sliceEncoder) thriftType() protocol.TType {
 	return protocol.TypeList
 }
+
+type sliceOfObjectEncoder struct {
+}
+
+func (encoder *sliceOfObjectEncoder) encode(ptr unsafe.Pointer, stream spi.Stream) {
+	stream.WriteList(*(*[]interface{})(ptr))
+}
+
+func (encoder *sliceOfObjectEncoder) thriftType() protocol.TType {
+	return protocol.TypeList
+}

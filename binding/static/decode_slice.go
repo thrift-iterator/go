@@ -33,7 +33,5 @@ var decodeSliceOfObject = generic.DefineFunc(
 	Param("DT", "the dst type to copy into").
 	Param("ST", "the src type to copy from").
 	Source(`
-elemType, length := src.ReadListHeader()
-for i := 0; i < length; i++ {
-	*dst = append(*dst, src.Read(elemType))
-}`)
+*dst = src.ReadList()
+`)
