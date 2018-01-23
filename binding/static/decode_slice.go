@@ -7,7 +7,6 @@ import (
 
 func init() {
 	decodeAnything.ImportFunc(decodeSlice)
-	decodeAnything.ImportFunc(decodeSliceOfObject)
 }
 
 var decodeSlice = generic.DefineFunc(
@@ -27,11 +26,3 @@ for i := 0; i < length; i++ {
 	{{$decodeElem}}(elem, src)
 	*dst = append(*dst, *elem)
 }`)
-
-var decodeSliceOfObject = generic.DefineFunc(
-	"DecodeSliceOfObject(dst DT, src ST)").
-	Param("DT", "the dst type to copy into").
-	Param("ST", "the src type to copy from").
-	Source(`
-*dst = src.ReadList()
-`)

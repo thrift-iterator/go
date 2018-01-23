@@ -55,14 +55,3 @@ func growOne(slice *sliceHeader, sliceType reflect.Type, elementType reflect.Typ
 	slice.Len = newLen
 	slice.Cap = newCap
 }
-
-type sliceOfObjectDecoder struct {
-}
-
-func (decoder *sliceOfObjectDecoder) decode(ptr unsafe.Pointer, iter spi.Iterator) {
-	slicePtr := (*[]interface{})(ptr)
-	elemType, length := iter.ReadListHeader()
-	for i := 0; i < length; i++ {
-		*slicePtr = append(*slicePtr, iter.Read(elemType))
-	}
-}

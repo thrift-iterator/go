@@ -14,6 +14,7 @@ import (
 	"github.com/thrift-iterator/go/spi"
 	"github.com/thrift-iterator/go/binding/static"
 	"github.com/thrift-iterator/go/binding/dynamic"
+	"github.com/thrift-iterator/go/general"
 )
 
 type frozenConfig struct {
@@ -30,8 +31,10 @@ func (cfg Config) Froze() API {
 		isFramed:       cfg.IsFramed,
 		dynamicCodegen: cfg.DynamicCodegen,
 	}
-	atomic.StorePointer(&api.decoderCache, unsafe.Pointer(&map[reflect.Type]spi.ValDecoder{}))
-	atomic.StorePointer(&api.encoderCache, unsafe.Pointer(&map[reflect.Type]spi.ValEncoder{}))
+	decoders := general.ExportDecoders()
+	encoders := general.ExportEncoders()
+	atomic.StorePointer(&api.decoderCache, unsafe.Pointer(&decoders))
+	atomic.StorePointer(&api.encoderCache, unsafe.Pointer(&encoders))
 	return api
 }
 

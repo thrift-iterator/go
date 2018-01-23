@@ -15,9 +15,6 @@ func dispatchDecode(dstType reflect.Type) string {
 	}
 	switch dstType.Kind() {
 	case reflect.Slice:
-		if dstType.Elem().Kind() == reflect.Interface {
-			return "DecodeSliceOfObject"
-		}
 		return "DecodeSlice"
 	case reflect.Map:
 		return "DecodeMap"

@@ -15,9 +15,6 @@ func dispatchEncode(srcType reflect.Type) (string, protocol.TType) {
 	}
 	switch srcType.Kind() {
 	case reflect.Slice:
-		if srcType.Elem().Kind() == reflect.Interface {
-			return "EncodeSliceOfObject", protocol.TypeList
-		}
 		return "EncodeSlice", protocol.TypeList
 	case reflect.Map:
 		return "EncodeMap", protocol.TypeMap
