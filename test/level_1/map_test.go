@@ -59,7 +59,7 @@ func Test_encode_map_by_stream(t *testing.T) {
 	}
 }
 
-func Test_decode_map_as_object(t *testing.T) {
+func Test_skip_map(t *testing.T) {
 	should := require.New(t)
 	for _, c := range test.Combinations {
 		buf, proto := c.CreateProtocol()
@@ -72,12 +72,29 @@ func Test_decode_map_as_object(t *testing.T) {
 		proto.WriteI64(3)
 		proto.WriteMapEnd()
 		iter := c.CreateIterator(buf.Bytes())
-		obj := iter.ReadMap()
+		should.Equal(buf.Bytes(), iter.SkipMap(nil))
+	}
+}
+
+func Test_unmarshal_general_map(t *testing.T) {
+	should := require.New(t)
+	for _, c := range test.Combinations {
+		buf, proto := c.CreateProtocol()
+		proto.WriteMapBegin(thrift.I32, thrift.I64, 3)
+		proto.WriteI32(1)
+		proto.WriteI64(1)
+		proto.WriteI32(2)
+		proto.WriteI64(2)
+		proto.WriteI32(3)
+		proto.WriteI64(3)
+		proto.WriteMapEnd()
+		var val map[interface{}]interface{}
+		should.NoError(c.Unmarshal(buf.Bytes(), &val))
 		should.Equal(map[interface{}]interface{}{
 			int32(1): int64(1),
 			int32(2): int64(2),
 			int32(3): int64(3),
-		}, obj)
+		}, val)
 	}
 }
 
@@ -103,39 +120,22 @@ func Test_unmarshal_map(t *testing.T) {
 	}
 }
 
-func Test_encode_map_from_object(t *testing.T) {
+func Test_marshal_general_map(t *testing.T) {
 	should := require.New(t)
 	for _, c := range test.Combinations {
-		stream := c.CreateStream()
-		stream.WriteMap(map[interface{}]interface{}{
+		output, err := c.Marshal(map[interface{}]interface{}{
 			"k1": int64(1),
 			"k2": int64(2),
 			"k3": int64(3),
 		})
-		iter := c.CreateIterator(stream.Buffer())
+		should.NoError(err)
+		iter := c.CreateIterator(output)
 		obj := iter.ReadMap()
 		should.Equal(map[interface{}]interface{}{
 			"k1": int64(1),
 			"k2": int64(2),
 			"k3": int64(3),
 		}, obj)
-	}
-}
-
-func Test_skip_map(t *testing.T) {
-	should := require.New(t)
-	for _, c := range test.Combinations {
-		buf, proto := c.CreateProtocol()
-		proto.WriteMapBegin(thrift.I32, thrift.I64, 3)
-		proto.WriteI32(1)
-		proto.WriteI64(1)
-		proto.WriteI32(2)
-		proto.WriteI64(2)
-		proto.WriteI32(3)
-		proto.WriteI64(3)
-		proto.WriteMapEnd()
-		iter := c.CreateIterator(buf.Bytes())
-		should.Equal(buf.Bytes(), iter.SkipMap(nil))
 	}
 }
 
