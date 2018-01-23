@@ -21,7 +21,7 @@ func Test_skip_list_of_string(t *testing.T) {
 	}
 }
 
-func Test_decode_list_of_string(t *testing.T) {
+func Test_unmarshal_general_list_of_string(t *testing.T) {
 	should := require.New(t)
 	for _, c := range test.Combinations {
 		buf, proto := c.CreateProtocol()
@@ -30,8 +30,9 @@ func Test_decode_list_of_string(t *testing.T) {
 		proto.WriteString("b")
 		proto.WriteString("c")
 		proto.WriteListEnd()
-		iter := c.CreateIterator(buf.Bytes())
-		should.Equal([]interface{}{"a", "b", "c"}, iter.ReadList())
+		var val []interface{}
+		should.NoError(c.Unmarshal(buf.Bytes(), &val))
+		should.Equal([]interface{}{"a", "b", "c"}, val)
 	}
 }
 
@@ -52,14 +53,14 @@ func Test_unmarshal_list_of_string(t *testing.T) {
 	}
 }
 
-func Test_encode_list_of_string(t *testing.T) {
+func Test_marshal_general_list_of_string(t *testing.T) {
 	should := require.New(t)
 	for _, c := range test.Combinations {
-		stream := c.CreateStream()
-		stream.WriteList([]interface{}{
+		output, err := c.Marshal([]interface{}{
 			"a", "b", "c",
 		})
-		iter := c.CreateIterator(stream.Buffer())
+		should.NoError(err)
+		iter := c.CreateIterator(output)
 		should.Equal([]interface{}{"a", "b", "c"}, iter.ReadList())
 	}
 }

@@ -6,10 +6,15 @@ type generalListDecoder struct {
 }
 
 func (decoder *generalListDecoder) Decode(val interface{}, iter spi.Iterator) {
-	obj := val.(*[]interface{})
+	*val.(*[]interface{}) = readList(iter).([]interface{})
+}
+
+func readList(iter spi.Iterator) interface{} {
 	elemType, length := iter.ReadListHeader()
 	generalReader := generalReaderOf(elemType)
+	var generalList []interface{}
 	for i := 0; i < length; i++ {
-		*obj = append(*obj, generalReader(iter))
+		generalList = append(generalList, generalReader(iter))
 	}
+	return generalList
 }

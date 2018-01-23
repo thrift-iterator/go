@@ -62,7 +62,10 @@ func (stream *Stream) Write(buf []byte) error {
 }
 
 func (stream *Stream) WriteMessageHeader(header protocol.MessageHeader) {
-	panic("not implemented")
+	stream.buf = append(stream.buf, compactProtocolId)
+	stream.buf = append(stream.buf, (compactVersion&versionMask)|((byte(header.MessageType)<<5)&0x0E0))
+	stream.writeVarInt32(int32(header.SeqId))
+	stream.WriteString(header.MessageName)
 }
 
 func (stream *Stream) WriteMessage(message protocol.Message) {

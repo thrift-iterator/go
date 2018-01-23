@@ -30,6 +30,12 @@ func generalReaderOf(ttype protocol.TType) func(iter spi.Iterator) interface{} {
 		return readString
 	case protocol.TypeDouble:
 		return readFloat64
+	case protocol.TypeList:
+		return readList
+	case protocol.TypeMap:
+		return readMap
+	case protocol.TypeStruct:
+		return readStruct
 	default:
 		panic("unsupported type")
 	}

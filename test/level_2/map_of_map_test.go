@@ -25,7 +25,7 @@ func Test_skip_map_of_map(t *testing.T) {
 	}
 }
 
-func Test_decode_map_of_map(t *testing.T) {
+func Test_unmarshal_general_map_of_map(t *testing.T) {
 	should := require.New(t)
 	for _, c := range test.Combinations {
 		buf, proto := c.CreateProtocol()
@@ -38,23 +38,24 @@ func Test_decode_map_of_map(t *testing.T) {
 		proto.WriteMapEnd()
 
 		proto.WriteMapEnd()
-		iter := c.CreateIterator(buf.Bytes())
+		var val map[interface{}]interface{}
+		should.NoError(c.Unmarshal(buf.Bytes(), &val))
 		should.Equal(map[interface{}]interface{}{
 			"k1": int64(1),
-		}, iter.ReadMap()[int64(1)])
+		}, val[int64(1)])
 	}
 }
 
-func Test_encode_map_of_map(t *testing.T) {
+func Test_marshal_general_map_of_map(t *testing.T) {
 	should := require.New(t)
 	for _, c := range test.Combinations {
-		stream := c.CreateStream()
-		stream.WriteMap(map[interface{}]interface{}{
+		output, err := c.Marshal(map[interface{}]interface{}{
 			int64(1): map[interface{}]interface{}{
 				"k1": int64(1),
 			},
 		})
-		iter := c.CreateIterator(stream.Buffer())
+		should.NoError(err)
+		iter := c.CreateIterator(output)
 		should.Equal(map[interface{}]interface{}{
 			"k1": int64(1),
 		}, iter.ReadMap()[int64(1)])

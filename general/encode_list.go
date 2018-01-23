@@ -9,6 +9,10 @@ type generalListEncoder struct {
 }
 
 func (encoder *generalListEncoder) Encode(val interface{}, stream spi.Stream) {
+	writeList(val, stream)
+}
+
+func writeList(val interface{}, stream spi.Stream) {
 	obj := val.([]interface{})
 	length := len(obj)
 	if length == 0 {

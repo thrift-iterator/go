@@ -9,18 +9,18 @@ type generalStructDecoder struct {
 }
 
 func (decoder *generalStructDecoder) Decode(val interface{}, iter spi.Iterator) {
-	obj := *val.(*map[protocol.FieldId]interface{})
-	if obj == nil {
-		obj = map[protocol.FieldId]interface{}{}
-		*val.(*map[protocol.FieldId]interface{}) = obj
-	}
+	*val.(*map[protocol.FieldId]interface{}) = readStruct(iter).(map[protocol.FieldId]interface{})
+}
+
+func readStruct(iter spi.Iterator) interface{} {
+	generalStruct := map[protocol.FieldId]interface{}{}
 	iter.ReadStructHeader()
 	for {
 		fieldType, fieldId := iter.ReadStructField()
 		if fieldType == protocol.TypeStop {
-			return
+			return generalStruct
 		}
 		generalReader := generalReaderOf(fieldType)
-		obj[fieldId] = generalReader(iter)
+		generalStruct[fieldId] = generalReader(iter)
 	}
 }

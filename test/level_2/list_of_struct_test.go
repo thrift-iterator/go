@@ -32,7 +32,7 @@ func Test_skip_list_of_struct(t *testing.T) {
 	}
 }
 
-func Test_decode_list_of_struct(t *testing.T) {
+func Test_unmarshal_general_list_of_struct(t *testing.T) {
 	should := require.New(t)
 	for _, c := range test.Combinations {
 		buf, proto := c.CreateProtocol()
@@ -50,10 +50,11 @@ func Test_decode_list_of_struct(t *testing.T) {
 		proto.WriteFieldStop()
 		proto.WriteStructEnd()
 		proto.WriteListEnd()
-		iter := c.CreateIterator(buf.Bytes())
+		var val []interface{}
+		should.NoError(c.Unmarshal(buf.Bytes(), &val))
 		should.Equal(map[protocol.FieldId]interface{}{
 			protocol.FieldId(1): int64(1024),
-		}, iter.ReadList()[0])
+		}, val[0])
 	}
 }
 
@@ -83,11 +84,10 @@ func Test_unmarshal_list_of_struct(t *testing.T) {
 	}
 }
 
-func Test_encode_list_of_struct(t *testing.T) {
+func Test_marshal_general_list_of_struct(t *testing.T) {
 	should := require.New(t)
 	for _, c := range test.Combinations {
-		stream := c.CreateStream()
-		stream.WriteList([]interface{}{
+		output, err := c.Marshal([]interface{}{
 			map[protocol.FieldId]interface{}{
 				protocol.FieldId(1): int64(1024),
 			},
@@ -95,7 +95,8 @@ func Test_encode_list_of_struct(t *testing.T) {
 				protocol.FieldId(1): int64(1024),
 			},
 		})
-		iter := c.CreateIterator(stream.Buffer())
+		should.NoError(err)
+		iter := c.CreateIterator(output)
 		should.Equal(map[protocol.FieldId]interface{}{
 			protocol.FieldId(1): int64(1024),
 		}, iter.ReadList()[0])

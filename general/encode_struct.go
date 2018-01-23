@@ -9,6 +9,10 @@ type generalStructEncoder struct {
 }
 
 func (encoder *generalStructEncoder) Encode(val interface{}, stream spi.Stream) {
+	writeStruct(val, stream)
+}
+
+func writeStruct(val interface{}, stream spi.Stream) {
 	obj := val.(map[protocol.FieldId]interface{})
 	stream.WriteStructHeader()
 	for fieldId, elem := range obj {

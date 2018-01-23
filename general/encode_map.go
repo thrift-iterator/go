@@ -9,6 +9,17 @@ type generalMapEncoder struct {
 }
 
 func (encoder *generalMapEncoder) Encode(val interface{}, stream spi.Stream) {
+	writeMap(val, stream)
+}
+
+func takeSampleFromMap(sample map[interface{}]interface{}) (interface{}, interface{}){
+	for key, elem := range sample {
+		return key, elem
+	}
+	panic("should not reach here")
+}
+
+func writeMap(val interface{}, stream spi.Stream) {
 	obj := val.(map[interface{}]interface{})
 	length := len(obj)
 	if length == 0 {
@@ -23,11 +34,4 @@ func (encoder *generalMapEncoder) Encode(val interface{}, stream spi.Stream) {
 		generalKeyWriter(key, stream)
 		generalElemWriter(elem, stream)
 	}
-}
-
-func takeSampleFromMap(sample map[interface{}]interface{}) (interface{}, interface{}){
-	for key, elem := range sample {
-		return key, elem
-	}
-	panic("should not reach here")
 }

@@ -31,7 +31,7 @@ func Test_skip_struct_of_struct(t *testing.T) {
 	}
 }
 
-func Test_decode_struct_of_struct(t *testing.T) {
+func Test_unmarshal_general_struct_of_struct(t *testing.T) {
 	should := require.New(t)
 	for _, c := range test.Combinations {
 		buf, proto := c.CreateProtocol()
@@ -48,10 +48,11 @@ func Test_decode_struct_of_struct(t *testing.T) {
 		proto.WriteFieldEnd()
 		proto.WriteFieldStop()
 		proto.WriteStructEnd()
-		iter := c.CreateIterator(buf.Bytes())
+		var val map[protocol.FieldId]interface{}
+		should.NoError(c.Unmarshal(buf.Bytes(), &val))
 		should.Equal(map[protocol.FieldId]interface{}{
 			protocol.FieldId(1): "abc",
-		}, iter.ReadStruct()[protocol.FieldId(1)])
+		}, val[protocol.FieldId(1)])
 	}
 }
 
@@ -80,16 +81,16 @@ func Test_unmarshal_struct_of_struct(t *testing.T) {
 	}
 }
 
-func Test_encode_struct_of_struct(t *testing.T) {
+func Test_marshal_general_struct_of_struct(t *testing.T) {
 	should := require.New(t)
 	for _, c := range test.Combinations {
-		stream := c.CreateStream()
-		stream.WriteStruct(map[protocol.FieldId]interface{}{
+		output, err := c.Marshal(map[protocol.FieldId]interface{}{
 			protocol.FieldId(1): map[protocol.FieldId]interface{}{
 				protocol.FieldId(1): "abc",
 			},
 		})
-		iter := c.CreateIterator(stream.Buffer())
+		should.NoError(err)
+		iter := c.CreateIterator(output)
 		should.Equal(map[protocol.FieldId]interface{}{
 			protocol.FieldId(1): "abc",
 		}, iter.ReadStruct()[protocol.FieldId(1)])

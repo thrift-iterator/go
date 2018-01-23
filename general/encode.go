@@ -40,6 +40,12 @@ func generalWriterOf(sample interface{}) (protocol.TType, func(val interface{}, 
 		return protocol.TypeString, writeString
 	case []byte:
 		return protocol.TypeString, writeBinary
+	case []interface{}:
+		return protocol.TypeList, writeList
+	case map[interface{}]interface{}:
+		return protocol.TypeMap, writeMap
+	case map[protocol.FieldId]interface{}:
+		return protocol.TypeStruct, writeStruct
 	default:
 		panic("unsupported type")
 	}
