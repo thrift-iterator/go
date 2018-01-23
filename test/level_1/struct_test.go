@@ -117,7 +117,7 @@ func Test_encode_struct_with_bool_by_stream(t *testing.T) {
 	}
 }
 
-func Test_decode_struct_as_object(t *testing.T) {
+func Test_skip_struct(t *testing.T) {
 	should := require.New(t)
 	for _, c := range test.Combinations {
 		buf, proto := c.CreateProtocol()
@@ -128,10 +128,25 @@ func Test_decode_struct_as_object(t *testing.T) {
 		proto.WriteFieldStop()
 		proto.WriteStructEnd()
 		iter := c.CreateIterator(buf.Bytes())
-		obj := iter.ReadStruct()
+		should.Equal(buf.Bytes(), iter.SkipStruct(nil))
+	}
+}
+
+func Test_unmarshal_general_struct(t *testing.T) {
+	should := require.New(t)
+	for _, c := range test.Combinations {
+		buf, proto := c.CreateProtocol()
+		proto.WriteStructBegin("hello")
+		proto.WriteFieldBegin("field1", thrift.I64, 1)
+		proto.WriteI64(1024)
+		proto.WriteFieldEnd()
+		proto.WriteFieldStop()
+		proto.WriteStructEnd()
+		var val map[protocol.FieldId]interface{}
+		should.NoError(c.Unmarshal(buf.Bytes(), &val))
 		should.Equal(map[protocol.FieldId]interface{}{
 			protocol.FieldId(1): int64(1024),
-		}, obj)
+		}, val)
 	}
 }
 
@@ -151,33 +166,18 @@ func Test_unmarshal_struct(t *testing.T) {
 	}
 }
 
-func Test_encode_struct_from_object(t *testing.T) {
+func Test_marshal_general_struct(t *testing.T) {
 	should := require.New(t)
 	for _, c := range test.Combinations {
-		stream := c.CreateStream()
-		stream.WriteStruct(map[protocol.FieldId]interface{}{
+		output, err := c.Marshal(map[protocol.FieldId]interface{}{
 			protocol.FieldId(1): int64(1024),
 		})
-		iter := c.CreateIterator(stream.Buffer())
+		should.NoError(err)
+		iter := c.CreateIterator(output)
 		obj := iter.ReadStruct()
 		should.Equal(map[protocol.FieldId]interface{}{
 			protocol.FieldId(1): int64(1024),
 		}, obj)
-	}
-}
-
-func Test_skip_struct(t *testing.T) {
-	should := require.New(t)
-	for _, c := range test.Combinations {
-		buf, proto := c.CreateProtocol()
-		proto.WriteStructBegin("hello")
-		proto.WriteFieldBegin("field1", thrift.I64, 1)
-		proto.WriteI64(1024)
-		proto.WriteFieldEnd()
-		proto.WriteFieldStop()
-		proto.WriteStructEnd()
-		iter := c.CreateIterator(buf.Bytes())
-		should.Equal(buf.Bytes(), iter.SkipStruct(nil))
 	}
 }
 

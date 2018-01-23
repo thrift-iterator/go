@@ -19,7 +19,7 @@ func Test_unmarshal_ptr_int64(t *testing.T) {
 }
 func Test_marshal_ptr_int64(t *testing.T) {
 	should := require.New(t)
-	for _, c := range test.UnmarshalCombinations {
+	for _, c := range test.MarshalCombinations {
 		val := int64(2)
 		output, err := c.Marshal(&val)
 		should.NoError(err)

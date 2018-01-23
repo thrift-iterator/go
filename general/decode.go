@@ -10,6 +10,7 @@ func ExportDecoders() map[reflect.Type]spi.ValDecoder {
 	return map[reflect.Type]spi.ValDecoder {
 		reflect.TypeOf((*[]interface{})(nil)): &generalListDecoder{},
 		reflect.TypeOf((*map[interface{}]interface{})(nil)): &generalMapDecoder{},
+		reflect.TypeOf((*map[protocol.FieldId]interface{})(nil)): &generalStructDecoder{},
 	}
 }
 
