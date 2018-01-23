@@ -101,15 +101,6 @@ func (iter *Iterator) ReadMessageHeader() protocol.MessageHeader {
 	}
 }
 
-func (iter *Iterator) ReadMessage() protocol.Message {
-	buf := iter.SkipMessage(iter.space[:0])
-	if iter.err != nil {
-		return protocol.Message{}
-	}
-	iter.real.Reset(nil, buf)
-	return iter.real.ReadMessage()
-}
-
 func (iter *Iterator) ReadStructHeader() {
 	// noop
 }
@@ -124,43 +115,16 @@ func (iter *Iterator) ReadStructField() (protocol.TType, protocol.FieldId) {
 	return fieldType, fieldId
 }
 
-func (iter *Iterator) ReadStruct() map[protocol.FieldId]interface{} {
-	buf := iter.SkipStruct(iter.space[:0])
-	if iter.err != nil {
-		return nil
-	}
-	iter.real.Reset(nil, buf)
-	return iter.real.ReadStruct()
-}
-
 func (iter *Iterator) ReadListHeader() (elemType protocol.TType, length int) {
 	tmp := iter.readSmall(5)
 	iter.real.Reset(nil, tmp)
 	return iter.real.ReadListHeader()
 }
 
-func (iter *Iterator) ReadList() []interface{} {
-	buf := iter.SkipList(iter.space[:0])
-	if iter.err != nil {
-		return nil
-	}
-	iter.real.Reset(nil, buf)
-	return iter.real.ReadList()
-}
-
 func (iter *Iterator) ReadMapHeader() (keyType protocol.TType, elemType protocol.TType, length int) {
 	tmp := iter.readSmall(6)
 	iter.real.Reset(nil, tmp)
 	return iter.real.ReadMapHeader()
-}
-
-func (iter *Iterator) ReadMap() map[interface{}]interface{} {
-	buf := iter.SkipMap(iter.space[:0])
-	if iter.err != nil {
-		return nil
-	}
-	iter.real.Reset(nil, buf)
-	return iter.real.ReadMap()
 }
 
 func (iter *Iterator) ReadBool() bool {
@@ -234,80 +198,6 @@ func (iter *Iterator) ReadString() string {
 func (iter *Iterator) ReadBinary() []byte {
 	size := iter.ReadUint32()
 	return iter.readLarge(int(size))
-}
-
-func (iter *Iterator) Read(ttype protocol.TType) interface{} {
-	switch ttype {
-	case protocol.TypeBool:
-		return iter.ReadBool()
-	case protocol.TypeI08:
-		return iter.ReadInt8()
-	case protocol.TypeI16:
-		return iter.ReadInt16()
-	case protocol.TypeI32:
-		return iter.ReadInt32()
-	case protocol.TypeI64:
-		return iter.ReadInt64()
-	case protocol.TypeDouble:
-		return iter.ReadFloat64()
-	case protocol.TypeString:
-		return iter.ReadString()
-	case protocol.TypeList:
-		return iter.ReadList()
-	case protocol.TypeMap:
-		return iter.ReadMap()
-	case protocol.TypeStruct:
-		return iter.ReadStruct()
-	default:
-		panic("unsupported type")
-	}
-}
-
-func (iter *Iterator) ReaderOf(ttype protocol.TType) func() interface{} {
-	switch ttype {
-	case protocol.TypeBool:
-		return func() interface{} {
-			return iter.ReadBool()
-		}
-	case protocol.TypeI08:
-		return func() interface{} {
-			return iter.ReadInt8()
-		}
-	case protocol.TypeI16:
-		return func() interface{} {
-			return iter.ReadInt16()
-		}
-	case protocol.TypeI32:
-		return func() interface{} {
-			return iter.ReadInt32()
-		}
-	case protocol.TypeI64:
-		return func() interface{} {
-			return iter.ReadInt64()
-		}
-	case protocol.TypeDouble:
-		return func() interface{} {
-			return iter.ReadFloat64()
-		}
-	case protocol.TypeString:
-		return func() interface{} {
-			return iter.ReadString()
-		}
-	case protocol.TypeList:
-		return func() interface{} {
-			return iter.ReadList()
-		}
-	case protocol.TypeMap:
-		return func() interface{} {
-			return iter.ReadMap()
-		}
-	case protocol.TypeStruct:
-		return func() interface{} {
-			return iter.ReadStruct()
-		}
-	default:
-		panic("unsupported type")
-	}
 }
 
 func getTypeSize(elemType protocol.TType) int {

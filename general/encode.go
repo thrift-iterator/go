@@ -11,6 +11,8 @@ func ExportEncoders() map[reflect.Type]spi.ValEncoder{
 		reflect.TypeOf(([]interface{})(nil)): &generalListEncoder{},
 		reflect.TypeOf((map[interface{}]interface{})(nil)): &generalMapEncoder{},
 		reflect.TypeOf((map[protocol.FieldId]interface{})(nil)): &generalStructEncoder{},
+		reflect.TypeOf((*protocol.Message)(nil)).Elem(): &messageEncoder{},
+		reflect.TypeOf((*protocol.MessageHeader)(nil)).Elem(): &messageHeaderEncoder{},
 	}
 }
 

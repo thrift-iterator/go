@@ -49,12 +49,11 @@ func (iter *Iterator) Skip(ttype protocol.TType, space []byte) []byte {
 		panic("unsupported type")
 	}
 }
-func (iter *Iterator) SkipMessage(space []byte) []byte {
+
+func (iter *Iterator) SkipMessageHeader(space []byte) []byte {
 	bufBeforeSkip := iter.buf
 	iter.buf = iter.buf[4:]
 	skippedBytes := 4 + len(iter.skipBinary()) + 4
-	iter.buf = bufBeforeSkip[skippedBytes:]
-	skippedBytes += len(iter.SkipStruct(nil))
 	skipped := bufBeforeSkip[:skippedBytes]
 	iter.buf = bufBeforeSkip[skippedBytes:]
 	if len(space) > 0 {

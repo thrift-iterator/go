@@ -72,10 +72,11 @@ func Test_marshal_general_map_of_string_key(t *testing.T) {
 			"1": int64(1),
 		})
 		should.NoError(err)
-		iter := c.CreateIterator(output)
+		var val map[interface{}]interface{}
+		should.NoError(c.Unmarshal(output, &val))
 		should.Equal(map[interface{}]interface{}{
 			"1": int64(1),
-		}, iter.ReadMap())
+		}, val)
 	}
 }
 
@@ -86,9 +87,10 @@ func Test_marshal_map_of_string_key(t *testing.T) {
 			"1": 1,
 		})
 		should.NoError(err)
-		iter := c.CreateIterator(output)
+		var val map[interface{}]interface{}
+		should.NoError(c.Unmarshal(output, &val))
 		should.Equal(map[interface{}]interface{}{
 			"1": int64(1),
-		}, iter.ReadMap())
+		}, val)
 	}
 }

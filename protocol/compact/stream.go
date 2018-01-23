@@ -68,11 +68,6 @@ func (stream *Stream) WriteMessageHeader(header protocol.MessageHeader) {
 	stream.WriteString(header.MessageName)
 }
 
-func (stream *Stream) WriteMessage(message protocol.Message) {
-	stream.WriteMessageHeader(message.MessageHeader)
-	stream.WriteStruct(message.Arguments)
-}
-
 func (stream *Stream) WriteListHeader(elemType protocol.TType, length int) {
 	if length <= 14 {
 		stream.WriteUint8(uint8(int32(length<<4) | int32(compactTypes[elemType])))
@@ -80,18 +75,6 @@ func (stream *Stream) WriteListHeader(elemType protocol.TType, length int) {
 	}
 	stream.WriteUint8(0xf0 | uint8(compactTypes[elemType]))
 	stream.writeVarInt32(int32(length))
-}
-
-func (stream *Stream) WriteList(val []interface{}) {
-	if len(val) == 0 {
-		stream.ReportError("WriteList", "input is empty slice, can not tell element type")
-		return
-	}
-	elemType, elemWriter := stream.WriterOf(val[0])
-	stream.WriteListHeader(elemType, len(val))
-	for _, elem := range val {
-		elemWriter(elem)
-	}
 }
 
 func (stream *Stream) WriteStructHeader() {
@@ -122,60 +105,6 @@ func (stream *Stream) WriteStructFieldStop() {
 	stream.pendingBoolField = 0
 }
 
-func (stream *Stream) WriteStruct(val map[protocol.FieldId]interface{}) {
-	stream.WriteStructHeader()
-	for key, elem := range val {
-		switch typedElem := elem.(type) {
-		case bool:
-			stream.WriteStructField(protocol.TypeBool, key)
-			stream.WriteBool(typedElem)
-		case int8:
-			stream.WriteStructField(protocol.TypeI08, key)
-			stream.WriteInt8(typedElem)
-		case uint8:
-			stream.WriteStructField(protocol.TypeI08, key)
-			stream.WriteUint8(typedElem)
-		case int16:
-			stream.WriteStructField(protocol.TypeI16, key)
-			stream.WriteInt16(typedElem)
-		case uint16:
-			stream.WriteStructField(protocol.TypeI16, key)
-			stream.WriteUint16(typedElem)
-		case int32:
-			stream.WriteStructField(protocol.TypeI32, key)
-			stream.WriteInt32(typedElem)
-		case uint32:
-			stream.WriteStructField(protocol.TypeI32, key)
-			stream.WriteUint32(typedElem)
-		case int64:
-			stream.WriteStructField(protocol.TypeI64, key)
-			stream.WriteInt64(typedElem)
-		case uint64:
-			stream.WriteStructField(protocol.TypeI64, key)
-			stream.WriteUint64(typedElem)
-		case float64:
-			stream.WriteStructField(protocol.TypeDouble, key)
-			stream.WriteFloat64(typedElem)
-		case string:
-			stream.WriteStructField(protocol.TypeString, key)
-			stream.WriteString(typedElem)
-		case []interface{}:
-			stream.WriteStructField(protocol.TypeList, key)
-			stream.WriteList(typedElem)
-		case map[interface{}]interface{}:
-			stream.WriteStructField(protocol.TypeMap, key)
-			stream.WriteMap(typedElem)
-		case map[protocol.FieldId]interface{}:
-			stream.WriteStructField(protocol.TypeStruct, key)
-			stream.WriteStruct(typedElem)
-		default:
-			panic("unsupported type")
-		}
-	}
-	stream.WriteStructFieldStop()
-	stream.Flush()
-}
-
 func (stream *Stream) WriteMapHeader(keyType protocol.TType, elemType protocol.TType, length int) {
 	if length == 0 {
 		stream.WriteUint8(0)
@@ -183,28 +112,6 @@ func (stream *Stream) WriteMapHeader(keyType protocol.TType, elemType protocol.T
 	}
 	stream.writeVarInt32(int32(length))
 	stream.WriteUint8(uint8(compactTypes[keyType]<<4 | TCompactType(compactTypes[elemType])))
-}
-
-func (stream *Stream) WriteMap(val map[interface{}]interface{}) {
-	hasSample, sampleKey, sampleElem := takeSampleFromMap(val)
-	if !hasSample {
-		stream.ReportError("WriteMap", "input is empty map, can not tell element type")
-		return
-	}
-	keyType, keyWriter := stream.WriterOf(sampleKey)
-	elemType, elemWriter := stream.WriterOf(sampleElem)
-	stream.WriteMapHeader(keyType, elemType, len(val))
-	for key, elem := range val {
-		keyWriter(key)
-		elemWriter(elem)
-	}
-}
-
-func takeSampleFromMap(val map[interface{}]interface{}) (bool, interface{}, interface{}) {
-	for key, elem := range val {
-		return true, key, elem
-	}
-	return false, nil, nil
 }
 
 func (stream *Stream) WriteBool(val bool) {
@@ -323,67 +230,4 @@ func (stream *Stream) WriteBinary(val []byte) {
 func (stream *Stream) WriteString(val string) {
 	stream.writeVarInt32(int32(len(val)))
 	stream.buf = append(stream.buf, val...)
-}
-
-func (stream *Stream) WriterOf(sample interface{}) (protocol.TType, func(interface{})) {
-	switch sample.(type) {
-	case bool:
-		return protocol.TypeBool, func(val interface{}) {
-			stream.WriteBool(val.(bool))
-		}
-	case int8:
-		return protocol.TypeI08, func(val interface{}) {
-			stream.WriteInt8(val.(int8))
-		}
-	case uint8:
-		return protocol.TypeI08, func(val interface{}) {
-			stream.WriteUint8(val.(uint8))
-		}
-	case int16:
-		return protocol.TypeI16, func(val interface{}) {
-			stream.WriteInt16(val.(int16))
-		}
-	case uint16:
-		return protocol.TypeI16, func(val interface{}) {
-			stream.WriteUint16(val.(uint16))
-		}
-	case int32:
-		return protocol.TypeI32, func(val interface{}) {
-			stream.WriteInt32(val.(int32))
-		}
-	case uint32:
-		return protocol.TypeI32, func(val interface{}) {
-			stream.WriteUint32(val.(uint32))
-		}
-	case int64:
-		return protocol.TypeI64, func(val interface{}) {
-			stream.WriteInt64(val.(int64))
-		}
-	case uint64:
-		return protocol.TypeI64, func(val interface{}) {
-			stream.WriteUint64(val.(uint64))
-		}
-	case float64:
-		return protocol.TypeDouble, func(val interface{}) {
-			stream.WriteFloat64(val.(float64))
-		}
-	case string:
-		return protocol.TypeString, func(val interface{}) {
-			stream.WriteString(val.(string))
-		}
-	case []interface{}:
-		return protocol.TypeList, func(val interface{}) {
-			stream.WriteList(val.([]interface{}))
-		}
-	case map[interface{}]interface{}:
-		return protocol.TypeMap, func(val interface{}) {
-			stream.WriteMap(val.(map[interface{}]interface{}))
-		}
-	case map[protocol.FieldId]interface{}:
-		return protocol.TypeStruct, func(val interface{}) {
-			stream.WriteStruct(val.(map[protocol.FieldId]interface{}))
-		}
-	default:
-		panic("unsupported type")
-	}
 }

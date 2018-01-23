@@ -7,10 +7,12 @@ import (
 )
 
 func ExportDecoders() map[reflect.Type]spi.ValDecoder {
-	return map[reflect.Type]spi.ValDecoder {
+	return map[reflect.Type]spi.ValDecoder{
 		reflect.TypeOf((*[]interface{})(nil)): &generalListDecoder{},
 		reflect.TypeOf((*map[interface{}]interface{})(nil)): &generalMapDecoder{},
 		reflect.TypeOf((*map[protocol.FieldId]interface{})(nil)): &generalStructDecoder{},
+		reflect.TypeOf((*protocol.Message)(nil)): &messageDecoder{},
+		reflect.TypeOf((*protocol.MessageHeader)(nil)): &messageHeaderDecoder{},
 	}
 }
 

@@ -23,7 +23,7 @@ func Test_skip_message(t *testing.T) {
 		proto.WriteStructEnd()
 		proto.WriteMessageEnd()
 		iter := c.CreateIterator(buf.Bytes())
-		should.Equal(buf.Bytes(), iter.SkipMessage(nil))
+		should.Equal(buf.Bytes(), iter.SkipStruct(iter.SkipMessageHeader(nil)))
 	}
 }
 
@@ -66,8 +66,8 @@ func Test_marshal_message(t *testing.T) {
 			},
 		})
 		should.NoError(err)
-		iter := c.CreateIterator(output)
-		msg := iter.ReadMessage()
+		var msg protocol.Message
+		should.NoError(c.Unmarshal(output, &msg))
 		should.Equal("hello", msg.MessageName)
 		should.Equal(protocol.MessageTypeCall, msg.MessageType)
 		should.Equal(protocol.SeqId(17), msg.SeqId)

@@ -60,8 +60,11 @@ func Test_marshal_general_list_of_string(t *testing.T) {
 			"a", "b", "c",
 		})
 		should.NoError(err)
-		iter := c.CreateIterator(output)
-		should.Equal([]interface{}{"a", "b", "c"}, iter.ReadList())
+		var val []string
+		should.NoError(c.Unmarshal(output, &val))
+		should.Equal([]string{
+			"a", "b", "c",
+		}, val)
 	}
 }
 
@@ -70,7 +73,10 @@ func Test_marshal_list_of_string(t *testing.T) {
 	for _, c := range test.MarshalCombinations {
 		output, err := c.Marshal([]string{"a", "b", "c"})
 		should.NoError(err)
-		iter := c.CreateIterator(output)
-		should.Equal([]interface{}{"a", "b", "c"}, iter.ReadList())
+		var val []string
+		should.NoError(c.Unmarshal(output, &val))
+		should.Equal([]string{
+			"a", "b", "c",
+		}, val)
 	}
 }

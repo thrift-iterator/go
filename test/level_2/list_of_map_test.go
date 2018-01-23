@@ -82,10 +82,11 @@ func Test_marshal_general_list_of_map(t *testing.T) {
 			},
 		})
 		should.NoError(err)
-		iter := c.CreateIterator(output)
-		should.Equal(map[interface{}]interface{}{
-			int32(1): int64(1),
-		}, iter.ReadList()[0])
+		var val []map[int32]int64
+		should.NoError(c.Unmarshal(output, &val))
+		should.Equal([]map[int32]int64{
+			{1:1}, {2:2},
+		}, val)
 	}
 }
 
@@ -96,9 +97,10 @@ func Test_marshal_list_of_map(t *testing.T) {
 			{1: 1}, {2: 2},
 		})
 		should.NoError(err)
-		iter := c.CreateIterator(output)
-		should.Equal(map[interface{}]interface{}{
-			int32(1): int64(1),
-		}, iter.ReadList()[0])
+		var val []map[int32]int64
+		should.NoError(c.Unmarshal(output, &val))
+		should.Equal([]map[int32]int64{
+			{1:1}, {2:2},
+		}, val)
 	}
 }

@@ -10,17 +10,13 @@ type Iterator interface {
 	Reset(reader io.Reader, buf []byte)
 	ReportError(operation string, err string)
 	ReadMessageHeader() protocol.MessageHeader
-	ReadMessage() protocol.Message
-	SkipMessage(space []byte) []byte
+	SkipMessageHeader(space []byte) []byte
 	ReadStructHeader()
 	ReadStructField() (fieldType protocol.TType, fieldId protocol.FieldId)
-	ReadStruct() map[protocol.FieldId]interface{}
 	SkipStruct(space []byte) []byte
 	ReadListHeader() (elemType protocol.TType, size int)
-	ReadList() []interface{}
 	SkipList(space []byte) []byte
 	ReadMapHeader() (keyType protocol.TType, elemType protocol.TType, size int)
-	ReadMap() map[interface{}]interface{}
 	SkipMap(space []byte) []byte
 	ReadBool() bool
 	ReadInt() int
@@ -39,8 +35,6 @@ type Iterator interface {
 	SkipBinary(space []byte) []byte
 	Skip(ttype protocol.TType, space []byte) []byte
 	Discard(ttype protocol.TType)
-	Read(ttype protocol.TType) interface{}
-	ReaderOf(ttype protocol.TType) func() interface{}
 }
 
 type Stream interface {
@@ -51,16 +45,11 @@ type Stream interface {
 	Buffer() []byte
 	Write(buf []byte) error
 	WriteMessageHeader(header protocol.MessageHeader)
-	WriteMessage(message protocol.Message)
 	WriteListHeader(elemType protocol.TType, length int)
-	WriteList(val []interface{})
 	WriteStructHeader()
 	WriteStructField(fieldType protocol.TType, fieldId protocol.FieldId)
 	WriteStructFieldStop()
-	WriteStruct(val map[protocol.FieldId]interface{})
 	WriteMapHeader(keyType protocol.TType, elemType protocol.TType, length int)
-	WriteMap(val map[interface{}]interface{})
-	WriterOf(sample interface{}) (protocol.TType, func(interface{}))
 	WriteBool(val bool)
 	WriteInt(val int)
 	WriteUint(val uint)

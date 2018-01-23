@@ -13,10 +13,10 @@ func (iter *Iterator) Skip(ttype protocol.TType, space []byte) []byte {
 	return skipped
 }
 
-func (iter *Iterator) SkipMessage(space []byte) []byte {
+func (iter *Iterator) SkipMessageHeader(space []byte) []byte {
 	bufBeforeSkip := iter.buf
 	consumedBeforeSkip := iter.consumed
-	iter.discardMessage()
+	iter.discardMessageHeader()
 	skipped := bufBeforeSkip[:iter.consumed-consumedBeforeSkip]
 	if len(space) > 0 {
 		return append(space, skipped...)

@@ -78,10 +78,11 @@ func Test_marshal_general_struct_of_map(t *testing.T) {
 			},
 		})
 		should.NoError(err)
-		iter := c.CreateIterator(output)
+		var val map[protocol.FieldId]interface{}
+		should.NoError(c.Unmarshal(output, &val))
 		should.Equal(map[interface{}]interface{}{
 			int32(2): int64(2),
-		}, iter.ReadStruct()[protocol.FieldId(1)])
+		}, val[protocol.FieldId(1)])
 	}
 }
 
@@ -92,9 +93,10 @@ func Test_marshal_struct_of_map(t *testing.T) {
 			map[int32]int64{2: 2},
 		})
 		should.NoError(err)
-		iter := c.CreateIterator(output)
+		var val map[protocol.FieldId]interface{}
+		should.NoError(c.Unmarshal(output, &val))
 		should.Equal(map[interface{}]interface{}{
 			int32(2): int64(2),
-		}, iter.ReadStruct()[protocol.FieldId(1)])
+		}, val[protocol.FieldId(1)])
 	}
 }

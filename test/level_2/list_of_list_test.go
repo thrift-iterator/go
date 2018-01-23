@@ -74,8 +74,9 @@ func Test_marshal_general_list_of_list(t *testing.T) {
 			},
 		})
 		should.NoError(err)
-		iter := c.CreateIterator(output)
-		should.Equal([]interface{}{int64(1)}, iter.ReadList()[0])
+		var val []interface{}
+		should.NoError(c.Unmarshal(output, &val))
+		should.Equal([]interface{}{int64(1)}, val[0])
 	}
 }
 
@@ -86,7 +87,8 @@ func Test_marshal_list_of_list(t *testing.T) {
 			{1}, {2},
 		})
 		should.NoError(err)
-		iter := c.CreateIterator(output)
-		should.Equal([]interface{}{int64(1)}, iter.ReadList()[0])
+		var val []interface{}
+		should.NoError(c.Unmarshal(output, &val))
+		should.Equal([]interface{}{int64(1)}, val[0])
 	}
 }

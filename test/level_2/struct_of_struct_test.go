@@ -90,10 +90,11 @@ func Test_marshal_general_struct_of_struct(t *testing.T) {
 			},
 		})
 		should.NoError(err)
-		iter := c.CreateIterator(output)
+		var val map[protocol.FieldId]interface{}
+		should.NoError(c.Unmarshal(output, &val))
 		should.Equal(map[protocol.FieldId]interface{}{
 			protocol.FieldId(1): "abc",
-		}, iter.ReadStruct()[protocol.FieldId(1)])
+		}, val[protocol.FieldId(1)])
 	}
 }
 
@@ -104,9 +105,10 @@ func Test_marshal_struct_of_struct(t *testing.T) {
 			struct_of_struct_test.EmbeddedObject{"abc"},
 		})
 		should.NoError(err)
-		iter := c.CreateIterator(output)
+		var val map[protocol.FieldId]interface{}
+		should.NoError(c.Unmarshal(output, &val))
 		should.Equal(map[protocol.FieldId]interface{}{
 			protocol.FieldId(1): "abc",
-		}, iter.ReadStruct()[protocol.FieldId(1)])
+		}, val[protocol.FieldId(1)])
 	}
 }

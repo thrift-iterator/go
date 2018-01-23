@@ -27,11 +27,10 @@ func (iter *Iterator) Skip(ttype protocol.TType, space []byte) []byte {
 		panic("unsupported type")
 	}
 }
-func (iter *Iterator) SkipMessage(space []byte) []byte {
+func (iter *Iterator) SkipMessageHeader(space []byte) []byte {
 	space = iter.skip(space, 4)
 	space = iter.SkipBinary(space)
 	space = iter.skip(space, 4)
-	space = iter.SkipStruct(space)
 	return space
 }
 

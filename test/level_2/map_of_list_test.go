@@ -65,10 +65,11 @@ func Test_marshal_general_map_of_list(t *testing.T) {
 			int64(1): []interface{}{int64(1)},
 		})
 		should.NoError(err)
-		iter := c.CreateIterator(output)
+		var val map[interface{}]interface{}
+		should.NoError(c.Unmarshal(output, &val))
 		should.Equal([]interface{}{
 			int64(1),
-		}, iter.ReadMap()[int64(1)])
+		}, val[int64(1)])
 	}
 }
 
@@ -79,9 +80,10 @@ func Test_marshal_map_of_list(t *testing.T) {
 			1: {1},
 		})
 		should.NoError(err)
-		iter := c.CreateIterator(output)
+		var val map[interface{}]interface{}
+		should.NoError(c.Unmarshal(output, &val))
 		should.Equal([]interface{}{
 			int64(1),
-		}, iter.ReadMap()[int64(1)])
+		}, val[int64(1)])
 	}
 }

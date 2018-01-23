@@ -96,10 +96,11 @@ func Test_marshal_general_list_of_struct(t *testing.T) {
 			},
 		})
 		should.NoError(err)
-		iter := c.CreateIterator(output)
+		var val []interface{}
+		should.NoError(c.Unmarshal(output, &val))
 		should.Equal(map[protocol.FieldId]interface{}{
 			protocol.FieldId(1): int64(1024),
-		}, iter.ReadList()[0])
+		}, val[0])
 	}
 }
 
@@ -110,9 +111,10 @@ func Test_marshal_list_of_struct(t *testing.T) {
 			{1024}, {1024},
 		})
 		should.NoError(err)
-		iter := c.CreateIterator(output)
+		var val []interface{}
+		should.NoError(c.Unmarshal(output, &val))
 		should.Equal(map[protocol.FieldId]interface{}{
 			protocol.FieldId(1): int64(1024),
-		}, iter.ReadList()[0])
+		}, val[0])
 	}
 }

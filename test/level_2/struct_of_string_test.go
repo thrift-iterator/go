@@ -65,8 +65,9 @@ func Test_marshal_general_struct_of_string(t *testing.T) {
 			protocol.FieldId(1): "abc",
 		})
 		should.NoError(err)
-		iter := c.CreateIterator(output)
-		should.Equal("abc", iter.ReadStruct()[protocol.FieldId(1)])
+		var val map[protocol.FieldId]interface{}
+		should.NoError(c.Unmarshal(output, &val))
+		should.Equal("abc", val[protocol.FieldId(1)])
 	}
 }
 
@@ -77,7 +78,8 @@ func Test_marshal_struct_of_string(t *testing.T) {
 			"abc",
 		})
 		should.NoError(err)
-		iter := c.CreateIterator(output)
-		should.Equal("abc", iter.ReadStruct()[protocol.FieldId(1)])
+		var val map[protocol.FieldId]interface{}
+		should.NoError(c.Unmarshal(output, &val))
+		should.Equal("abc", val[protocol.FieldId(1)])
 	}
 }
