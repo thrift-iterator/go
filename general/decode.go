@@ -1,20 +1,9 @@
 package general
 
 import (
-	"reflect"
 	"github.com/thrift-iterator/go/spi"
 	"github.com/thrift-iterator/go/protocol"
 )
-
-func ExportDecoders() map[reflect.Type]spi.ValDecoder {
-	return map[reflect.Type]spi.ValDecoder{
-		reflect.TypeOf((*[]interface{})(nil)): &generalListDecoder{},
-		reflect.TypeOf((*map[interface{}]interface{})(nil)): &generalMapDecoder{},
-		reflect.TypeOf((*map[protocol.FieldId]interface{})(nil)): &generalStructDecoder{},
-		reflect.TypeOf((*protocol.Message)(nil)): &messageDecoder{},
-		reflect.TypeOf((*protocol.MessageHeader)(nil)): &messageHeaderDecoder{},
-	}
-}
 
 func generalReaderOf(ttype protocol.TType) func(iter spi.Iterator) interface{} {
 	switch ttype {

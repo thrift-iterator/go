@@ -11,6 +11,7 @@ func init() {
 
 var decodeSlice = generic.DefineFunc(
 	"DecodeSlice(dst DT, src ST)").
+	Param("EXT", "user provided extension").
 	Param("DT", "the dst type to copy into").
 	Param("ST", "the src type to copy from").
 	ImportFunc(decodeAnything).
@@ -19,7 +20,7 @@ var decodeSlice = generic.DefineFunc(
 		return reflect.PtrTo(typ.Elem().Elem())
 	}).
 	Source(`
-{{ $decodeElem := expand "DecodeAnything" "DT" (.DT|ptrSliceElem) "ST" .ST }}
+{{ $decodeElem := expand "DecodeAnything" "EXT" .EXT "DT" (.DT|ptrSliceElem) "ST" .ST }}
 _, length := src.ReadListHeader()
 for i := 0; i < length; i++ {
 	elem := new({{.DT|elem|elem|name}})

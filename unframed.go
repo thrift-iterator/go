@@ -20,7 +20,7 @@ type unframedEncoder struct {
 func (decoder *unframedDecoder) Decode(val interface{}) error {
 	cfg := decoder.cfg
 	valType := reflect.TypeOf(val)
-	valDecoder := cfg.getDecoderFromCache(valType)
+	valDecoder := cfg.GetDecoder(valType.String())
 	if valDecoder == nil {
 		valDecoder = cfg.decoderOf(decoder.decodeFromReader, valType)
 		cfg.addDecoderToCache(valType, valDecoder)
@@ -39,7 +39,7 @@ func (decoder *unframedDecoder) Reset(reader io.Reader, buf []byte) {
 func (encoder *unframedEncoder) Encode(val interface{}) error {
 	cfg := encoder.cfg
 	valType := reflect.TypeOf(val)
-	valEncoder := cfg.getEncoderFromCache(valType)
+	valEncoder := cfg.GetEncoder(valType.String())
 	if valEncoder == nil {
 		valEncoder = cfg.encoderOf(valType)
 		cfg.addEncoderToCache(valType, valEncoder)

@@ -11,6 +11,7 @@ func init() {
 
 var decodeMap = generic.DefineFunc(
 	"DecodeMap(dst DT, src ST)").
+	Param("EXT", "user provided extension").
 	Param("DT", "the dst type to copy into").
 	Param("ST", "the src type to copy from").
 	ImportFunc(decodeAnything).
@@ -21,8 +22,8 @@ var decodeMap = generic.DefineFunc(
 		return reflect.PtrTo(typ.Elem().Key())
 	}).
 	Source(`
-{{ $decodeKey := expand "DecodeAnything" "DT" (.DT|ptrMapKey) "ST" .ST }}
-{{ $decodeElem := expand "DecodeAnything" "DT" (.DT|ptrMapElem) "ST" .ST }}
+{{ $decodeKey := expand "DecodeAnything" "EXT" .EXT "DT" (.DT|ptrMapKey) "ST" .ST }}
+{{ $decodeElem := expand "DecodeAnything" "EXT" .EXT "DT" (.DT|ptrMapElem) "ST" .ST }}
 if *dst == nil {
 	*dst = {{.DT|elem|name}}{}
 }

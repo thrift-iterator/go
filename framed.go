@@ -45,7 +45,7 @@ func (decoder *framedDecoder) Decode(val interface{}) error {
 	}
 	cfg := decoder.cfg
 	valType := reflect.TypeOf(val)
-	valDecoder := cfg.getDecoderFromCache(valType)
+	valDecoder := cfg.GetDecoder(valType.String())
 	if valDecoder == nil {
 		valDecoder = cfg.decoderOf(true, valType)
 		cfg.addDecoderToCache(valType, valDecoder)
@@ -68,7 +68,7 @@ type framedEncoder struct {
 func (encoder *framedEncoder) Encode(val interface{}) error {
 	cfg := encoder.cfg
 	valType := reflect.TypeOf(val)
-	valEncoder := cfg.getEncoderFromCache(valType)
+	valEncoder := cfg.GetEncoder(valType.String())
 	if valEncoder == nil {
 		valEncoder = cfg.encoderOf(valType)
 		cfg.addEncoderToCache(valType, valEncoder)

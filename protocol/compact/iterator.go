@@ -6,9 +6,11 @@ import (
 	"math"
 	"io"
 	"encoding/binary"
+	"github.com/thrift-iterator/go/spi"
 )
 
 type Iterator struct {
+	spi.ValDecoderProvider
 	buf              []byte
 	err              error
 	fieldIdStack     []protocol.FieldId
@@ -17,8 +19,8 @@ type Iterator struct {
 	pendingBoolField uint8
 }
 
-func NewIterator(buf []byte) *Iterator {
-	return &Iterator{buf: buf}
+func NewIterator(provider spi.ValDecoderProvider, buf []byte) *Iterator {
+	return &Iterator{ValDecoderProvider: provider, buf: buf}
 }
 
 func (iter *Iterator) Error() error {

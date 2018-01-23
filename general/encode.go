@@ -1,20 +1,9 @@
 package general
 
 import (
-	"reflect"
 	"github.com/thrift-iterator/go/spi"
 	"github.com/thrift-iterator/go/protocol"
 )
-
-func ExportEncoders() map[reflect.Type]spi.ValEncoder{
-	return map[reflect.Type]spi.ValEncoder {
-		reflect.TypeOf(([]interface{})(nil)): &generalListEncoder{},
-		reflect.TypeOf((map[interface{}]interface{})(nil)): &generalMapEncoder{},
-		reflect.TypeOf((map[protocol.FieldId]interface{})(nil)): &generalStructEncoder{},
-		reflect.TypeOf((*protocol.Message)(nil)).Elem(): &messageEncoder{},
-		reflect.TypeOf((*protocol.MessageHeader)(nil)).Elem(): &messageHeaderEncoder{},
-	}
-}
 
 func generalWriterOf(sample interface{}) (protocol.TType, func(val interface{}, stream spi.Stream)) {
 	switch sample.(type) {

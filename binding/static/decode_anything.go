@@ -5,7 +5,14 @@ import (
 	"reflect"
 )
 
-func dispatchDecode(dstType reflect.Type) string {
+func dispatchDecode(ext *CodegenExtension, dstType reflect.Type) string {
+	if ext.DecoderOf(dstType) != nil {
+		ext.ExtTypes = append(ext.ExtTypes, dstType)
+		return "DecodeByExtension"
+	}
+	if dstType.Kind() != reflect.Ptr {
+		panic("can only decode into pointer")
+	}
 	dstType = dstType.Elem()
 	if dstType == byteArrayType {
 		return "DecodeBinary"
@@ -23,16 +30,24 @@ func dispatchDecode(dstType reflect.Type) string {
 	case reflect.Ptr:
 		return "DecodePointer"
 	}
-	return "DecodeSimpleValue"
+	if _, isSimpleValue := simpleValueMap[dstType.Kind()]; isSimpleValue {
+		return "DecodeSimpleValue"
+	}
+	panic("unsupported type")
 }
 
 var decodeAnything = generic.DefineFunc("DecodeAnything(dst DT, src ST)").
+	Param("EXT", "user provided extension").
 	Param("DT", "the dst type to copy into").
 	Param("ST", "the src type to copy from").
 	Generators(
 	"dispatchDecode", dispatchDecode).
 	Source(`
-{{ $tmpl := dispatchDecode .DT }}
-{{ $decode := expand $tmpl "DT" .DT "ST" .ST }}
-{{$decode}}(dst, src)
+{{ $tmpl := dispatchDecode .EXT .DT }}
+{{ if eq $tmpl "DecodeByExtension" }}
+	src.GetDecoder("{{ .DT|name }}").Decode(dst, src)
+{{ else }}
+	{{ $decode := expand $tmpl "EXT" .EXT "DT" .DT "ST" .ST }}
+	{{$decode}}(dst, src)
+{{ end }}
 `)

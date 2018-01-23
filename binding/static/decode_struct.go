@@ -10,6 +10,7 @@ func init() {
 
 var decodeStruct = generic.DefineFunc(
 	"DecodeStruct(dst DT, src ST)").
+	Param("EXT", "user provided extension").
 	Param("DT", "the dst type to copy into").
 	Param("ST", "the src type to copy from").
 	ImportFunc(decodeAnything).
@@ -22,7 +23,7 @@ var decodeStruct = generic.DefineFunc(
 	Source(`
 {{ $bindings := calcBindings (.DT|elem) }}
 {{ range $_, $binding := $bindings}}
-	{{ $decode := expand "DecodeAnything" "DT" $binding.fieldType "ST" $.ST }}
+	{{ $decode := expand "DecodeAnything" "EXT" .EXT "DT" $binding.fieldType "ST" $.ST }}
 	{{ assignDecode $binding $decode }}
 {{ end }}
 src.ReadStructHeader()

@@ -5,9 +5,11 @@ import (
 	"github.com/thrift-iterator/go/protocol"
 	"github.com/thrift-iterator/go/protocol/binary"
 	"fmt"
+	"github.com/thrift-iterator/go/spi"
 )
 
 type Iterator struct {
+	spi.ValDecoderProvider
 	real     *binary.Iterator
 	reader   io.Reader
 	// tmp buffer, because recorder is not always on, we can not use recorder to replace this one
@@ -19,9 +21,10 @@ type Iterator struct {
 	err      error
 }
 
-func NewIterator(reader io.Reader, buf []byte) *Iterator {
+func NewIterator(provider spi.ValDecoderProvider, reader io.Reader, buf []byte) *Iterator {
 	return &Iterator{
-		reader: reader, real: binary.NewIterator(nil),
+		ValDecoderProvider: provider,
+		reader: reader, real: binary.NewIterator(provider, nil),
 		tmp:    make([]byte, 10),
 		space:  buf,
 	}

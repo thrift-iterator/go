@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"math"
 	"github.com/thrift-iterator/go/protocol"
+	"github.com/thrift-iterator/go/spi"
 )
 
 type Stream struct {
+	spi.ValEncoderProvider
 	writer           io.Writer
 	buf              []byte
 	err              error
@@ -16,8 +18,9 @@ type Stream struct {
 	pendingBoolField protocol.FieldId
 }
 
-func NewStream(writer io.Writer, buf []byte) *Stream {
+func NewStream(provider spi.ValEncoderProvider, writer io.Writer, buf []byte) *Stream {
 	return &Stream{
+		ValEncoderProvider: provider,
 		writer: writer,
 		buf:    buf,
 	}

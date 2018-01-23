@@ -10,6 +10,7 @@ func init() {
 
 var decodeEnum = generic.DefineFunc(
 	"DecodeEnum(dst DT, src ST)").
+	Param("EXT", "user provided extension").
 	Param("DT", "the dst type to copy into").
 	Param("ST", "the src type to copy from").
 	Source(`

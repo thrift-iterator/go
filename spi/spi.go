@@ -3,9 +3,11 @@ package spi
 import (
 	"io"
 	"github.com/thrift-iterator/go/protocol"
+	"reflect"
 )
 
 type Iterator interface {
+	ValDecoderProvider
 	Error() error
 	Reset(reader io.Reader, buf []byte)
 	ReportError(operation string, err string)
@@ -38,6 +40,7 @@ type Iterator interface {
 }
 
 type Stream interface {
+	ValEncoderProvider
 	Error() error
 	ReportError(operation string, err string)
 	Reset(writer io.Writer)
@@ -73,3 +76,30 @@ type ValEncoder interface {
 type ValDecoder interface {
 	Decode(val interface{}, iter Iterator)
 }
+
+type ValDecoderProvider interface {
+	PrepareDecoder(valType reflect.Type)
+	GetDecoder(decoderName string) ValDecoder
+}
+
+type ValEncoderProvider interface {
+	PrepareEncoder(valType reflect.Type)
+	GetEncoder(encoderName string) ValEncoder
+}
+
+type Extension interface {
+	DecoderOf(valType reflect.Type) ValDecoder
+	EncoderOf(valType reflect.Type) ValEncoder
+}
+
+type DummyExtension struct {
+}
+
+func (extension *DummyExtension) DecoderOf(valType reflect.Type) ValDecoder {
+	return nil
+}
+
+func (extension *DummyExtension) EncoderOf(valType reflect.Type) ValEncoder {
+	return nil
+}
+

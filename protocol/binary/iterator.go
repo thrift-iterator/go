@@ -5,15 +5,17 @@ import (
 	"github.com/thrift-iterator/go/protocol"
 	"math"
 	"io"
+	"github.com/thrift-iterator/go/spi"
 )
 
 type Iterator struct {
+	spi.ValDecoderProvider
 	buf []byte
 	err error
 }
 
-func NewIterator(buf []byte) *Iterator {
-	return &Iterator{buf: buf}
+func NewIterator(provider spi.ValDecoderProvider, buf []byte) *Iterator {
+	return &Iterator{ValDecoderProvider: provider, buf: buf}
 }
 
 func (iter *Iterator) Error() error {
