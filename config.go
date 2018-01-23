@@ -148,7 +148,7 @@ func (cfg *frozenConfig) decoderOf(decodeFromReader bool, valType reflect.Type) 
 		return rawStructDecoderInstance
 	}
 	if cfg.dynamicCodegen {
-		return dynamic.DecoderOf(valType)
+		return dynamic.DecoderOf(cfg.extension, valType)
 	}
 	return cfg.staticDecoderOf(decodeFromReader, valType)
 }

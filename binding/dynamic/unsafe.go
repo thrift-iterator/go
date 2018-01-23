@@ -19,6 +19,18 @@ func (decoder *valDecoderAdapter) Decode(val interface{}, iter spi.Iterator) {
 	decoder.decoder.decode(ptr, iter)
 }
 
+type internalDecoderAdapter struct {
+	decoder spi.ValDecoder
+	valEmptyInterface emptyInterface
+}
+
+func (decoder *internalDecoderAdapter) decode(ptr unsafe.Pointer, iter spi.Iterator) {
+	valEmptyInterface := decoder.valEmptyInterface
+	valEmptyInterface.word = ptr
+	valObj := *(*interface{})((unsafe.Pointer(&valEmptyInterface)))
+	decoder.decoder.Decode(valObj, iter)
+}
+
 type internalEncoder interface {
 	encode(ptr unsafe.Pointer, stream spi.Stream)
 	thriftType() protocol.TType

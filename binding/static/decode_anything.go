@@ -5,9 +5,9 @@ import (
 	"reflect"
 )
 
-func dispatchDecode(ext *CodegenExtension, dstType reflect.Type) string {
-	if ext.DecoderOf(dstType) != nil {
-		ext.ExtTypes = append(ext.ExtTypes, dstType)
+func dispatchDecode(extension *CodegenExtension, dstType reflect.Type) string {
+	if extension.DecoderOf(dstType) != nil {
+		extension.ExtTypes = append(extension.ExtTypes, dstType)
 		return "DecodeByExtension"
 	}
 	if dstType.Kind() != reflect.Ptr {

@@ -12,15 +12,21 @@ import (
 
 var byteSliceType = reflect.TypeOf(([]byte)(nil))
 
-func DecoderOf(valType reflect.Type) spi.ValDecoder {
+func DecoderOf(extension spi.Extension, valType reflect.Type) spi.ValDecoder {
 	if valType.Kind() != reflect.Ptr {
 		return &valDecoderAdapter{&unknownDecoder{
 			prefix: "unmarshal into non-pointer type", valType: valType}}
 	}
-	return &valDecoderAdapter{decoderOf("", valType.Elem())}
+	return &valDecoderAdapter{decoderOf(extension, "", valType.Elem())}
 }
 
-func decoderOf(prefix string, valType reflect.Type) internalDecoder {
+func decoderOf(extension spi.Extension, prefix string, valType reflect.Type) internalDecoder {
+	extDecoder := extension.DecoderOf(reflect.PtrTo(valType))
+	if extDecoder != nil {
+		valObj := reflect.New(valType).Interface()
+		valEmptyInterface := *(*emptyInterface)(unsafe.Pointer(&valObj))
+		return &internalDecoderAdapter{valEmptyInterface: valEmptyInterface, decoder: extDecoder}
+	}
 	if byteSliceType == valType {
 		return &binaryDecoder{}
 	}
@@ -57,21 +63,21 @@ func decoderOf(prefix string, valType reflect.Type) internalDecoder {
 	case reflect.Ptr:
 		return &pointerDecoder{
 			valType: valType.Elem(),
-			valDecoder: decoderOf(prefix+" [ptrElem]", valType.Elem()),
+			valDecoder: decoderOf(extension, prefix+" [ptrElem]", valType.Elem()),
 		}
 	case reflect.Slice:
 		return &sliceDecoder{
 			elemType:    valType.Elem(),
 			sliceType:   valType,
-			elemDecoder: decoderOf(prefix+" [sliceElem]", valType.Elem()),
+			elemDecoder: decoderOf(extension, prefix+" [sliceElem]", valType.Elem()),
 		}
 	case reflect.Map:
 		sampleObj := reflect.New(valType).Interface()
 		return &mapDecoder{
 			keyType:      valType.Key(),
-			keyDecoder:   decoderOf(prefix+" [mapKey]", valType.Key()),
+			keyDecoder:   decoderOf(extension, prefix+" [mapKey]", valType.Key()),
 			elemType:     valType.Elem(),
-			elemDecoder:  decoderOf(prefix+" [mapElem]", valType.Elem()),
+			elemDecoder:  decoderOf(extension, prefix+" [mapElem]", valType.Elem()),
 			mapType:      valType,
 			mapInterface: *(*emptyInterface)(unsafe.Pointer(&sampleObj)),
 		}
@@ -87,7 +93,7 @@ func decoderOf(prefix string, valType reflect.Type) internalDecoder {
 			decoderField := structDecoderField{
 				offset: refField.Offset,
 				fieldId: fieldId,
-				decoder: decoderOf(prefix + " " + refField.Name, refField.Type),
+				decoder: decoderOf(extension, prefix + " " + refField.Name, refField.Type),
 			}
 			decoderFields = append(decoderFields, decoderField)
 			decoderFieldMap[fieldId] = decoderField
