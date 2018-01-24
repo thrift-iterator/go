@@ -14,11 +14,17 @@ var ProtocolCompact Protocol = 2
 
 type Decoder interface {
 	Decode(obj interface{}) error
+	DecodeMessage() (protocol.Message, error)
+	DecodeMessageHeader() (protocol.MessageHeader, error)
+	DecodeMessageArguments() (map[protocol.FieldId]interface{}, error)
 	Reset(reader io.Reader, buf []byte)
 }
 
 type Encoder interface {
 	Encode(obj interface{}) error
+	EncodeMessage(msg protocol.Message) error
+	EncodeMessageHeader(msgHeader protocol.MessageHeader) error
+	EncodeMessageArguments(msgArgs map[protocol.FieldId]interface{}) error
 	Reset(writer io.Writer)
 	Buffer() []byte
 }
@@ -82,6 +88,11 @@ func ToJSON(buf []byte) (string, error) {
 
 func Marshal(obj interface{}) ([]byte, error) {
 	return DefaultConfig.Marshal(obj)
+}
+
+// MarshalMessage is just a shortcut to demonstrate message decoded by UnmarshalMessage can be encoded back
+func MarshalMessage(msg protocol.Message) ([]byte, error) {
+	return Marshal(msg)
 }
 
 func NewDecoder(reader io.Reader, buf []byte) Decoder {

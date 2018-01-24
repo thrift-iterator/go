@@ -4,6 +4,7 @@ import (
 	"reflect"
 	"github.com/thrift-iterator/go/spi"
 	"io"
+	"github.com/thrift-iterator/go/protocol"
 )
 
 type unframedDecoder struct {
@@ -32,6 +33,24 @@ func (decoder *unframedDecoder) Decode(val interface{}) error {
 	return nil
 }
 
+func (decoder *unframedDecoder) DecodeMessage() (protocol.Message, error) {
+	var msg protocol.Message
+	err := decoder.Decode(&msg)
+	return msg, err
+}
+
+func (decoder *unframedDecoder) DecodeMessageHeader() (protocol.MessageHeader, error) {
+	var msgHeader protocol.MessageHeader
+	err := decoder.Decode(&msgHeader)
+	return msgHeader, err
+}
+
+func (decoder *unframedDecoder) DecodeMessageArguments() (map[protocol.FieldId]interface{}, error) {
+	var msgArgs map[protocol.FieldId]interface{}
+	err := decoder.Decode(&msgArgs)
+	return msgArgs, err
+}
+
 func (decoder *unframedDecoder) Reset(reader io.Reader, buf []byte) {
 	decoder.iter.Reset(reader, buf)
 }
@@ -50,6 +69,18 @@ func (encoder *unframedEncoder) Encode(val interface{}) error {
 		return encoder.stream.Error()
 	}
 	return nil
+}
+
+func (encoder *unframedEncoder) EncodeMessage(msg protocol.Message) error {
+	return encoder.Encode(msg)
+}
+
+func (encoder *unframedEncoder) EncodeMessageHeader(msgHeader protocol.MessageHeader) error {
+	return encoder.Encode(msgHeader)
+}
+
+func (encoder *unframedEncoder) EncodeMessageArguments(msgArgs map[protocol.FieldId]interface{}) error {
+	return encoder.Encode(msgArgs)
 }
 
 func (encoder *unframedEncoder) Reset(writer io.Writer) {

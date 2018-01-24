@@ -54,6 +54,24 @@ func (decoder *framedDecoder) Decode(val interface{}) error {
 	return decoder.iter.Error()
 }
 
+func (decoder *framedDecoder) DecodeMessage() (protocol.Message, error) {
+	var msg protocol.Message
+	err := decoder.Decode(&msg)
+	return msg, err
+}
+
+func (decoder *framedDecoder) DecodeMessageHeader() (protocol.MessageHeader, error) {
+	var msgHeader protocol.MessageHeader
+	err := decoder.Decode(&msgHeader)
+	return msgHeader, err
+}
+
+func (decoder *framedDecoder) DecodeMessageArguments() (map[protocol.FieldId]interface{}, error) {
+	var msgArgs map[protocol.FieldId]interface{}
+	err := decoder.Decode(&msgArgs)
+	return msgArgs, err
+}
+
 func (decoder *framedDecoder) Reset(reader io.Reader, buf []byte) {
 	decoder.reader = reader
 }
@@ -99,6 +117,18 @@ func (encoder *framedEncoder) Encode(val interface{}) error {
 		encoder.shouldEncodeFrame = true
 	}
 	return nil
+}
+
+func (encoder *framedEncoder) EncodeMessage(msg protocol.Message) error {
+	return encoder.Encode(msg)
+}
+
+func (encoder *framedEncoder) EncodeMessageHeader(msgHeader protocol.MessageHeader) error {
+	return encoder.Encode(msgHeader)
+}
+
+func (encoder *framedEncoder) EncodeMessageArguments(msgArgs map[protocol.FieldId]interface{}) error {
+	return encoder.Encode(msgArgs)
 }
 
 func (encoder *framedEncoder) Reset(writer io.Writer) {
