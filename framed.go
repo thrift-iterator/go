@@ -6,6 +6,7 @@ import (
 	"github.com/thrift-iterator/go/protocol"
 	"github.com/thrift-iterator/go/spi"
 	"reflect"
+	"github.com/thrift-iterator/go/general"
 )
 
 type framedDecoder struct {
@@ -36,7 +37,7 @@ func (decoder *framedDecoder) Decode(val interface{}) error {
 			return err
 		}
 		decoder.iter.Reset(nil, tmp)
-		_, isMsg := val.(*protocol.Message)
+		_, isMsg := val.(*general.Message)
 		if !isMsg {
 			decoder.shouldDecodeFrame = false
 		}
@@ -54,8 +55,8 @@ func (decoder *framedDecoder) Decode(val interface{}) error {
 	return decoder.iter.Error()
 }
 
-func (decoder *framedDecoder) DecodeMessage() (protocol.Message, error) {
-	var msg protocol.Message
+func (decoder *framedDecoder) DecodeMessage() (general.Message, error) {
+	var msg general.Message
 	err := decoder.Decode(&msg)
 	return msg, err
 }
@@ -66,8 +67,8 @@ func (decoder *framedDecoder) DecodeMessageHeader() (protocol.MessageHeader, err
 	return msgHeader, err
 }
 
-func (decoder *framedDecoder) DecodeMessageArguments() (map[protocol.FieldId]interface{}, error) {
-	var msgArgs map[protocol.FieldId]interface{}
+func (decoder *framedDecoder) DecodeMessageArguments() (general.Struct, error) {
+	var msgArgs general.Struct
 	err := decoder.Decode(&msgArgs)
 	return msgArgs, err
 }
@@ -96,7 +97,7 @@ func (encoder *framedEncoder) Encode(val interface{}) error {
 	if encoder.stream.Error() != nil {
 		return encoder.stream.Error()
 	}
-	if _, isMsg := val.(*protocol.Message); isMsg {
+	if _, isMsg := val.(*general.Message); isMsg {
 		encoder.shouldEncodeFrame = true
 	}
 	if encoder.shouldEncodeFrame {
@@ -119,7 +120,7 @@ func (encoder *framedEncoder) Encode(val interface{}) error {
 	return nil
 }
 
-func (encoder *framedEncoder) EncodeMessage(msg protocol.Message) error {
+func (encoder *framedEncoder) EncodeMessage(msg general.Message) error {
 	return encoder.Encode(msg)
 }
 
@@ -127,7 +128,7 @@ func (encoder *framedEncoder) EncodeMessageHeader(msgHeader protocol.MessageHead
 	return encoder.Encode(msgHeader)
 }
 
-func (encoder *framedEncoder) EncodeMessageArguments(msgArgs map[protocol.FieldId]interface{}) error {
+func (encoder *framedEncoder) EncodeMessageArguments(msgArgs general.Struct) error {
 	return encoder.Encode(msgArgs)
 }
 

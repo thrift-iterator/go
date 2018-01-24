@@ -6,6 +6,7 @@ import (
 	"git.apache.org/thrift.git/lib/go/thrift"
 	"github.com/thrift-iterator/go/protocol"
 	"github.com/thrift-iterator/go/test"
+	"github.com/thrift-iterator/go/general"
 )
 
 func Test_decode_map_by_iterator(t *testing.T) {
@@ -88,9 +89,9 @@ func Test_unmarshal_general_map(t *testing.T) {
 		proto.WriteI32(3)
 		proto.WriteI64(3)
 		proto.WriteMapEnd()
-		var val map[interface{}]interface{}
+		var val general.Map
 		should.NoError(c.Unmarshal(buf.Bytes(), &val))
-		should.Equal(map[interface{}]interface{}{
+		should.Equal(general.Map{
 			int32(1): int64(1),
 			int32(2): int64(2),
 			int32(3): int64(3),
@@ -123,7 +124,7 @@ func Test_unmarshal_map(t *testing.T) {
 func Test_marshal_general_map(t *testing.T) {
 	should := require.New(t)
 	for _, c := range test.Combinations {
-		output, err := c.Marshal(map[interface{}]interface{}{
+		output, err := c.Marshal(general.Map{
 			"k1": int64(1),
 			"k2": int64(2),
 			"k3": int64(3),
@@ -131,7 +132,7 @@ func Test_marshal_general_map(t *testing.T) {
 		should.NoError(err)
 		iter := c.CreateIterator(output)
 		obj := iter.ReadMap()
-		should.Equal(map[interface{}]interface{}{
+		should.Equal(general.Map{
 			"k1": int64(1),
 			"k2": int64(2),
 			"k3": int64(3),
@@ -150,7 +151,7 @@ func Test_marshal_map(t *testing.T) {
 		should.NoError(err)
 		iter := c.CreateIterator(output)
 		obj := iter.ReadMap()
-		should.Equal(map[interface{}]interface{}{
+		should.Equal(general.Map{
 			"k1": int64(1),
 			"k2": int64(2),
 			"k3": int64(3),

@@ -64,8 +64,3 @@ type MessageHeader struct {
 	MessageType TMessageType
 	SeqId       SeqId
 }
-
-type Message struct {
-	MessageHeader
-	Arguments map[FieldId]interface{}
-}

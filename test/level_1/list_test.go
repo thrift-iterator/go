@@ -68,9 +68,9 @@ func Test_unmarshal_general_list(t *testing.T) {
 		proto.WriteI64(2)
 		proto.WriteI64(3)
 		proto.WriteListEnd()
-		var val []interface{}
+		var val general.List
 		should.NoError(c.Unmarshal(buf.Bytes(), &val))
-		should.Equal([]interface{}{int64(1), int64(2), int64(3)}, val)
+		should.Equal(general.List{int64(1), int64(2), int64(3)}, val)
 	}
 }
 
@@ -92,7 +92,7 @@ func Test_unmarshal_list(t *testing.T) {
 func Test_marshal_general_list(t *testing.T) {
 	should := require.New(t)
 	for _, c := range test.Combinations {
-		output, err := c.Marshal([]interface{}{
+		output, err := c.Marshal(general.List{
 			int64(1), int64(2), int64(3),
 		})
 		should.NoError(err)

@@ -6,14 +6,14 @@ type generalMapDecoder struct {
 }
 
 func (decoder *generalMapDecoder) Decode(val interface{}, iter spi.Iterator) {
-	*val.(*map[interface{}]interface{}) = readMap(iter).(map[interface{}]interface{})
+	*val.(*Map) = readMap(iter).(Map)
 }
 
 func readMap(iter spi.Iterator) interface{} {
 	keyType, elemType, length := iter.ReadMapHeader()
 	keyReader := generalReaderOf(keyType)
 	elemReader := generalReaderOf(elemType)
-	generalMap := map[interface{}]interface{}{}
+	generalMap := Map{}
 	for i := 0; i < length; i++ {
 		key := keyReader(iter)
 		elem := elemReader(iter)

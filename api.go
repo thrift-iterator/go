@@ -5,6 +5,7 @@ import (
 	"github.com/thrift-iterator/go/spi"
 	"github.com/thrift-iterator/go/protocol"
 	"encoding/json"
+	"github.com/thrift-iterator/go/general"
 )
 
 type Protocol int
@@ -14,17 +15,17 @@ var ProtocolCompact Protocol = 2
 
 type Decoder interface {
 	Decode(obj interface{}) error
-	DecodeMessage() (protocol.Message, error)
+	DecodeMessage() (general.Message, error)
 	DecodeMessageHeader() (protocol.MessageHeader, error)
-	DecodeMessageArguments() (map[protocol.FieldId]interface{}, error)
+	DecodeMessageArguments() (general.Struct, error)
 	Reset(reader io.Reader, buf []byte)
 }
 
 type Encoder interface {
 	Encode(obj interface{}) error
-	EncodeMessage(msg protocol.Message) error
+	EncodeMessage(msg general.Message) error
 	EncodeMessageHeader(msgHeader protocol.MessageHeader) error
-	EncodeMessageArguments(msgArgs map[protocol.FieldId]interface{}) error
+	EncodeMessageArguments(msgArgs general.Struct) error
 	Reset(writer io.Writer)
 	Buffer() []byte
 }
@@ -67,8 +68,8 @@ func Unmarshal(buf []byte, obj interface{}) error {
 }
 
 // UnmarshalMessage demonstrate how to decode thrift binary without IDL into a general message struct
-func UnmarshalMessage(buf []byte) (protocol.Message, error) {
-	var msg protocol.Message
+func UnmarshalMessage(buf []byte) (general.Message, error) {
+	var msg general.Message
 	err := Unmarshal(buf, &msg)
 	return msg, err
 }
@@ -91,7 +92,7 @@ func Marshal(obj interface{}) ([]byte, error) {
 }
 
 // MarshalMessage is just a shortcut to demonstrate message decoded by UnmarshalMessage can be encoded back
-func MarshalMessage(msg protocol.Message) ([]byte, error) {
+func MarshalMessage(msg general.Message) ([]byte, error) {
 	return Marshal(msg)
 }
 

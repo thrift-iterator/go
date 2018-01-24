@@ -17,7 +17,7 @@ func (encoder *generalListEncoder) ThriftType() protocol.TType {
 }
 
 func writeList(val interface{}, stream spi.Stream) {
-	obj := val.([]interface{})
+	obj := val.(List)
 	length := len(obj)
 	if length == 0 {
 		stream.WriteListHeader(protocol.TypeI64, 0)

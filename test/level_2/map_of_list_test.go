@@ -5,6 +5,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"git.apache.org/thrift.git/lib/go/thrift"
 	"github.com/thrift-iterator/go/test"
+	"github.com/thrift-iterator/go/general"
 )
 
 func Test_skip_map_of_list(t *testing.T) {
@@ -32,9 +33,9 @@ func Test_unmarshal_general_map_of_list(t *testing.T) {
 		proto.WriteI64(1)
 		proto.WriteListEnd()
 		proto.WriteMapEnd()
-		var val map[interface{}]interface{}
+		var val general.Map
 		should.NoError(c.Unmarshal(buf.Bytes(), &val))
-		should.Equal([]interface{}{
+		should.Equal(general.List{
 			int64(1),
 		}, val[int64(1)])
 	}
@@ -61,13 +62,13 @@ func Test_unmarshal_map_of_list(t *testing.T) {
 func Test_marshal_general_map_of_list(t *testing.T) {
 	should := require.New(t)
 	for _, c := range test.Combinations {
-		output, err := c.Marshal(map[interface{}]interface{}{
-			int64(1): []interface{}{int64(1)},
+		output, err := c.Marshal(general.Map{
+			int64(1): general.List{int64(1)},
 		})
 		should.NoError(err)
-		var val map[interface{}]interface{}
+		var val general.Map
 		should.NoError(c.Unmarshal(output, &val))
-		should.Equal([]interface{}{
+		should.Equal(general.List{
 			int64(1),
 		}, val[int64(1)])
 	}
@@ -80,9 +81,9 @@ func Test_marshal_map_of_list(t *testing.T) {
 			1: {1},
 		})
 		should.NoError(err)
-		var val map[interface{}]interface{}
+		var val general.Map
 		should.NoError(c.Unmarshal(output, &val))
-		should.Equal([]interface{}{
+		should.Equal(general.List{
 			int64(1),
 		}, val[int64(1)])
 	}

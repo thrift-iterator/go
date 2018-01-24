@@ -7,6 +7,7 @@ import (
 	"github.com/thrift-iterator/go/protocol"
 	"github.com/thrift-iterator/go/test"
 	"github.com/thrift-iterator/go/test/level_2/map_of_struct_test"
+	"github.com/thrift-iterator/go/general"
 )
 
 func Test_skip_map_of_struct(t *testing.T) {
@@ -44,9 +45,9 @@ func Test_unmarshal_general_map_of_struct(t *testing.T) {
 		proto.WriteStructEnd()
 
 		proto.WriteMapEnd()
-		var val map[interface{}]interface{}
+		var val general.Map
 		should.NoError(c.Unmarshal(buf.Bytes(), &val))
-		should.Equal(map[protocol.FieldId]interface{}{
+		should.Equal(general.Struct{
 			protocol.FieldId(1): int64(1024),
 		}, val[int64(1)])
 	}
@@ -78,15 +79,15 @@ func Test_unmarshal_map_of_struct(t *testing.T) {
 func Test_marshal_general_map_of_struct(t *testing.T) {
 	should := require.New(t)
 	for _, c := range test.Combinations {
-		output, err := c.Marshal(map[interface{}]interface{}{
-			int64(1): map[protocol.FieldId]interface{} {
+		output, err := c.Marshal(general.Map{
+			int64(1): general.Struct {
 				protocol.FieldId(1): int64(1024),
 			},
 		})
 		should.NoError(err)
-		var val map[interface{}]interface{}
+		var val general.Map
 		should.NoError(c.Unmarshal(output, &val))
-		should.Equal(map[protocol.FieldId]interface{}{
+		should.Equal(general.Struct{
 			protocol.FieldId(1): int64(1024),
 		}, val[int64(1)])
 	}
@@ -99,9 +100,9 @@ func Test_marshal_map_of_struct(t *testing.T) {
 			1: {1024},
 		})
 		should.NoError(err)
-		var val map[interface{}]interface{}
+		var val general.Map
 		should.NoError(c.Unmarshal(output, &val))
-		should.Equal(map[protocol.FieldId]interface{}{
+		should.Equal(general.Struct{
 			protocol.FieldId(1): int64(1024),
 		}, val[int64(1)])
 	}

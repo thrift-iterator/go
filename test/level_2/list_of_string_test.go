@@ -5,6 +5,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"git.apache.org/thrift.git/lib/go/thrift"
 	"github.com/thrift-iterator/go/test"
+	"github.com/thrift-iterator/go/general"
 )
 
 func Test_skip_list_of_string(t *testing.T) {
@@ -30,9 +31,9 @@ func Test_unmarshal_general_list_of_string(t *testing.T) {
 		proto.WriteString("b")
 		proto.WriteString("c")
 		proto.WriteListEnd()
-		var val []interface{}
+		var val general.List
 		should.NoError(c.Unmarshal(buf.Bytes(), &val))
-		should.Equal([]interface{}{"a", "b", "c"}, val)
+		should.Equal(general.List{"a", "b", "c"}, val)
 	}
 }
 
@@ -56,7 +57,7 @@ func Test_unmarshal_list_of_string(t *testing.T) {
 func Test_marshal_general_list_of_string(t *testing.T) {
 	should := require.New(t)
 	for _, c := range test.Combinations {
-		output, err := c.Marshal([]interface{}{
+		output, err := c.Marshal(general.List{
 			"a", "b", "c",
 		})
 		should.NoError(err)

@@ -5,6 +5,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"git.apache.org/thrift.git/lib/go/thrift"
 	"github.com/thrift-iterator/go/test"
+	"github.com/thrift-iterator/go/general"
 )
 
 func Test_skip_map_of_string_key(t *testing.T) {
@@ -41,9 +42,9 @@ func Test_unmarshal_general_map_of_string_key(t *testing.T) {
 		proto.WriteString("1")
 		proto.WriteI64(1)
 		proto.WriteMapEnd()
-		var val map[interface{}]interface{}
+		var val general.Map
 		should.NoError(c.Unmarshal(buf.Bytes(), &val))
-		should.Equal(map[interface{}]interface{}{
+		should.Equal(general.Map{
 			"1": int64(1),
 		}, val)
 	}
@@ -68,13 +69,13 @@ func Test_unmarshal_map_of_string_key(t *testing.T) {
 func Test_marshal_general_map_of_string_key(t *testing.T) {
 	should := require.New(t)
 	for _, c := range test.Combinations {
-		output, err := c.Marshal(map[interface{}]interface{}{
+		output, err := c.Marshal(general.Map{
 			"1": int64(1),
 		})
 		should.NoError(err)
-		var val map[interface{}]interface{}
+		var val general.Map
 		should.NoError(c.Unmarshal(output, &val))
-		should.Equal(map[interface{}]interface{}{
+		should.Equal(general.Map{
 			"1": int64(1),
 		}, val)
 	}
@@ -87,9 +88,9 @@ func Test_marshal_map_of_string_key(t *testing.T) {
 			"1": 1,
 		})
 		should.NoError(err)
-		var val map[interface{}]interface{}
+		var val general.Map
 		should.NoError(c.Unmarshal(output, &val))
-		should.Equal(map[interface{}]interface{}{
+		should.Equal(general.Map{
 			"1": int64(1),
 		}, val)
 	}

@@ -5,6 +5,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"git.apache.org/thrift.git/lib/go/thrift"
 	"github.com/thrift-iterator/go/test"
+	"github.com/thrift-iterator/go/general"
 )
 
 func Test_skip_list_of_list(t *testing.T) {
@@ -36,9 +37,9 @@ func Test_unmarshal_general_list_of_list(t *testing.T) {
 		proto.WriteI64(2)
 		proto.WriteListEnd()
 		proto.WriteListEnd()
-		var val []interface{}
+		var val general.List
 		should.NoError(c.Unmarshal(buf.Bytes(), &val))
-		should.Equal([]interface{}{int64(1)}, val[0])
+		should.Equal(general.List{int64(1)}, val[0])
 	}
 }
 
@@ -54,9 +55,9 @@ func Test_unmarshal_list_of_general_list(t *testing.T) {
 		proto.WriteI64(2)
 		proto.WriteListEnd()
 		proto.WriteListEnd()
-		var val [][]interface{}
+		var val []general.List
 		should.NoError(c.Unmarshal(buf.Bytes(), &val))
-		should.Equal([]interface{}{int64(1)}, val[0])
+		should.Equal(general.List{int64(1)}, val[0])
 	}
 }
 
@@ -83,25 +84,25 @@ func Test_unmarshal_list_of_list(t *testing.T) {
 func Test_marshal_general_list_of_list(t *testing.T) {
 	should := require.New(t)
 	for _, c := range test.Combinations {
-		output, err := c.Marshal([]interface{}{
-			[]interface{}{
+		output, err := c.Marshal(general.List{
+			general.List{
 				int64(1),
 			},
-			[]interface{} {
+			general.List {
 				int64(2),
 			},
 		})
 		should.NoError(err)
-		var val []interface{}
+		var val general.List
 		should.NoError(c.Unmarshal(output, &val))
-		should.Equal([]interface{}{int64(1)}, val[0])
+		should.Equal(general.List{int64(1)}, val[0])
 	}
 }
 
 func Test_marshal_list_of_general_list(t *testing.T) {
 	should := require.New(t)
 	for _, c := range test.MarshalCombinations {
-		output, err := c.Marshal([][]interface{}{
+		output, err := c.Marshal([]general.List{
 			{
 				int64(1),
 			},
@@ -110,9 +111,9 @@ func Test_marshal_list_of_general_list(t *testing.T) {
 			},
 		})
 		should.NoError(err)
-		var val []interface{}
+		var val general.List
 		should.NoError(c.Unmarshal(output, &val))
-		should.Equal([]interface{}{int64(1)}, val[0])
+		should.Equal(general.List{int64(1)}, val[0])
 	}
 }
 
@@ -123,8 +124,8 @@ func Test_marshal_list_of_list(t *testing.T) {
 			{1}, {2},
 		})
 		should.NoError(err)
-		var val []interface{}
+		var val general.List
 		should.NoError(c.Unmarshal(output, &val))
-		should.Equal([]interface{}{int64(1)}, val[0])
+		should.Equal(general.List{int64(1)}, val[0])
 	}
 }

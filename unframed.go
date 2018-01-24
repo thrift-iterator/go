@@ -5,6 +5,7 @@ import (
 	"github.com/thrift-iterator/go/spi"
 	"io"
 	"github.com/thrift-iterator/go/protocol"
+	"github.com/thrift-iterator/go/general"
 )
 
 type unframedDecoder struct {
@@ -33,8 +34,8 @@ func (decoder *unframedDecoder) Decode(val interface{}) error {
 	return nil
 }
 
-func (decoder *unframedDecoder) DecodeMessage() (protocol.Message, error) {
-	var msg protocol.Message
+func (decoder *unframedDecoder) DecodeMessage() (general.Message, error) {
+	var msg general.Message
 	err := decoder.Decode(&msg)
 	return msg, err
 }
@@ -45,8 +46,8 @@ func (decoder *unframedDecoder) DecodeMessageHeader() (protocol.MessageHeader, e
 	return msgHeader, err
 }
 
-func (decoder *unframedDecoder) DecodeMessageArguments() (map[protocol.FieldId]interface{}, error) {
-	var msgArgs map[protocol.FieldId]interface{}
+func (decoder *unframedDecoder) DecodeMessageArguments() (general.Struct, error) {
+	var msgArgs general.Struct
 	err := decoder.Decode(&msgArgs)
 	return msgArgs, err
 }
@@ -71,7 +72,7 @@ func (encoder *unframedEncoder) Encode(val interface{}) error {
 	return nil
 }
 
-func (encoder *unframedEncoder) EncodeMessage(msg protocol.Message) error {
+func (encoder *unframedEncoder) EncodeMessage(msg general.Message) error {
 	return encoder.Encode(msg)
 }
 
@@ -79,7 +80,7 @@ func (encoder *unframedEncoder) EncodeMessageHeader(msgHeader protocol.MessageHe
 	return encoder.Encode(msgHeader)
 }
 
-func (encoder *unframedEncoder) EncodeMessageArguments(msgArgs map[protocol.FieldId]interface{}) error {
+func (encoder *unframedEncoder) EncodeMessageArguments(msgArgs general.Struct) error {
 	return encoder.Encode(msgArgs)
 }
 

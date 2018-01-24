@@ -9,11 +9,11 @@ type generalStructDecoder struct {
 }
 
 func (decoder *generalStructDecoder) Decode(val interface{}, iter spi.Iterator) {
-	*val.(*map[protocol.FieldId]interface{}) = readStruct(iter).(map[protocol.FieldId]interface{})
+	*val.(*Struct) = readStruct(iter).(Struct)
 }
 
 func readStruct(iter spi.Iterator) interface{} {
-	generalStruct := map[protocol.FieldId]interface{}{}
+	generalStruct := Struct{}
 	iter.ReadStructHeader()
 	for {
 		fieldType, fieldId := iter.ReadStructField()

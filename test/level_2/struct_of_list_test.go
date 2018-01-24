@@ -7,6 +7,7 @@ import (
 	"github.com/thrift-iterator/go/protocol"
 	"github.com/thrift-iterator/go/test"
 	"github.com/thrift-iterator/go/test/level_2/struct_of_list_test"
+	"github.com/thrift-iterator/go/general"
 )
 
 func Test_skip_struct_of_list(t *testing.T) {
@@ -38,9 +39,9 @@ func Test_unmarshal_general_struct_of_list(t *testing.T) {
 		proto.WriteFieldEnd()
 		proto.WriteFieldStop()
 		proto.WriteStructEnd()
-		var val map[protocol.FieldId]interface{}
+		var val general.Struct
 		should.NoError(c.Unmarshal(buf.Bytes(), &val))
-		should.Equal([]interface{}{int64(1)}, val[protocol.FieldId(1)])
+		should.Equal(general.List{int64(1)}, val[protocol.FieldId(1)])
 	}
 }
 
@@ -67,15 +68,15 @@ func Test_unmarshal_struct_of_list(t *testing.T) {
 func Test_marshal_general_struct_of_list(t *testing.T) {
 	should := require.New(t)
 	for _, c := range test.Combinations {
-		output, err := c.Marshal(map[protocol.FieldId]interface{} {
-			protocol.FieldId(1): []interface{} {
+		output, err := c.Marshal(general.Struct {
+			protocol.FieldId(1): general.List {
 				int64(1),
 			},
 		})
 		should.NoError(err)
-		var val map[protocol.FieldId]interface{}
+		var val general.Struct
 		should.NoError(c.Unmarshal(output, &val))
-		should.Equal([]interface{}{int64(1)}, val[protocol.FieldId(1)])
+		should.Equal(general.List{int64(1)}, val[protocol.FieldId(1)])
 	}
 }
 
@@ -86,8 +87,8 @@ func Test_marshal_struct_of_list(t *testing.T) {
 			[]int64{1},
 		})
 		should.NoError(err)
-		var val map[protocol.FieldId]interface{}
+		var val general.Struct
 		should.NoError(c.Unmarshal(output, &val))
-		should.Equal([]interface{}{int64(1)}, val[protocol.FieldId(1)])
+		should.Equal(general.List{int64(1)}, val[protocol.FieldId(1)])
 	}
 }

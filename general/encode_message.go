@@ -9,7 +9,7 @@ type messageEncoder struct {
 }
 
 func (encoder *messageEncoder) Encode(val interface{}, stream spi.Stream) {
-	msg := val.(protocol.Message)
+	msg := val.(Message)
 	stream.WriteMessageHeader(msg.MessageHeader)
 	writeStruct(msg.Arguments, stream)
 }

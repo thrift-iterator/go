@@ -4,8 +4,8 @@ package test
 //	should := require.New(t)
 //	api := thrifter.Config{Protocol: thrifter.ProtocolBinary, DynamicCodegen: true}.Froze()
 //	stream := api.NewStream(nil, nil)
-//	stream.WriteStruct(map[protocol.FieldId]interface{}{
-//		0: map[interface{}]interface{}{
+//	stream.WriteStruct(general.Struct{
+//		0: general.Map{
 //			"key1": "value1",
 //		},
 //		1: "hello",

@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"github.com/thrift-iterator/go/protocol"
 	"bytes"
+	"github.com/thrift-iterator/go/general"
 )
 
 type combination struct {
@@ -35,7 +36,7 @@ func Test_unmarshal_message(t *testing.T) {
 	for _, c := range combinations {
 		input, err := hex.DecodeString(c.encoded)
 		should.NoError(err)
-		var msg protocol.Message
+		var msg general.Message
 		err = c.api.Unmarshal(input, &msg)
 		should.NoError(err)
 		fmt.Println(msg.MessageType)
@@ -48,20 +49,20 @@ func Test_unmarshal_message(t *testing.T) {
 
 func Test_marshal_message(t *testing.T) {
 	should := require.New(t)
-	msg := protocol.Message{
+	msg := general.Message{
 		MessageHeader: protocol.MessageHeader{
 			MessageType: protocol.MessageTypeCall,
 			MessageName: "hello",
 			SeqId:       protocol.SeqId(17),
 		},
-		Arguments: map[protocol.FieldId]interface{}{
+		Arguments: general.Struct{
 			protocol.FieldId(1): int64(1),
 			protocol.FieldId(2): int64(2),
 		},
 	}
 	output, err := thrifter.Marshal(msg)
 	should.Nil(err)
-	var msgRead protocol.Message
+	var msgRead general.Message
 	err = thrifter.Unmarshal(output, &msgRead)
 	should.NoError(err)
 	fmt.Println(msgRead.MessageType)
@@ -81,7 +82,7 @@ func Test_decode_framed_message(t *testing.T) {
 	}, input...)
 	reader := bytes.NewBuffer(input)
 	decoder := thrifter.NewDecoder(reader, nil)
-	var msg protocol.Message
+	var msg general.Message
 	should.NoError(decoder.Decode(&msg))
 	fmt.Println(msg.MessageType)
 	fmt.Println(msg.MessageName)
@@ -122,7 +123,7 @@ func Test_decode_unframed_message(t *testing.T) {
 	reader := bytes.NewBuffer(input)
 	cfg := thrifter.Config{Protocol: thrifter.ProtocolBinary, IsFramed: false}.Froze()
 	decoder := cfg.NewDecoder(reader, nil)
-	var msg protocol.Message
+	var msg general.Message
 	should.NoError(decoder.Decode(&msg))
 	fmt.Println(msg.MessageType)
 	fmt.Println(msg.MessageName)
@@ -133,18 +134,18 @@ func Test_decode_unframed_message(t *testing.T) {
 
 func Test_encode_framed_message(t *testing.T) {
 	should := require.New(t)
-	msg := protocol.Message{
+	msg := general.Message{
 		MessageHeader: protocol.MessageHeader{
 			MessageType: protocol.MessageTypeCall,
 			MessageName: "hello",
 			SeqId:       protocol.SeqId(17),
 		},
-		Arguments: map[protocol.FieldId]interface{}{
+		Arguments: general.Struct{
 			protocol.FieldId(1): int64(1),
 			protocol.FieldId(2): int64(2),
 		},
 	}
-	var msgRead protocol.Message
+	var msgRead general.Message
 	buf := bytes.NewBuffer(nil)
 	encoder := thrifter.NewEncoder(buf)
 	should.NoError(encoder.Encode(msg))
@@ -164,7 +165,7 @@ func Test_encode_framed_message_header_and_args(t *testing.T) {
 		MessageName: "hello",
 		SeqId:       protocol.SeqId(17),
 	}
-	var msgRead protocol.Message
+	var msgRead general.Message
 	buf := bytes.NewBuffer(nil)
 	encoder := thrifter.NewEncoder(buf)
 	// write message header
@@ -184,18 +185,18 @@ func Test_encode_framed_message_header_and_args(t *testing.T) {
 
 func Test_encode_unframed_message(t *testing.T) {
 	should := require.New(t)
-	msg := protocol.Message{
+	msg := general.Message{
 		MessageHeader: protocol.MessageHeader{
 			MessageType: protocol.MessageTypeCall,
 			MessageName: "hello",
 			SeqId:       protocol.SeqId(17),
 		},
-		Arguments: map[protocol.FieldId]interface{}{
+		Arguments: general.Struct{
 			protocol.FieldId(1): int64(1),
 			protocol.FieldId(2): int64(2),
 		},
 	}
-	var msgRead protocol.Message
+	var msgRead general.Message
 	buf := bytes.NewBuffer(nil)
 	cfg := thrifter.Config{Protocol: thrifter.ProtocolBinary, IsFramed: false}.Froze()
 	encoder := cfg.NewEncoder(buf)

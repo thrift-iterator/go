@@ -1,6 +1,8 @@
 package codegen
 
-import "github.com/v2pro/wombat/generic"
+import (
+	"github.com/v2pro/wombat/generic"
+)
 
 var Decode = generic.DefineFunc("Decode(dst interface{}, src interface{})").
 	Param("EXT", "user provided extension").

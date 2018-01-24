@@ -142,9 +142,9 @@ func Test_unmarshal_general_struct(t *testing.T) {
 		proto.WriteFieldEnd()
 		proto.WriteFieldStop()
 		proto.WriteStructEnd()
-		var val map[protocol.FieldId]interface{}
+		var val general.Struct
 		should.NoError(c.Unmarshal(buf.Bytes(), &val))
-		should.Equal(map[protocol.FieldId]interface{}{
+		should.Equal(general.Struct{
 			protocol.FieldId(1): int64(1024),
 		}, val)
 	}
@@ -169,13 +169,13 @@ func Test_unmarshal_struct(t *testing.T) {
 func Test_marshal_general_struct(t *testing.T) {
 	should := require.New(t)
 	for _, c := range test.Combinations {
-		output, err := c.Marshal(map[protocol.FieldId]interface{}{
+		output, err := c.Marshal(general.Struct{
 			protocol.FieldId(1): int64(1024),
 		})
 		should.NoError(err)
 		iter := c.CreateIterator(output)
 		obj := iter.ReadStruct()
-		should.Equal(map[protocol.FieldId]interface{}{
+		should.Equal(general.Struct{
 			protocol.FieldId(1): int64(1024),
 		}, obj)
 	}

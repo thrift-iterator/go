@@ -17,7 +17,7 @@ func (encoder *generalStructEncoder) ThriftType() protocol.TType {
 }
 
 func writeStruct(val interface{}, stream spi.Stream) {
-	obj := val.(map[protocol.FieldId]interface{})
+	obj := val.(Struct)
 	stream.WriteStructHeader()
 	for fieldId, elem := range obj {
 		fieldType, generalWriter := generalWriterOf(elem)

@@ -40,8 +40,7 @@ var decodeAnything = generic.DefineFunc("DecodeAnything(dst DT, src ST)").
 	Param("EXT", "user provided extension").
 	Param("DT", "the dst type to copy into").
 	Param("ST", "the src type to copy from").
-	Generators(
-	"dispatchDecode", dispatchDecode).
+	Generators("dispatchDecode", dispatchDecode).
 	Source(`
 {{ $tmpl := dispatchDecode .EXT .DT }}
 {{ if eq $tmpl "DecodeByExtension" }}

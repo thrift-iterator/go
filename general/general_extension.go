@@ -11,13 +11,13 @@ type Extension struct {
 
 func (ext *Extension) EncoderOf(valType reflect.Type) spi.ValEncoder {
 	switch valType {
-	case reflect.TypeOf(([]interface{})(nil)):
+	case reflect.TypeOf(List(nil)):
 		return &generalListEncoder{}
-	case reflect.TypeOf((map[interface{}]interface{})(nil)):
+	case reflect.TypeOf(Map(nil)):
 		return &generalMapEncoder{}
-	case reflect.TypeOf((map[protocol.FieldId]interface{})(nil)):
+	case reflect.TypeOf(Struct(nil)):
 		return &generalStructEncoder{}
-	case reflect.TypeOf((*protocol.Message)(nil)).Elem():
+	case reflect.TypeOf((*Message)(nil)).Elem():
 		return &messageEncoder{}
 	case reflect.TypeOf((*protocol.MessageHeader)(nil)).Elem():
 		return &messageHeaderEncoder{}
@@ -27,13 +27,13 @@ func (ext *Extension) EncoderOf(valType reflect.Type) spi.ValEncoder {
 
 func (ext *Extension) DecoderOf(valType reflect.Type) spi.ValDecoder {
 	switch valType {
-	case reflect.TypeOf((*[]interface{})(nil)):
+	case reflect.TypeOf((*List)(nil)):
 		return &generalListDecoder{}
-	case reflect.TypeOf((*map[interface{}]interface{})(nil)):
+	case reflect.TypeOf((*Map)(nil)):
 		return &generalMapDecoder{}
-	case reflect.TypeOf((*map[protocol.FieldId]interface{})(nil)):
+	case reflect.TypeOf((*Struct)(nil)):
 		return &generalStructDecoder{}
-	case reflect.TypeOf((*protocol.Message)(nil)):
+	case reflect.TypeOf((*Message)(nil)):
 		return &messageDecoder{}
 	case reflect.TypeOf((*protocol.MessageHeader)(nil)):
 		return &messageHeaderDecoder{}

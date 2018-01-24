@@ -9,9 +9,9 @@ type messageDecoder struct {
 }
 
 func (decoder *messageDecoder) Decode(val interface{}, iter spi.Iterator) {
-	*val.(*protocol.Message) = protocol.Message{
+	*val.(*Message) = Message{
 		MessageHeader: iter.ReadMessageHeader(),
-		Arguments:     readStruct(iter).(map[protocol.FieldId]interface{}),
+		Arguments:     readStruct(iter).(Struct),
 	}
 }
 
