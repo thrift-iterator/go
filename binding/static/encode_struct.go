@@ -1,7 +1,6 @@
 package static
 
 import (
-	"reflect"
 	"github.com/v2pro/wombat/generic"
 )
 
@@ -11,6 +10,7 @@ func init() {
 
 var encodeStruct = generic.DefineFunc(
 	"EncodeStruct(dst DT, src ST)").
+	Param("EXT", "user provided extension").
 	Param("DT", "the dst type to copy into").
 	Param("ST", "the src type to copy from").
 	ImportFunc(encodeAnything).
@@ -20,16 +20,13 @@ var encodeStruct = generic.DefineFunc(
 		binding["encode"] = encodeFuncName
 		return ""
 	},
-	"thriftType", func(srcType reflect.Type) int {
-		_, ttype := dispatchEncode(srcType)
-		return int(ttype)
-	}).
+	"thriftType", dispatchThriftType).
 	Source(`
 {{ $bindings := calcBindings .ST }}
 dst.WriteStructHeader()
 {{ range $_, $binding := $bindings}}
-	{{ $encode := expand "EncodeAnything" "DT" $.DT "ST" $binding.fieldType }}
-	dst.WriteStructField({{$binding.fieldType|thriftType}}, {{$binding.fieldId}})
+	{{ $encode := expand "EncodeAnything" "EXT" .EXT "DT" $.DT "ST" $binding.fieldType }}
+	dst.WriteStructField({{$binding.fieldType|thriftType .EXT}}, {{$binding.fieldId}})
 	{{$encode}}(dst, &src.{{$binding.fieldName}})
 {{ end }}
 dst.WriteStructFieldStop()

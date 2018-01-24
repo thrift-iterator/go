@@ -7,19 +7,25 @@ import (
 	"github.com/thrift-iterator/go/protocol"
 )
 
-func EncoderOf(valType reflect.Type) spi.ValEncoder {
+func EncoderOf(extension spi.Extension, valType reflect.Type) spi.ValEncoder {
 	isPtr := valType.Kind() == reflect.Ptr
 	isOnePtrArray := valType.Kind() == reflect.Array && valType.Len() == 1 &&
 		valType.Elem().Kind() == reflect.Ptr
 	isOnePtrStruct := valType.Kind() == reflect.Struct && valType.NumField() == 1 &&
 		valType.Field(0).Type.Kind() == reflect.Ptr
-	if isPtr || isOnePtrArray || isOnePtrStruct  {
-		return &ptrEncoderAdapter{encoderOf("", valType)}
+	if isPtr || isOnePtrArray || isOnePtrStruct {
+		return &ptrEncoderAdapter{encoderOf(extension, "", valType)}
 	}
-	return &valEncoderAdapter{encoderOf("", valType)}
+	return &valEncoderAdapter{encoderOf(extension, "", valType)}
 }
 
-func encoderOf(prefix string, valType reflect.Type) internalEncoder {
+func encoderOf(extension spi.Extension, prefix string, valType reflect.Type) internalEncoder {
+	extEncoder := extension.EncoderOf(valType)
+	if extEncoder != nil {
+		valObj := reflect.New(valType).Elem().Interface()
+		valEmptyInterface := *(*emptyInterface)(unsafe.Pointer(&valObj))
+		return &internalEncoderAdapter{valEmptyInterface: valEmptyInterface, encoder: extEncoder}
+	}
 	if byteSliceType == valType {
 		return &binaryEncoder{}
 	}
@@ -59,13 +65,13 @@ func encoderOf(prefix string, valType reflect.Type) internalEncoder {
 		return &sliceEncoder{
 			sliceType:   valType,
 			elemType:    valType.Elem(),
-			elemEncoder: encoderOf(prefix+" [sliceElem]", valType.Elem()),
+			elemEncoder: encoderOf(extension, prefix+" [sliceElem]", valType.Elem()),
 		}
 	case reflect.Map:
 		sampleObj := reflect.New(valType).Elem().Interface()
 		return &mapEncoder{
-			keyEncoder:   encoderOf(prefix+" [mapKey]", valType.Key()),
-			elemEncoder:  encoderOf(prefix+" [mapElem]", valType.Elem()),
+			keyEncoder:   encoderOf(extension, prefix+" [mapKey]", valType.Key()),
+			elemEncoder:  encoderOf(extension, prefix+" [mapElem]", valType.Elem()),
 			mapInterface: *(*emptyInterface)(unsafe.Pointer(&sampleObj)),
 		}
 	case reflect.Struct:
@@ -79,7 +85,7 @@ func encoderOf(prefix string, valType reflect.Type) internalEncoder {
 			encoderField := structEncoderField{
 				offset:  refField.Offset,
 				fieldId: fieldId,
-				encoder: encoderOf(prefix+" "+refField.Name, refField.Type),
+				encoder: encoderOf(extension, prefix+" "+refField.Name, refField.Type),
 			}
 			encoderFields = append(encoderFields, encoderField)
 		}
@@ -88,7 +94,7 @@ func encoderOf(prefix string, valType reflect.Type) internalEncoder {
 		}
 	case reflect.Ptr:
 		return &pointerEncoder{
-			valEncoder: encoderOf(prefix+" [ptrElem]", valType.Elem()),
+			valEncoder: encoderOf(extension, prefix+" [ptrElem]", valType.Elem()),
 		}
 	}
 	return &unknownEncoder{prefix, valType}

@@ -12,6 +12,10 @@ func (encoder *generalStructEncoder) Encode(val interface{}, stream spi.Stream) 
 	writeStruct(val, stream)
 }
 
+func (encoder *generalStructEncoder) ThriftType() protocol.TType {
+	return protocol.TypeStruct
+}
+
 func writeStruct(val interface{}, stream spi.Stream) {
 	obj := val.(map[protocol.FieldId]interface{})
 	stream.WriteStructHeader()

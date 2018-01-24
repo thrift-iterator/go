@@ -11,6 +11,7 @@ func init() {
 
 var encodeSimpleValue = generic.DefineFunc(
 	"EncodeSimpleValue(dst DT, src ST)").
+	Param("EXT", "user provided extension").
 	Param("DT", "the dst type to copy into").
 	Param("ST", "the src type to copy from").
 	Generators(

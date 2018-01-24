@@ -45,6 +45,10 @@ func (encoder *valEncoderAdapter) Encode(val interface{}, stream spi.Stream) {
 	encoder.encoder.encode(ptr, stream)
 }
 
+func (encoder *valEncoderAdapter) ThriftType() protocol.TType {
+	return encoder.encoder.thriftType()
+}
+
 type ptrEncoderAdapter struct {
 	encoder internalEncoder
 }
@@ -52,6 +56,26 @@ type ptrEncoderAdapter struct {
 func (encoder *ptrEncoderAdapter) Encode(val interface{}, stream spi.Stream) {
 	ptr := (*emptyInterface)(unsafe.Pointer(&val)).word
 	encoder.encoder.encode(unsafe.Pointer(&ptr), stream)
+}
+
+func (encoder *ptrEncoderAdapter) ThriftType() protocol.TType {
+	return encoder.encoder.thriftType()
+}
+
+type internalEncoderAdapter struct {
+	encoder spi.ValEncoder
+	valEmptyInterface emptyInterface
+}
+
+func (encoder *internalEncoderAdapter) encode(ptr unsafe.Pointer, stream spi.Stream) {
+	valEmptyInterface := encoder.valEmptyInterface
+	valEmptyInterface.word = ptr
+	valObj := *(*interface{})((unsafe.Pointer(&valEmptyInterface)))
+	encoder.encoder.Encode(valObj, stream)
+}
+
+func (encoder *internalEncoderAdapter) thriftType() protocol.TType {
+	return encoder.encoder.ThriftType()
 }
 
 // emptyInterface is the header for an interface{} value.

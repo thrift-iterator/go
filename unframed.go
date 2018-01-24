@@ -20,10 +20,10 @@ type unframedEncoder struct {
 func (decoder *unframedDecoder) Decode(val interface{}) error {
 	cfg := decoder.cfg
 	valType := reflect.TypeOf(val)
-	valDecoder := cfg.GetDecoder(valType.String())
+	valDecoder := cfg.getGenDecoder(valType)
 	if valDecoder == nil {
 		valDecoder = cfg.decoderOf(decoder.decodeFromReader, valType)
-		cfg.addDecoderToCache(valType, valDecoder)
+		cfg.addGenDecoder(valType, valDecoder)
 	}
 	valDecoder.Decode(val, decoder.iter)
 	if decoder.iter.Error() != nil {
@@ -39,10 +39,10 @@ func (decoder *unframedDecoder) Reset(reader io.Reader, buf []byte) {
 func (encoder *unframedEncoder) Encode(val interface{}) error {
 	cfg := encoder.cfg
 	valType := reflect.TypeOf(val)
-	valEncoder := cfg.GetEncoder(valType.String())
+	valEncoder := cfg.getGenEncoder(valType)
 	if valEncoder == nil {
 		valEncoder = cfg.encoderOf(valType)
-		cfg.addEncoderToCache(valType, valEncoder)
+		cfg.addGenEncoder(valType, valEncoder)
 	}
 	valEncoder.Encode(val, encoder.stream)
 	encoder.stream.Flush()

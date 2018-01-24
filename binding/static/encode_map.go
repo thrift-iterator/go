@@ -1,7 +1,6 @@
 package static
 
 import (
-	"reflect"
 	"github.com/v2pro/wombat/generic"
 )
 
@@ -11,18 +10,16 @@ func init() {
 
 var encodeMap = generic.DefineFunc(
 	"EncodeMap(dst DT, src ST)").
+	Param("EXT", "user provided extension").
 	Param("DT", "the dst type to copy into").
 	Param("ST", "the src type to copy from").
 	ImportFunc(encodeAnything).
 	Generators(
-	"thriftType", func(srcType reflect.Type) int {
-		_, ttype := dispatchEncode(srcType)
-		return int(ttype)
-	}).
+	"thriftType", dispatchThriftType).
 	Source(`
-{{ $encodeKey := expand "EncodeAnything" "DT" .DT "ST" (.ST|key) }}
-{{ $encodeElem := expand "EncodeAnything" "DT" .DT "ST" (.ST|elem) }}
-dst.WriteMapHeader({{.ST|key|thriftType}}, {{.ST|elem|thriftType}}, len(src))
+{{ $encodeKey := expand "EncodeAnything" "EXT" .EXT "DT" .DT "ST" (.ST|key) }}
+{{ $encodeElem := expand "EncodeAnything" "EXT" .EXT "DT" .DT "ST" (.ST|elem) }}
+dst.WriteMapHeader({{.ST|key|thriftType .EXT}}, {{.ST|elem|thriftType .EXT}}, len(src))
 for key, elem := range src {
 	{{$encodeKey}}(dst, key)
 	{{$encodeElem}}(dst, elem)

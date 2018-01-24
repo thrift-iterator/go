@@ -20,8 +20,10 @@ import (
 type frozenConfig struct {
 	extension      spi.Extension
 	protocol       Protocol
-	decoderCache   unsafe.Pointer
-	encoderCache   unsafe.Pointer
+	genDecoders    unsafe.Pointer
+	genEncoders    unsafe.Pointer
+	extDecoders    unsafe.Pointer
+	extEncoders    unsafe.Pointer
 	isFramed       bool
 	dynamicCodegen bool
 }
@@ -33,62 +35,110 @@ func (cfg Config) Froze() API {
 		isFramed:       cfg.IsFramed,
 		dynamicCodegen: cfg.DynamicCodegen,
 	}
-	atomic.StorePointer(&api.decoderCache, unsafe.Pointer(&map[string]spi.ValDecoder{}))
-	atomic.StorePointer(&api.encoderCache, unsafe.Pointer(&map[string]spi.ValEncoder{}))
+	atomic.StorePointer(&api.extDecoders, unsafe.Pointer(&map[string]spi.ValDecoder{}))
+	atomic.StorePointer(&api.extEncoders, unsafe.Pointer(&map[string]spi.ValEncoder{}))
+	atomic.StorePointer(&api.genDecoders, unsafe.Pointer(&map[reflect.Type]spi.ValDecoder{}))
+	atomic.StorePointer(&api.genEncoders, unsafe.Pointer(&map[reflect.Type]spi.ValEncoder{}))
 	return api
 }
 
-func (cfg *frozenConfig) addDecoderToCache(cacheKey reflect.Type, decoder spi.ValDecoder) {
+func (cfg *frozenConfig) addGenDecoder(cacheKey reflect.Type, decoder spi.ValDecoder) {
 	done := false
 	for !done {
-		ptr := atomic.LoadPointer(&cfg.decoderCache)
+		ptr := atomic.LoadPointer(&cfg.genDecoders)
+		cache := *(*map[reflect.Type]spi.ValDecoder)(ptr)
+		copied := map[reflect.Type]spi.ValDecoder{}
+		for k, v := range cache {
+			copied[k] = v
+		}
+		copied[cacheKey] = decoder
+		done = atomic.CompareAndSwapPointer(&cfg.genDecoders, ptr, unsafe.Pointer(&copied))
+	}
+}
+
+func (cfg *frozenConfig) addExtDecoder(cacheKey string, decoder spi.ValDecoder) {
+	done := false
+	for !done {
+		ptr := atomic.LoadPointer(&cfg.extDecoders)
 		cache := *(*map[string]spi.ValDecoder)(ptr)
 		copied := map[string]spi.ValDecoder{}
 		for k, v := range cache {
 			copied[k] = v
 		}
-		copied[cacheKey.String()] = decoder
-		done = atomic.CompareAndSwapPointer(&cfg.decoderCache, ptr, unsafe.Pointer(&copied))
+		copied[cacheKey] = decoder
+		done = atomic.CompareAndSwapPointer(&cfg.extDecoders, ptr, unsafe.Pointer(&copied))
 	}
 }
 
-func (cfg *frozenConfig) addEncoderToCache(cacheKey reflect.Type, encoder spi.ValEncoder) {
+func (cfg *frozenConfig) addGenEncoder(cacheKey reflect.Type, encoder spi.ValEncoder) {
 	done := false
 	for !done {
-		ptr := atomic.LoadPointer(&cfg.encoderCache)
+		ptr := atomic.LoadPointer(&cfg.genEncoders)
+		cache := *(*map[reflect.Type]spi.ValEncoder)(ptr)
+		copied := map[reflect.Type]spi.ValEncoder{}
+		for k, v := range cache {
+			copied[k] = v
+		}
+		copied[cacheKey] = encoder
+		done = atomic.CompareAndSwapPointer(&cfg.genEncoders, ptr, unsafe.Pointer(&copied))
+	}
+}
+
+func (cfg *frozenConfig) addExtEncoder(cacheKey string, encoder spi.ValEncoder) {
+	done := false
+	for !done {
+		ptr := atomic.LoadPointer(&cfg.extEncoders)
 		cache := *(*map[string]spi.ValEncoder)(ptr)
 		copied := map[string]spi.ValEncoder{}
 		for k, v := range cache {
 			copied[k] = v
 		}
-		copied[cacheKey.String()] = encoder
-		done = atomic.CompareAndSwapPointer(&cfg.encoderCache, ptr, unsafe.Pointer(&copied))
+		copied[cacheKey] = encoder
+		done = atomic.CompareAndSwapPointer(&cfg.extEncoders, ptr, unsafe.Pointer(&copied))
 	}
 }
 
 func (cfg *frozenConfig) PrepareDecoder(valType reflect.Type) {
-	if cfg.GetDecoder(valType.String()) != nil {
+	cacheKey := valType.String()
+	if cfg.GetDecoder(cacheKey) != nil {
 		return
 	}
-	cfg.addDecoderToCache(valType, cfg.extension.DecoderOf(valType))
+	decoder := cfg.extension.DecoderOf(valType)
+	cfg.addExtDecoder(cacheKey, decoder)
+	cfg.addGenDecoder(valType, decoder)
 }
 
 func (cfg *frozenConfig) GetDecoder(cacheKey string) spi.ValDecoder {
-	ptr := atomic.LoadPointer(&cfg.decoderCache)
+	ptr := atomic.LoadPointer(&cfg.extDecoders)
 	cache := *(*map[string]spi.ValDecoder)(ptr)
 	return cache[cacheKey]
 }
 
+func (cfg *frozenConfig) getGenDecoder(cacheKey reflect.Type) spi.ValDecoder {
+	ptr := atomic.LoadPointer(&cfg.genDecoders)
+	cache := *(*map[reflect.Type]spi.ValDecoder)(ptr)
+	return cache[cacheKey]
+}
+
 func (cfg *frozenConfig) PrepareEncoder(valType reflect.Type) {
-	if cfg.GetEncoder(valType.String()) != nil {
+	cacheKey := valType.String()
+	if cfg.GetEncoder(cacheKey) != nil {
 		return
 	}
-	cfg.addEncoderToCache(valType, cfg.extension.EncoderOf(valType))
+	encoder := cfg.extension.EncoderOf(valType)
+	cfg.addExtEncoder(cacheKey, encoder)
+	cfg.addGenEncoder(valType, encoder)
 }
 
 func (cfg *frozenConfig) GetEncoder(cacheKey string) spi.ValEncoder {
-	ptr := atomic.LoadPointer(&cfg.encoderCache)
+	ptr := atomic.LoadPointer(&cfg.extEncoders)
 	cache := *(*map[string]spi.ValEncoder)(ptr)
+	return cache[cacheKey]
+}
+
+func (cfg *frozenConfig) getGenEncoder(cacheKey reflect.Type) spi.ValEncoder {
+	ptr := atomic.LoadPointer(&cfg.genEncoders)
+	cache := *(*map[reflect.Type]spi.ValEncoder)(ptr)
 	return cache[cacheKey]
 }
 
@@ -175,7 +225,7 @@ func (cfg *frozenConfig) encoderOf(valType reflect.Type) spi.ValEncoder {
 		return rawStructEncoderInstance
 	}
 	if cfg.dynamicCodegen {
-		return dynamic.EncoderOf(valType)
+		return dynamic.EncoderOf(cfg.extension, valType)
 	}
 	return cfg.staticEncoderOf(valType)
 }
@@ -186,6 +236,7 @@ func (cfg *frozenConfig) staticEncoderOf(valType reflect.Type) spi.ValEncoder {
 		streamType = reflect.TypeOf((*compact.Stream)(nil))
 	}
 	funcObj := generic.Expand(static.Encode,
+		"EXT", &static.CodegenExtension{Extension: cfg.extension},
 		"ST", valType,
 		"DT", streamType)
 	f := funcObj.(func(interface{}, interface{}))
@@ -208,12 +259,16 @@ func (encoder *funcEncoder) Encode(val interface{}, stream spi.Stream) {
 	encoder.f(stream, val)
 }
 
+func (encoder *funcEncoder) ThriftType() protocol.TType {
+	panic("funcEncoder is not composable")
+}
+
 func (cfg *frozenConfig) Unmarshal(buf []byte, val interface{}) error {
 	valType := reflect.TypeOf(val)
-	decoder := cfg.GetDecoder(valType.String())
+	decoder := cfg.getGenDecoder(valType)
 	if decoder == nil {
 		decoder = cfg.decoderOf(false, valType)
-		cfg.addDecoderToCache(valType, decoder)
+		cfg.addGenDecoder(valType, decoder)
 	}
 	if buf == nil {
 		return errors.New("empty input")
@@ -232,10 +287,10 @@ func (cfg *frozenConfig) Unmarshal(buf []byte, val interface{}) error {
 
 func (cfg *frozenConfig) Marshal(val interface{}) ([]byte, error) {
 	valType := reflect.TypeOf(val)
-	encoder := cfg.GetEncoder(valType.String())
+	encoder := cfg.getGenEncoder(valType)
 	if encoder == nil {
 		encoder = cfg.encoderOf(valType)
-		cfg.addEncoderToCache(valType, encoder)
+		cfg.addGenEncoder(valType, encoder)
 	}
 	stream := cfg.NewStream(nil, nil)
 	encoder.Encode(val, stream)

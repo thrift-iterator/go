@@ -12,6 +12,10 @@ func (encoder *generalMapEncoder) Encode(val interface{}, stream spi.Stream) {
 	writeMap(val, stream)
 }
 
+func (encoder *generalMapEncoder) ThriftType() protocol.TType {
+	return protocol.TypeMap
+}
+
 func takeSampleFromMap(sample map[interface{}]interface{}) (interface{}, interface{}){
 	for key, elem := range sample {
 		return key, elem

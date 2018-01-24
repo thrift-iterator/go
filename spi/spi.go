@@ -71,6 +71,7 @@ type Stream interface {
 
 type ValEncoder interface {
 	Encode(val interface{}, stream Stream)
+	ThriftType() protocol.TType
 }
 
 type ValDecoder interface {

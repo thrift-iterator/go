@@ -12,6 +12,10 @@ func (encoder *generalListEncoder) Encode(val interface{}, stream spi.Stream) {
 	writeList(val, stream)
 }
 
+func (encoder *generalListEncoder) ThriftType() protocol.TType {
+	return protocol.TypeList
+}
+
 func writeList(val interface{}, stream spi.Stream) {
 	obj := val.([]interface{})
 	length := len(obj)

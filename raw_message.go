@@ -47,4 +47,8 @@ func (encoder *rawStructEncoder) Encode(val interface{}, stream spi.Stream) {
 	stream.WriteStructFieldStop()
 }
 
+func (encoder *rawStructEncoder) ThriftType() protocol.TType {
+	return protocol.TypeStruct
+}
+
 var rawStructEncoderInstance = &rawStructEncoder{}

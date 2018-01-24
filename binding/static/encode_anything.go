@@ -6,7 +6,12 @@ import (
 	"github.com/thrift-iterator/go/protocol"
 )
 
-func dispatchEncode(srcType reflect.Type) (string, protocol.TType) {
+func dispatchEncode(extension *CodegenExtension, srcType reflect.Type) (string, protocol.TType) {
+	extEncoder := extension.EncoderOf(srcType)
+	if extEncoder != nil {
+		extension.ExtTypes = append(extension.ExtTypes, srcType)
+		return "EncodeByExtension", extEncoder.ThriftType()
+	}
 	if srcType == byteArrayType {
 		return "EncodeBinary", protocol.TypeString
 	}
@@ -21,22 +26,32 @@ func dispatchEncode(srcType reflect.Type) (string, protocol.TType) {
 	case reflect.Struct:
 		return "EncodeStruct", protocol.TypeStruct
 	case reflect.Ptr:
-		_, ttype := dispatchEncode(srcType.Elem())
+		_, ttype := dispatchEncode(extension, srcType.Elem())
 		return "EncodePointer", ttype
 	}
 	return "EncodeSimpleValue", thriftTypeMap[srcType.Kind()]
 }
 
+func dispatchThriftType(extension *CodegenExtension, srcType reflect.Type) int {
+	_, ttype := dispatchEncode(extension, srcType)
+	return int(ttype)
+}
+
 var encodeAnything = generic.DefineFunc("EncodeAnything(dst DT, src ST)").
+	Param("EXT", "user provided extension").
 	Param("DT", "the dst type to copy into").
 	Param("ST", "the src type to copy from").
 	Generators(
-	"dispatchEncode", func(srcType reflect.Type) string {
-		encode, _ := dispatchEncode(srcType)
+	"dispatchEncode", func(extension *CodegenExtension, srcType reflect.Type) string {
+		encode, _ := dispatchEncode(extension, srcType)
 		return encode
 	}).
 	Source(`
-{{ $tmpl := dispatchEncode .ST }}
-{{ $encode := expand $tmpl "DT" .DT "ST" .ST }}
-{{$encode}}(dst, src)
+{{ $tmpl := dispatchEncode .EXT .ST }}
+{{ if eq $tmpl "EncodeByExtension" }}
+	dst.GetEncoder("{{ .ST|name }}").Encode(src, dst)
+{{ else }}
+	{{ $encode := expand $tmpl "EXT" .EXT "DT" .DT "ST" .ST }}
+	{{$encode}}(dst, src)
+{{ end }}
 `)

@@ -98,6 +98,24 @@ func Test_marshal_general_list_of_list(t *testing.T) {
 	}
 }
 
+func Test_marshal_list_of_general_list(t *testing.T) {
+	should := require.New(t)
+	for _, c := range test.MarshalCombinations {
+		output, err := c.Marshal([][]interface{}{
+			{
+				int64(1),
+			},
+			{
+				int64(2),
+			},
+		})
+		should.NoError(err)
+		var val []interface{}
+		should.NoError(c.Unmarshal(output, &val))
+		should.Equal([]interface{}{int64(1)}, val[0])
+	}
+}
+
 func Test_marshal_list_of_list(t *testing.T) {
 	should := require.New(t)
 	for _, c := range test.MarshalCombinations {
