@@ -3,6 +3,8 @@ package thrifter
 import (
 	"io"
 	"github.com/thrift-iterator/go/spi"
+	"github.com/thrift-iterator/go/protocol"
+	"encoding/json"
 )
 
 type Protocol int
@@ -56,6 +58,26 @@ func NewIterator(reader io.Reader, buf []byte) spi.Iterator {
 
 func Unmarshal(buf []byte, obj interface{}) error {
 	return DefaultConfig.Unmarshal(buf, obj)
+}
+
+// UnmarshalMessage demonstrate how to decode thrift binary without IDL into a general message struct
+func UnmarshalMessage(buf []byte) (protocol.Message, error) {
+	var msg protocol.Message
+	err := Unmarshal(buf, &msg)
+	return msg, err
+}
+
+// ToJSON convert the thrift binary to JSON
+func ToJSON(buf []byte) (string, error) {
+	msg, err := UnmarshalMessage(buf)
+	if err != nil {
+		return "", err
+	}
+	json, err := json.MarshalIndent(msg, "", "  ")
+	if err != nil {
+		return "", err
+	}
+	return string(json), nil
 }
 
 func Marshal(obj interface{}) ([]byte, error) {

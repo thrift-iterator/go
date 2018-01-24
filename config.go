@@ -12,8 +12,8 @@ import (
 	"errors"
 	"github.com/v2pro/wombat/generic"
 	"github.com/thrift-iterator/go/spi"
-	"github.com/thrift-iterator/go/binding/static"
-	"github.com/thrift-iterator/go/binding/dynamic"
+	"github.com/thrift-iterator/go/binding/reflection"
+	"github.com/thrift-iterator/go/binding/codegen"
 	"github.com/thrift-iterator/go/general"
 )
 
@@ -198,7 +198,7 @@ func (cfg *frozenConfig) decoderOf(decodeFromReader bool, valType reflect.Type) 
 		return rawStructDecoderInstance
 	}
 	if cfg.dynamicCodegen {
-		return dynamic.DecoderOf(cfg.extension, valType)
+		return reflection.DecoderOf(cfg.extension, valType)
 	}
 	return cfg.staticDecoderOf(decodeFromReader, valType)
 }
@@ -211,8 +211,8 @@ func (cfg *frozenConfig) staticDecoderOf(decodeFromReader bool, valType reflect.
 	if cfg.protocol == ProtocolCompact {
 		iteratorType = reflect.TypeOf((*compact.Iterator)(nil))
 	}
-	funcObj := generic.Expand(static.Decode,
-		"EXT", &static.CodegenExtension{Extension: cfg.extension},
+	funcObj := generic.Expand(codegen.Decode,
+		"EXT", &codegen.Extension{Extension: cfg.extension},
 		"ST", iteratorType,
 		"DT", valType)
 	f := funcObj.(func(interface{}, interface{}))
@@ -225,7 +225,7 @@ func (cfg *frozenConfig) encoderOf(valType reflect.Type) spi.ValEncoder {
 		return rawStructEncoderInstance
 	}
 	if cfg.dynamicCodegen {
-		return dynamic.EncoderOf(cfg.extension, valType)
+		return reflection.EncoderOf(cfg.extension, valType)
 	}
 	return cfg.staticEncoderOf(valType)
 }
@@ -235,8 +235,8 @@ func (cfg *frozenConfig) staticEncoderOf(valType reflect.Type) spi.ValEncoder {
 	if cfg.protocol == ProtocolCompact {
 		streamType = reflect.TypeOf((*compact.Stream)(nil))
 	}
-	funcObj := generic.Expand(static.Encode,
-		"EXT", &static.CodegenExtension{Extension: cfg.extension},
+	funcObj := generic.Expand(codegen.Encode,
+		"EXT", &codegen.Extension{Extension: cfg.extension},
 		"ST", valType,
 		"DT", streamType)
 	f := funcObj.(func(interface{}, interface{}))
