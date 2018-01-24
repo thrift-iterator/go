@@ -9,6 +9,7 @@ var Decode = generic.DefineFunc("Decode(dst interface{}, src interface{})").
 	Param("DT", "the dst type to copy into").
 	Param("ST", "the src type to copy from").
 	ImportPackage("reflect").
+	Declare("var typeOf = reflect.TypeOf").
 	ImportFunc(decodeAnything).
 	Source(`
 {{ $decode := expand "DecodeAnything" "EXT" .EXT "DT" .DT "ST" .ST }}

@@ -11,8 +11,8 @@ var api = thrifter.Config{
 	IsFramed: true,
 }.Froze()
 
-//go:generate go install github.com/v2pro/wombat/cmd/wombat-codegen
-//go:generate $GOPATH/bin/wombat-codegen -pkg github.com/thrift-iterator/go/test/api
+//go:generate go install github.com/thrift-iterator/go/cmd/thrifter
+//go:generate $GOPATH/bin/thrifter -pkg github.com/thrift-iterator/go/test/api
 func init() {
 	generic.Declare(func() {
 		api.WillDecodeFromBuffer(

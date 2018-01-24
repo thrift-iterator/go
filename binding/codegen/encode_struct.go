@@ -25,7 +25,7 @@ var encodeStruct = generic.DefineFunc(
 {{ $bindings := calcBindings .ST }}
 dst.WriteStructHeader()
 {{ range $_, $binding := $bindings}}
-	{{ $encode := expand "EncodeAnything" "EXT" .EXT "DT" $.DT "ST" $binding.fieldType }}
+	{{ $encode := expand "EncodeAnything" "EXT" $.EXT "DT" $.DT "ST" $binding.fieldType }}
 	dst.WriteStructField({{$binding.fieldType|thriftType .EXT}}, {{$binding.fieldId}})
 	{{$encode}}(dst, &src.{{$binding.fieldName}})
 {{ end }}

@@ -23,7 +23,7 @@ var decodeStruct = generic.DefineFunc(
 	Source(`
 {{ $bindings := calcBindings (.DT|elem) }}
 {{ range $_, $binding := $bindings}}
-	{{ $decode := expand "DecodeAnything" "EXT" .EXT "DT" $binding.fieldType "ST" $.ST }}
+	{{ $decode := expand "DecodeAnything" "EXT" $.EXT "DT" $binding.fieldType "ST" $.ST }}
 	{{ assignDecode $binding $decode }}
 {{ end }}
 src.ReadStructHeader()
