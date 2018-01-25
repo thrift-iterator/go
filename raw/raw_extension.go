@@ -17,5 +17,9 @@ func (extension *Extension) DecoderOf(valType reflect.Type) spi.ValDecoder {
 }
 
 func (extension *Extension) EncoderOf(valType reflect.Type) spi.ValEncoder {
+	switch valType {
+	case reflect.TypeOf((*List)(nil)).Elem():
+		return &rawListEncoder{}
+	}
 	return nil
 }

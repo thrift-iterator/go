@@ -126,6 +126,26 @@ func Test_marshal_general_list(t *testing.T) {
 	}
 }
 
+
+func Test_marshal_raw_list(t *testing.T) {
+	should := require.New(t)
+	for _, c := range test.Combinations {
+		buf, proto := c.CreateProtocol()
+		proto.WriteListBegin(thrift.I64, 3)
+		proto.WriteI64(1)
+		proto.WriteI64(2)
+		proto.WriteI64(3)
+		proto.WriteListEnd()
+		var val raw.List
+		should.NoError(c.Unmarshal(buf.Bytes(), &val))
+		output, err := c.Marshal(val)
+		should.NoError(err)
+		var generalVal general.List
+		should.NoError(c.Unmarshal(output, &generalVal))
+		should.Equal(general.List{int64(1), int64(2), int64(3)}, generalVal)
+	}
+}
+
 func Test_marshal_list(t *testing.T) {
 	should := require.New(t)
 	for _, c := range test.MarshalCombinations {

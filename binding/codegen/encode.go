@@ -8,6 +8,7 @@ var Encode = generic.DefineFunc("Encode(dst interface{}, src interface{})").
 	Param("ST", "the src type to copy from").
 	ImportFunc(encodeAnything).
 	ImportPackage("reflect").
+	Declare("var typeOf = reflect.TypeOf").
 	Source(`
 {{ $decode := expand "EncodeAnything" "EXT" .EXT "DT" .DT "ST" .ST }}
 stream := dst.({{.DT|name}})
