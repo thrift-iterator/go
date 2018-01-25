@@ -14,6 +14,8 @@ func (extension *Extension) DecoderOf(valType reflect.Type) spi.ValDecoder {
 		return &rawListDecoder{}
 	case reflect.TypeOf((*Map)(nil)):
 		return &rawMapDecoder{}
+	case reflect.TypeOf((*Struct)(nil)):
+		return &rawStructDecoder{}
 	}
 	return nil
 }
@@ -24,6 +26,8 @@ func (extension *Extension) EncoderOf(valType reflect.Type) spi.ValEncoder {
 		return &rawListEncoder{}
 	case reflect.TypeOf((*Map)(nil)).Elem():
 		return &rawMapEncoder{}
+	case reflect.TypeOf((*Struct)(nil)).Elem():
+		return &rawStructEncoder{}
 	}
 	return nil
 }

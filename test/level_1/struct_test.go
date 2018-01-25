@@ -8,6 +8,7 @@ import (
 	"github.com/thrift-iterator/go/test"
 	"github.com/thrift-iterator/go/test/level_1/struct_test"
 	"github.com/thrift-iterator/go/general"
+	"github.com/thrift-iterator/go/raw"
 )
 
 func Test_decode_struct_by_iterator(t *testing.T) {
@@ -151,6 +152,23 @@ func Test_unmarshal_general_struct(t *testing.T) {
 	}
 }
 
+func Test_unmarshal_raw_struct(t *testing.T) {
+	should := require.New(t)
+	for _, c := range test.Combinations {
+		buf, proto := c.CreateProtocol()
+		proto.WriteStructBegin("hello")
+		proto.WriteFieldBegin("field1", thrift.I64, 1)
+		proto.WriteI64(1024)
+		proto.WriteFieldEnd()
+		proto.WriteFieldStop()
+		proto.WriteStructEnd()
+		var val raw.Struct
+		should.NoError(c.Unmarshal(buf.Bytes(), &val))
+		should.Equal(1, len(val))
+		should.Equal(protocol.TypeI64, val[protocol.FieldId(1)].Type)
+	}
+}
+
 func Test_unmarshal_struct(t *testing.T) {
 	should := require.New(t)
 	for _, c := range test.UnmarshalCombinations {
@@ -179,6 +197,28 @@ func Test_marshal_general_struct(t *testing.T) {
 		should.Equal(general.Struct{
 			protocol.FieldId(1): int64(1024),
 		}, val)
+	}
+}
+
+func Test_marshal_raw_struct(t *testing.T) {
+	should := require.New(t)
+	for _, c := range test.Combinations {
+		buf, proto := c.CreateProtocol()
+		proto.WriteStructBegin("hello")
+		proto.WriteFieldBegin("field1", thrift.I64, 1)
+		proto.WriteI64(1024)
+		proto.WriteFieldEnd()
+		proto.WriteFieldStop()
+		proto.WriteStructEnd()
+		var val raw.Struct
+		should.NoError(c.Unmarshal(buf.Bytes(), &val))
+		output, err := c.Marshal(val)
+		should.NoError(err)
+		var generalVal general.Struct
+		should.NoError(c.Unmarshal(output, &generalVal))
+		should.Equal(general.Struct{
+			protocol.FieldId(1): int64(1024),
+		}, generalVal)
 	}
 }
 
