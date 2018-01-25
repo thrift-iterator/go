@@ -34,7 +34,7 @@ type NewOrderRequest struct {
 }
 
 type NewOrderLine struct {
-	ProductId string `thrift:",1"`
+    ProductId string `thrift:",1"`
     Quantity int `thrift:",2"`
 }
 
