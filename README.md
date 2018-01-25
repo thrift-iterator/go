@@ -159,4 +159,4 @@ is unchanged, just need to add extra static codegen in your build steps, and inc
 the generated code in your package. The runtime will automatically use the 
 generated encoder/decoder instead of reflection.
 
-For example of static codgen, checkout [https://github.com/thrift-iterator/go/blob/master/test/api/init.go](https://github.com/thrift-iterator/go/blob/master/test/api/init.go)
+For example of static codegen, checkout [https://github.com/thrift-iterator/go/blob/master/test/api/init.go](https://github.com/thrift-iterator/go/blob/master/test/api/init.go)
