@@ -30,7 +30,7 @@ event struct data binding is supported
 import "github.com/thrift-iterator/go"
 
 type NewOrderRequest struct {
-	Lines []NewOrderLine `thrift:",1"`
+    Lines []NewOrderLine `thrift:",1"`
 }
 
 type NewOrderLine struct {
@@ -50,3 +50,42 @@ var val NewOrderRequest
 err = thrifter.Unmarshal(thriftEncodedBytes, &val)
 ```
 
+# without IDL
+
+you do not need to define IDL. you do not need to use static code generation.
+you do not event need to define struct.
+
+```go
+import "github.com/thrift-iterator/go"
+import "github.com/thrift-iterator/go/general"
+
+// msg is of type general.Message
+msg, err := thrifter.UnmarshalMessage(thriftEncodedBytes)
+// the RPC call method name, type is string
+fmt.Println(msg.MessageName)
+// the RPC call arguments, type is general.Struct
+fmt.Println(msg.MessageArgs)
+```
+
+what is `general.Struct`, it is defined as a map
+
+```go
+type FieldId int16
+type Struct map[FieldId]interface{}
+```
+
+we can extract out specific argument using one line
+
+```go
+productId := msg.MessageArgs.Get(
+	protocol.FieldId(1), // lines of request
+	0, // the first line
+	protocol.FieldId(1), // product id
+).(string)
+```
+
+You can unmarshal any thrift bytes into general objects. And you can marshal them back.
+
+# Partial decoding
+
+TODO
