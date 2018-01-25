@@ -130,13 +130,13 @@ func Test_marshal_general_map(t *testing.T) {
 			"k3": int64(3),
 		})
 		should.NoError(err)
-		iter := c.CreateIterator(output)
-		obj := iter.ReadMap()
+		var val general.Map
+		should.NoError(c.Unmarshal(output, &val))
 		should.Equal(general.Map{
-			"k1": int64(1),
-			"k2": int64(2),
-			"k3": int64(3),
-		}, obj)
+			int32(1): int64(1),
+			int32(2): int64(2),
+			int32(3): int64(3),
+		}, val)
 	}
 }
 
@@ -149,12 +149,12 @@ func Test_marshal_map(t *testing.T) {
 			"k3": int64(3),
 		})
 		should.NoError(err)
-		iter := c.CreateIterator(output)
-		obj := iter.ReadMap()
+		var val general.Map
+		should.NoError(c.Unmarshal(output, &val))
 		should.Equal(general.Map{
-			"k1": int64(1),
-			"k2": int64(2),
-			"k3": int64(3),
-		}, obj)
+			int32(1): int64(1),
+			int32(2): int64(2),
+			int32(3): int64(3),
+		}, val)
 	}
 }

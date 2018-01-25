@@ -7,6 +7,7 @@ import (
 	"github.com/thrift-iterator/go/protocol"
 	"github.com/thrift-iterator/go/test"
 	"github.com/thrift-iterator/go/test/level_1/struct_test"
+	"github.com/thrift-iterator/go/general"
 )
 
 func Test_decode_struct_by_iterator(t *testing.T) {
@@ -173,11 +174,11 @@ func Test_marshal_general_struct(t *testing.T) {
 			protocol.FieldId(1): int64(1024),
 		})
 		should.NoError(err)
-		iter := c.CreateIterator(output)
-		obj := iter.ReadStruct()
+		var val general.Struct
+		should.NoError(c.Unmarshal(output, &val))
 		should.Equal(general.Struct{
 			protocol.FieldId(1): int64(1024),
-		}, obj)
+		}, val)
 	}
 }
 

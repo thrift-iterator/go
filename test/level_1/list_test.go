@@ -6,6 +6,8 @@ import (
 	"git.apache.org/thrift.git/lib/go/thrift"
 	"github.com/thrift-iterator/go/protocol"
 	"github.com/thrift-iterator/go/test"
+	"github.com/thrift-iterator/go/general"
+	"github.com/thrift-iterator/go/raw"
 )
 
 func Test_decode_list_by_iterator(t *testing.T) {
@@ -71,6 +73,24 @@ func Test_unmarshal_general_list(t *testing.T) {
 		var val general.List
 		should.NoError(c.Unmarshal(buf.Bytes(), &val))
 		should.Equal(general.List{int64(1), int64(2), int64(3)}, val)
+	}
+}
+
+func Test_unmarshal_raw_list(t *testing.T) {
+	should := require.New(t)
+	for _, c := range test.Combinations {
+		buf, proto := c.CreateProtocol()
+		proto.WriteListBegin(thrift.I64, 3)
+		proto.WriteI64(1)
+		proto.WriteI64(2)
+		proto.WriteI64(3)
+		proto.WriteListEnd()
+		var val raw.List
+		should.NoError(c.Unmarshal(buf.Bytes(), &val))
+		should.Equal(3, len(val.Elements))
+		should.Equal(protocol.TypeI64, val.ElementType)
+		iter := c.CreateIterator(val.Elements[0])
+		should.Equal(int64(1), iter.ReadInt64())
 	}
 }
 

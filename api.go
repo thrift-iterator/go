@@ -34,6 +34,7 @@ type Config struct {
 	Protocol       Protocol
 	IsFramed       bool
 	DynamicCodegen bool
+	Extensions     spi.Extensions
 }
 
 type API interface {

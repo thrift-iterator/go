@@ -104,3 +104,24 @@ func (extension *DummyExtension) EncoderOf(valType reflect.Type) ValEncoder {
 	return nil
 }
 
+type Extensions []Extension
+
+func (extensions Extensions) DecoderOf(valType reflect.Type) ValDecoder {
+	for _, extension := range extensions {
+		decoder := extension.DecoderOf(valType)
+		if decoder != nil {
+			return decoder
+		}
+	}
+	return nil
+}
+
+func (extensions Extensions) EncoderOf(valType reflect.Type) ValEncoder {
+	for _, extension := range extensions {
+		encoder := extension.EncoderOf(valType)
+		if encoder != nil {
+			return encoder
+		}
+	}
+	return nil
+}

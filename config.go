@@ -15,6 +15,7 @@ import (
 	"github.com/thrift-iterator/go/binding/reflection"
 	"github.com/thrift-iterator/go/binding/codegen"
 	"github.com/thrift-iterator/go/general"
+	"github.com/thrift-iterator/go/raw"
 )
 
 type frozenConfig struct {
@@ -28,9 +29,16 @@ type frozenConfig struct {
 	dynamicCodegen bool
 }
 
+func (cfg Config) AddExtension(extension spi.Extension) Config {
+	cfg.Extensions = append(cfg.Extensions, extension)
+	return cfg
+}
+
 func (cfg Config) Froze() API {
+	extensions := append(cfg.Extensions, &general.Extension{})
+	extensions = append(extensions, &raw.Extension{})
 	api := &frozenConfig{
-		extension:      &general.Extension{},
+		extension:      extensions,
 		protocol:       cfg.Protocol,
 		isFramed:       cfg.IsFramed,
 		dynamicCodegen: cfg.DynamicCodegen,
