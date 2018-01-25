@@ -160,3 +160,13 @@ the generated code in your package. The runtime will automatically use the
 generated encoder/decoder instead of reflection.
 
 For example of static codegen, checkout [https://github.com/thrift-iterator/go/blob/master/test/api/init.go](https://github.com/thrift-iterator/go/blob/master/test/api/init.go)
+
+# Sync IDL and Go Struct
+
+Keep IDL and your object model is challenging. We do not always like the code 
+generated from thrift IDL. But manually keeping the IDL and model in sync is
+tedious and error prone. 
+
+A separate toolchain to manipulate thrift IDL file, and keeping them bidirectionally in sync
+will be provided in another project.
+
