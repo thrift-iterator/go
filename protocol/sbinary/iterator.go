@@ -30,6 +30,10 @@ func NewIterator(provider spi.ValDecoderProvider, reader io.Reader, buf []byte) 
 	}
 }
 
+func (iter *Iterator) Spawn() spi.Iterator {
+	return binary.NewIterator(iter.ValDecoderProvider, nil)
+}
+
 func (iter *Iterator) Reset(reader io.Reader, buf []byte) {
 	iter.reader = reader
 	iter.err = nil

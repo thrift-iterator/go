@@ -20,7 +20,7 @@ func readStruct(iter spi.Iterator) interface{} {
 		if fieldType == protocol.TypeStop {
 			return generalStruct
 		}
-		generalReader := ReaderOf(fieldType)
+		generalReader := generalReaderOf(fieldType)
 		generalStruct[fieldId] = generalReader(iter)
 	}
 }

@@ -5,7 +5,7 @@ import (
 	"github.com/thrift-iterator/go/protocol"
 )
 
-func ReaderOf(ttype protocol.TType) func(iter spi.Iterator) interface{} {
+func generalReaderOf(ttype protocol.TType) func(iter spi.Iterator) interface{} {
 	switch ttype {
 	case protocol.TypeBool:
 		return readBool

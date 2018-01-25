@@ -12,7 +12,7 @@ func generalWriterOf(sample interface{}) (protocol.TType, func(val interface{}, 
 	case int8:
 		return protocol.TypeI08, writeInt8
 	case uint8:
-		return protocol.TypeI08, writeInt8
+		return protocol.TypeI08, writeUint8
 	case int16:
 		return protocol.TypeI16, writeInt16
 	case uint16:

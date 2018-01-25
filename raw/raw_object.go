@@ -14,8 +14,13 @@ type List struct {
 	Elements [][]byte
 }
 
+type MapEntry struct {
+	Key []byte
+	Element []byte
+}
+
 type Map struct {
 	KeyType protocol.TType
 	ElementType protocol.TType
-	Entries map[interface{}][]byte
+	Entries map[interface{}]MapEntry
 }

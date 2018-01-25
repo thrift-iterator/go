@@ -23,6 +23,10 @@ func NewIterator(provider spi.ValDecoderProvider, buf []byte) *Iterator {
 	return &Iterator{ValDecoderProvider: provider, buf: buf}
 }
 
+func (iter *Iterator) Spawn() spi.Iterator {
+	return &Iterator{ValDecoderProvider: iter.ValDecoderProvider}
+}
+
 func (iter *Iterator) Error() error {
 	return iter.err
 }

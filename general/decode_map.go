@@ -11,8 +11,8 @@ func (decoder *generalMapDecoder) Decode(val interface{}, iter spi.Iterator) {
 
 func readMap(iter spi.Iterator) interface{} {
 	keyType, elemType, length := iter.ReadMapHeader()
-	keyReader := ReaderOf(keyType)
-	elemReader := ReaderOf(elemType)
+	keyReader := generalReaderOf(keyType)
+	elemReader := generalReaderOf(elemType)
 	generalMap := Map{}
 	for i := 0; i < length; i++ {
 		key := keyReader(iter)

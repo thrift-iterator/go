@@ -8,6 +8,7 @@ import (
 
 type Iterator interface {
 	ValDecoderProvider
+	Spawn() Iterator
 	Error() error
 	Reset(reader io.Reader, buf []byte)
 	ReportError(operation string, err string)
@@ -41,6 +42,7 @@ type Iterator interface {
 
 type Stream interface {
 	ValEncoderProvider
+	Spawn() Stream
 	Error() error
 	ReportError(operation string, err string)
 	Reset(writer io.Writer)

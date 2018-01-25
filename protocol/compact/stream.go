@@ -21,8 +21,14 @@ type Stream struct {
 func NewStream(provider spi.ValEncoderProvider, writer io.Writer, buf []byte) *Stream {
 	return &Stream{
 		ValEncoderProvider: provider,
-		writer: writer,
-		buf:    buf,
+		writer:             writer,
+		buf:                buf,
+	}
+}
+
+func (stream *Stream) Spawn() spi.Stream {
+	return &Stream{
+		ValEncoderProvider: stream.ValEncoderProvider,
 	}
 }
 

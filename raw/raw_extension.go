@@ -22,6 +22,8 @@ func (extension *Extension) EncoderOf(valType reflect.Type) spi.ValEncoder {
 	switch valType {
 	case reflect.TypeOf((*List)(nil)).Elem():
 		return &rawListEncoder{}
+	case reflect.TypeOf((*Map)(nil)).Elem():
+		return &rawMapEncoder{}
 	}
 	return nil
 }

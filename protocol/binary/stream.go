@@ -23,6 +23,12 @@ func NewStream(provider spi.ValEncoderProvider, writer io.Writer, buf []byte) *S
 	}
 }
 
+func (stream *Stream) Spawn() spi.Stream {
+	return &Stream{
+		ValEncoderProvider: stream.ValEncoderProvider,
+	}
+}
+
 func (stream *Stream) Error() error {
 	return stream.err
 }
