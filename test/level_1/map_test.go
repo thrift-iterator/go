@@ -7,6 +7,7 @@ import (
 	"github.com/thrift-iterator/go/protocol"
 	"github.com/thrift-iterator/go/test"
 	"github.com/thrift-iterator/go/general"
+	"github.com/thrift-iterator/go/raw"
 )
 
 func Test_decode_map_by_iterator(t *testing.T) {
@@ -96,6 +97,29 @@ func Test_unmarshal_general_map(t *testing.T) {
 			int32(2): int64(2),
 			int32(3): int64(3),
 		}, val)
+	}
+}
+
+
+func Test_unmarshal_raw_map(t *testing.T) {
+	should := require.New(t)
+	for _, c := range test.Combinations {
+		buf, proto := c.CreateProtocol()
+		proto.WriteMapBegin(thrift.I32, thrift.I64, 3)
+		proto.WriteI32(1)
+		proto.WriteI64(1)
+		proto.WriteI32(2)
+		proto.WriteI64(2)
+		proto.WriteI32(3)
+		proto.WriteI64(3)
+		proto.WriteMapEnd()
+		var val raw.Map
+		should.NoError(c.Unmarshal(buf.Bytes(), &val))
+		should.Equal(3, len(val.Entries))
+		should.Equal(protocol.TypeI32, val.KeyType)
+		should.Equal(protocol.TypeI64, val.ElementType)
+		iter := c.CreateIterator(val.Entries[int32(1)])
+		should.Equal(int64(1), iter.ReadInt64())
 	}
 }
 

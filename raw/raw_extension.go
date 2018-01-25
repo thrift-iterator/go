@@ -12,6 +12,8 @@ func (extension *Extension) DecoderOf(valType reflect.Type) spi.ValDecoder {
 	switch valType {
 	case reflect.TypeOf((*List)(nil)):
 		return &rawListDecoder{}
+	case reflect.TypeOf((*Map)(nil)):
+		return &rawMapDecoder{}
 	}
 	return nil
 }
