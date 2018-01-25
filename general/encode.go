@@ -3,6 +3,7 @@ package general
 import (
 	"github.com/thrift-iterator/go/spi"
 	"github.com/thrift-iterator/go/protocol"
+	"reflect"
 )
 
 func generalWriterOf(sample interface{}) (protocol.TType, func(val interface{}, stream spi.Stream)) {
@@ -31,14 +32,14 @@ func generalWriterOf(sample interface{}) (protocol.TType, func(val interface{}, 
 		return protocol.TypeString, writeString
 	case []byte:
 		return protocol.TypeString, writeBinary
-	case []interface{}:
+	case List:
 		return protocol.TypeList, writeList
-	case map[interface{}]interface{}:
+	case Map:
 		return protocol.TypeMap, writeMap
-	case map[protocol.FieldId]interface{}:
+	case Struct:
 		return protocol.TypeStruct, writeStruct
 	default:
-		panic("unsupported type")
+		panic("unsupported type: " + reflect.TypeOf(sample).String())
 	}
 }
 

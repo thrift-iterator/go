@@ -201,10 +201,6 @@ func (cfg *frozenConfig) WillEncode(samples ...interface{}) {
 }
 
 func (cfg *frozenConfig) decoderOf(decodeFromReader bool, valType reflect.Type) spi.ValDecoder {
-	switch valType {
-	case reflect.TypeOf((*map[protocol.FieldId]RawMessage)(nil)):
-		return rawStructDecoderInstance
-	}
 	if cfg.dynamicCodegen {
 		return reflection.DecoderOf(cfg.extension, valType)
 	}
@@ -228,10 +224,6 @@ func (cfg *frozenConfig) staticDecoderOf(decodeFromReader bool, valType reflect.
 }
 
 func (cfg *frozenConfig) encoderOf(valType reflect.Type) spi.ValEncoder {
-	switch valType {
-	case reflect.TypeOf((*map[protocol.FieldId]RawMessage)(nil)).Elem():
-		return rawStructEncoderInstance
-	}
 	if cfg.dynamicCodegen {
 		return reflection.EncoderOf(cfg.extension, valType)
 	}
