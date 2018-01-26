@@ -7,7 +7,7 @@ Why?
 * because IDL generated model is ugly and inflexible, it is seldom used in application directly. instead we define another model, which leads to bad performance.
   * bytes need to be copied twice 
   * more objects to gc
-* thrift proxy can not know all possible IDL in advance, we need to decode/encode in a generic way to modify embedded header.
+* thrift proxy can not know all possible IDL in advance, in scenarios like api gateway, we need to decode/encode in a generic way to modify embedded header.
 * official thrift library for go is slow, verified in several benchmarks. It is even slower than [json-iterator](https://github.com/json-iterator/go)
 
 # works like encoding/json
@@ -24,7 +24,7 @@ var val []int
 err = thrifter.Unmarshal(thriftEncodedBytes, &val)
 ```
 
-event struct data binding is supported
+even struct data binding is supported
 
 ```go
 import "github.com/thrift-iterator/go"
