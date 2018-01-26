@@ -82,7 +82,7 @@ var compact = Combination{
 		return compactCfg.Froze().Marshal(val)
 	},
 }
-var binaryDynamicCfg = thrifter.Config{Protocol: thrifter.ProtocolBinary, DynamicCodegen: true}
+var binaryDynamicCfg = thrifter.Config{Protocol: thrifter.ProtocolBinary, StaticCodegen: false}
 var binaryDynamic = Combination{
 	CreateProtocol: func() (*thrift.TMemoryBuffer, thrift.TProtocol) {
 		buf := thrift.NewTMemoryBuffer()
@@ -99,7 +99,7 @@ var binaryDynamic = Combination{
 		return binaryDynamicCfg.Froze().Marshal(val)
 	},
 }
-var compactDynamicCfg = thrifter.Config{Protocol: thrifter.ProtocolCompact, DynamicCodegen: true}
+var compactDynamicCfg = thrifter.Config{Protocol: thrifter.ProtocolCompact, StaticCodegen: false}
 var compactDynamic = Combination{
 	CreateProtocol: func() (*thrift.TMemoryBuffer, thrift.TProtocol) {
 		buf := thrift.NewTMemoryBuffer()

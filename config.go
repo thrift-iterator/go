@@ -19,14 +19,14 @@ import (
 )
 
 type frozenConfig struct {
-	extension      spi.Extension
-	protocol       Protocol
-	genDecoders    unsafe.Pointer
-	genEncoders    unsafe.Pointer
-	extDecoders    unsafe.Pointer
-	extEncoders    unsafe.Pointer
-	isFramed       bool
-	dynamicCodegen bool
+	extension     spi.Extension
+	protocol      Protocol
+	genDecoders   unsafe.Pointer
+	genEncoders   unsafe.Pointer
+	extDecoders   unsafe.Pointer
+	extEncoders   unsafe.Pointer
+	isFramed      bool
+	staticCodegen bool
 }
 
 func (cfg Config) AddExtension(extension spi.Extension) Config {
@@ -38,10 +38,10 @@ func (cfg Config) Froze() API {
 	extensions := append(cfg.Extensions, &general.Extension{})
 	extensions = append(extensions, &raw.Extension{})
 	api := &frozenConfig{
-		extension:      extensions,
-		protocol:       cfg.Protocol,
-		isFramed:       cfg.IsFramed,
-		dynamicCodegen: cfg.DynamicCodegen,
+		extension:     extensions,
+		protocol:      cfg.Protocol,
+		isFramed:      cfg.IsFramed,
+		staticCodegen: cfg.StaticCodegen,
 	}
 	atomic.StorePointer(&api.extDecoders, unsafe.Pointer(&map[string]spi.ValDecoder{}))
 	atomic.StorePointer(&api.extEncoders, unsafe.Pointer(&map[string]spi.ValEncoder{}))
@@ -174,7 +174,7 @@ func (cfg *frozenConfig) NewIterator(reader io.Reader, buf []byte) spi.Iterator 
 }
 
 func (cfg *frozenConfig) WillDecodeFromBuffer(samples ...interface{}) {
-	if cfg.dynamicCodegen {
+	if !cfg.staticCodegen {
 		panic("this config is using dynamic codegen, can not do static codegen")
 	}
 	for _, sample := range samples {
@@ -183,7 +183,7 @@ func (cfg *frozenConfig) WillDecodeFromBuffer(samples ...interface{}) {
 }
 
 func (cfg *frozenConfig) WillDecodeFromReader(samples ...interface{}) {
-	if cfg.dynamicCodegen {
+	if !cfg.staticCodegen {
 		panic("this config is using dynamic codegen, can not do static codegen")
 	}
 	for _, sample := range samples {
@@ -192,7 +192,7 @@ func (cfg *frozenConfig) WillDecodeFromReader(samples ...interface{}) {
 }
 
 func (cfg *frozenConfig) WillEncode(samples ...interface{}) {
-	if cfg.dynamicCodegen {
+	if !cfg.staticCodegen {
 		panic("this config is using dynamic codegen, can not do static codegen")
 	}
 	for _, sample := range samples {
@@ -201,10 +201,10 @@ func (cfg *frozenConfig) WillEncode(samples ...interface{}) {
 }
 
 func (cfg *frozenConfig) decoderOf(decodeFromReader bool, valType reflect.Type) spi.ValDecoder {
-	if cfg.dynamicCodegen {
-		return reflection.DecoderOf(cfg.extension, valType)
+	if cfg.staticCodegen {
+		return cfg.staticDecoderOf(decodeFromReader, valType)
 	}
-	return cfg.staticDecoderOf(decodeFromReader, valType)
+	return reflection.DecoderOf(cfg.extension, valType)
 }
 
 func (cfg *frozenConfig) staticDecoderOf(decodeFromReader bool, valType reflect.Type) spi.ValDecoder {
@@ -224,10 +224,10 @@ func (cfg *frozenConfig) staticDecoderOf(decodeFromReader bool, valType reflect.
 }
 
 func (cfg *frozenConfig) encoderOf(valType reflect.Type) spi.ValEncoder {
-	if cfg.dynamicCodegen {
-		return reflection.EncoderOf(cfg.extension, valType)
+	if cfg.staticCodegen {
+		return cfg.staticEncoderOf(valType)
 	}
-	return cfg.staticEncoderOf(valType)
+	return reflection.EncoderOf(cfg.extension, valType)
 }
 
 func (cfg *frozenConfig) staticEncoderOf(valType reflect.Type) spi.ValEncoder {

@@ -12,7 +12,7 @@ import (
 
 func Test_decode_struct_of_raw_message(t *testing.T) {
 	should := require.New(t)
-	api := thrifter.Config{Protocol: thrifter.ProtocolBinary, DynamicCodegen: true}.Froze()
+	api := thrifter.Config{Protocol: thrifter.ProtocolBinary, StaticCodegen: false}.Froze()
 	output, err := api.Marshal(general.Struct{
 		0: general.Map{
 			"key1": "value1",

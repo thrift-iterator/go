@@ -31,10 +31,10 @@ type Encoder interface {
 }
 
 type Config struct {
-	Protocol       Protocol
-	IsFramed       bool
-	DynamicCodegen bool
-	Extensions     spi.Extensions
+	Protocol      Protocol
+	IsFramed      bool
+	StaticCodegen bool
+	Extensions    spi.Extensions
 }
 
 type API interface {
@@ -54,7 +54,7 @@ type API interface {
 	WillEncode(sample ...interface{})
 }
 
-var DefaultConfig = Config{Protocol: ProtocolBinary, IsFramed: true, DynamicCodegen: true}.Froze()
+var DefaultConfig = Config{Protocol: ProtocolBinary, IsFramed: true, StaticCodegen: false}.Froze()
 
 func NewStream(writer io.Writer, buf []byte) spi.Stream {
 	return DefaultConfig.NewStream(writer, buf)
