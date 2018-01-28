@@ -1,12 +1,10 @@
 package thrifter
 
 import (
-	"unsafe"
 	"reflect"
 	"io"
 	"github.com/thrift-iterator/go/protocol/sbinary"
 	"github.com/thrift-iterator/go/protocol/compact"
-	"sync/atomic"
 	"github.com/thrift-iterator/go/protocol/binary"
 	"github.com/thrift-iterator/go/protocol"
 	"errors"
@@ -16,15 +14,16 @@ import (
 	"github.com/thrift-iterator/go/binding/codegen"
 	"github.com/thrift-iterator/go/general"
 	"github.com/thrift-iterator/go/raw"
+	"sync"
 )
 
 type frozenConfig struct {
 	extension     spi.Extension
 	protocol      Protocol
-	genDecoders   unsafe.Pointer
-	genEncoders   unsafe.Pointer
-	extDecoders   unsafe.Pointer
-	extEncoders   unsafe.Pointer
+	genDecoders   sync.Map
+	genEncoders   sync.Map
+	extDecoders   sync.Map
+	extEncoders   sync.Map
 	isFramed      bool
 	staticCodegen bool
 }
@@ -43,67 +42,27 @@ func (cfg Config) Froze() API {
 		isFramed:      cfg.IsFramed,
 		staticCodegen: cfg.StaticCodegen,
 	}
-	atomic.StorePointer(&api.extDecoders, unsafe.Pointer(&map[string]spi.ValDecoder{}))
-	atomic.StorePointer(&api.extEncoders, unsafe.Pointer(&map[string]spi.ValEncoder{}))
-	atomic.StorePointer(&api.genDecoders, unsafe.Pointer(&map[reflect.Type]spi.ValDecoder{}))
-	atomic.StorePointer(&api.genEncoders, unsafe.Pointer(&map[reflect.Type]spi.ValEncoder{}))
+	api.extDecoders = sync.Map{}
+	api.genDecoders = sync.Map{}
+	api.extEncoders = sync.Map{}
+	api.genEncoders = sync.Map{}
 	return api
 }
 
 func (cfg *frozenConfig) addGenDecoder(cacheKey reflect.Type, decoder spi.ValDecoder) {
-	done := false
-	for !done {
-		ptr := atomic.LoadPointer(&cfg.genDecoders)
-		cache := *(*map[reflect.Type]spi.ValDecoder)(ptr)
-		copied := map[reflect.Type]spi.ValDecoder{}
-		for k, v := range cache {
-			copied[k] = v
-		}
-		copied[cacheKey] = decoder
-		done = atomic.CompareAndSwapPointer(&cfg.genDecoders, ptr, unsafe.Pointer(&copied))
-	}
+	cfg.genDecoders.Store(cacheKey, decoder)
 }
 
 func (cfg *frozenConfig) addExtDecoder(cacheKey string, decoder spi.ValDecoder) {
-	done := false
-	for !done {
-		ptr := atomic.LoadPointer(&cfg.extDecoders)
-		cache := *(*map[string]spi.ValDecoder)(ptr)
-		copied := map[string]spi.ValDecoder{}
-		for k, v := range cache {
-			copied[k] = v
-		}
-		copied[cacheKey] = decoder
-		done = atomic.CompareAndSwapPointer(&cfg.extDecoders, ptr, unsafe.Pointer(&copied))
-	}
+	cfg.extDecoders.Store(cacheKey, decoder)
 }
 
 func (cfg *frozenConfig) addGenEncoder(cacheKey reflect.Type, encoder spi.ValEncoder) {
-	done := false
-	for !done {
-		ptr := atomic.LoadPointer(&cfg.genEncoders)
-		cache := *(*map[reflect.Type]spi.ValEncoder)(ptr)
-		copied := map[reflect.Type]spi.ValEncoder{}
-		for k, v := range cache {
-			copied[k] = v
-		}
-		copied[cacheKey] = encoder
-		done = atomic.CompareAndSwapPointer(&cfg.genEncoders, ptr, unsafe.Pointer(&copied))
-	}
+	cfg.genEncoders.Store(cacheKey, encoder)
 }
 
 func (cfg *frozenConfig) addExtEncoder(cacheKey string, encoder spi.ValEncoder) {
-	done := false
-	for !done {
-		ptr := atomic.LoadPointer(&cfg.extEncoders)
-		cache := *(*map[string]spi.ValEncoder)(ptr)
-		copied := map[string]spi.ValEncoder{}
-		for k, v := range cache {
-			copied[k] = v
-		}
-		copied[cacheKey] = encoder
-		done = atomic.CompareAndSwapPointer(&cfg.extEncoders, ptr, unsafe.Pointer(&copied))
-	}
+	cfg.extEncoders.Store(cacheKey, encoder)
 }
 
 func (cfg *frozenConfig) PrepareDecoder(valType reflect.Type) {
@@ -117,15 +76,19 @@ func (cfg *frozenConfig) PrepareDecoder(valType reflect.Type) {
 }
 
 func (cfg *frozenConfig) GetDecoder(cacheKey string) spi.ValDecoder {
-	ptr := atomic.LoadPointer(&cfg.extDecoders)
-	cache := *(*map[string]spi.ValDecoder)(ptr)
-	return cache[cacheKey]
+	decoder, found := cfg.extDecoders.Load(cacheKey)
+	if found {
+		return decoder.(spi.ValDecoder)
+	}
+	return nil
 }
 
 func (cfg *frozenConfig) getGenDecoder(cacheKey reflect.Type) spi.ValDecoder {
-	ptr := atomic.LoadPointer(&cfg.genDecoders)
-	cache := *(*map[reflect.Type]spi.ValDecoder)(ptr)
-	return cache[cacheKey]
+	decoder, found := cfg.genDecoders.Load(cacheKey)
+	if found {
+		return decoder.(spi.ValDecoder)
+	}
+	return nil
 }
 
 func (cfg *frozenConfig) PrepareEncoder(valType reflect.Type) {
@@ -139,15 +102,19 @@ func (cfg *frozenConfig) PrepareEncoder(valType reflect.Type) {
 }
 
 func (cfg *frozenConfig) GetEncoder(cacheKey string) spi.ValEncoder {
-	ptr := atomic.LoadPointer(&cfg.extEncoders)
-	cache := *(*map[string]spi.ValEncoder)(ptr)
-	return cache[cacheKey]
+	encoder, found := cfg.extEncoders.Load(cacheKey)
+	if found {
+		return encoder.(spi.ValEncoder)
+	}
+	return nil
 }
 
 func (cfg *frozenConfig) getGenEncoder(cacheKey reflect.Type) spi.ValEncoder {
-	ptr := atomic.LoadPointer(&cfg.genEncoders)
-	cache := *(*map[reflect.Type]spi.ValEncoder)(ptr)
-	return cache[cacheKey]
+	encoder, found := cfg.genEncoders.Load(cacheKey)
+	if found {
+		return encoder.(spi.ValEncoder)
+	}
+	return nil
 }
 
 func (cfg *frozenConfig) NewStream(writer io.Writer, buf []byte) spi.Stream {
