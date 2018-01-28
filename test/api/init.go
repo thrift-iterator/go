@@ -8,7 +8,6 @@ import (
 
 var api = thrifter.Config{
 	Protocol: thrifter.ProtocolBinary,
-	IsFramed: true,
 }.Froze()
 
 //go:generate go install github.com/thrift-iterator/go/cmd/thrifter

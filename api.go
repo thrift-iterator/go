@@ -3,8 +3,6 @@ package thrifter
 import (
 	"io"
 	"github.com/thrift-iterator/go/spi"
-	"github.com/thrift-iterator/go/protocol"
-	"encoding/json"
 	"github.com/thrift-iterator/go/general"
 )
 
@@ -13,26 +11,8 @@ type Protocol int
 var ProtocolBinary Protocol = 1
 var ProtocolCompact Protocol = 2
 
-type Decoder interface {
-	Decode(obj interface{}) error
-	DecodeMessage() (general.Message, error)
-	DecodeMessageHeader() (protocol.MessageHeader, error)
-	DecodeMessageArguments() (general.Struct, error)
-	Reset(reader io.Reader, buf []byte)
-}
-
-type Encoder interface {
-	Encode(obj interface{}) error
-	EncodeMessage(msg general.Message) error
-	EncodeMessageHeader(msgHeader protocol.MessageHeader) error
-	EncodeMessageArguments(msgArgs general.Struct) error
-	Reset(writer io.Writer)
-	Buffer() []byte
-}
-
 type Config struct {
 	Protocol      Protocol
-	IsFramed      bool
 	StaticCodegen bool
 	Extensions    spi.Extensions
 }
@@ -42,10 +22,20 @@ type API interface {
 	NewStream(writer io.Writer, buf []byte) spi.Stream
 	// NewIterator is low level streaming api
 	NewIterator(reader io.Reader, buf []byte) spi.Iterator
+	// Unmarshal from []byte
 	Unmarshal(buf []byte, obj interface{}) error
+	// UnmarshalMessage from []byte
+	UnmarshalMessage(buf []byte) (general.Message, error)
+	// Marshal to []byte
 	Marshal(obj interface{}) ([]byte, error)
-	NewDecoder(reader io.Reader, buf []byte) Decoder
-	NewEncoder(writer io.Writer) Encoder
+	// ToJSON convert thrift message to JSON string
+	ToJSON(buf []byte) (string, error)
+	// MarshalMessage to []byte
+	MarshalMessage(msg general.Message) ([]byte, error)
+	// NewDecoder to unmarshal from []byte or io.Reader
+	NewDecoder(reader io.Reader, buf []byte) *Decoder
+	// NewEncoder to marshal to io.Writer
+	NewEncoder(writer io.Writer) *Encoder
 	// WillDecodeFromBuffer should only be used in generic.Declare
 	WillDecodeFromBuffer(sample ...interface{})
 	// WillDecodeFromReader should only be used in generic.Declare
@@ -54,7 +44,7 @@ type API interface {
 	WillEncode(sample ...interface{})
 }
 
-var DefaultConfig = Config{Protocol: ProtocolBinary, IsFramed: true, StaticCodegen: false}.Froze()
+var DefaultConfig = Config{Protocol: ProtocolBinary, StaticCodegen: false}.Froze()
 
 func NewStream(writer io.Writer, buf []byte) spi.Stream {
 	return DefaultConfig.NewStream(writer, buf)
@@ -70,22 +60,12 @@ func Unmarshal(buf []byte, obj interface{}) error {
 
 // UnmarshalMessage demonstrate how to decode thrift binary without IDL into a general message struct
 func UnmarshalMessage(buf []byte) (general.Message, error) {
-	var msg general.Message
-	err := Unmarshal(buf, &msg)
-	return msg, err
+	return DefaultConfig.UnmarshalMessage(buf)
 }
 
-// ToJSON convert the thrift binary to JSON
+// ToJSON convert the thrift message to JSON string
 func ToJSON(buf []byte) (string, error) {
-	msg, err := UnmarshalMessage(buf)
-	if err != nil {
-		return "", err
-	}
-	json, err := json.MarshalIndent(msg, "", "  ")
-	if err != nil {
-		return "", err
-	}
-	return string(json), nil
+	return DefaultConfig.ToJSON(buf)
 }
 
 func Marshal(obj interface{}) ([]byte, error) {
@@ -94,13 +74,13 @@ func Marshal(obj interface{}) ([]byte, error) {
 
 // MarshalMessage is just a shortcut to demonstrate message decoded by UnmarshalMessage can be encoded back
 func MarshalMessage(msg general.Message) ([]byte, error) {
-	return Marshal(msg)
+	return DefaultConfig.MarshalMessage(msg)
 }
 
-func NewDecoder(reader io.Reader, buf []byte) Decoder {
+func NewDecoder(reader io.Reader, buf []byte) *Decoder {
 	return DefaultConfig.NewDecoder(reader, buf)
 }
 
-func NewEncoder(writer io.Writer) Encoder {
+func NewEncoder(writer io.Writer) *Encoder {
 	return DefaultConfig.NewEncoder(writer)
 }

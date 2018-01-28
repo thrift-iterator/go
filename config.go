@@ -15,6 +15,7 @@ import (
 	"github.com/thrift-iterator/go/general"
 	"github.com/thrift-iterator/go/raw"
 	"sync"
+	"encoding/json"
 )
 
 type frozenConfig struct {
@@ -24,7 +25,6 @@ type frozenConfig struct {
 	genEncoders   sync.Map
 	extDecoders   sync.Map
 	extEncoders   sync.Map
-	isFramed      bool
 	staticCodegen bool
 }
 
@@ -39,7 +39,6 @@ func (cfg Config) Froze() API {
 	api := &frozenConfig{
 		extension:     extensions,
 		protocol:      cfg.Protocol,
-		isFramed:      cfg.IsFramed,
 		staticCodegen: cfg.StaticCodegen,
 	}
 	api.extDecoders = sync.Map{}
@@ -240,10 +239,6 @@ func (cfg *frozenConfig) Unmarshal(buf []byte, val interface{}) error {
 	if buf == nil {
 		return errors.New("empty input")
 	}
-	if cfg.isFramed {
-		size := uint32(buf[3]) | uint32(buf[2])<<8 | uint32(buf[1])<<16 | uint32(buf[0])<<24
-		buf = buf[4:4+size]
-	}
 	iter := cfg.NewIterator(nil, buf)
 	decoder.Decode(val, iter)
 	if iter.Error() != nil {
@@ -265,43 +260,42 @@ func (cfg *frozenConfig) Marshal(val interface{}) ([]byte, error) {
 		return nil, stream.Error()
 	}
 	buf := stream.Buffer()
-	if cfg.isFramed {
-		size := len(buf)
-		buf = append([]byte{
-			byte(size >> 24), byte(size >> 16), byte(size >> 8), byte(size),
-		}, buf...)
-	}
 	return buf, nil
 }
 
-func (cfg *frozenConfig) NewDecoder(reader io.Reader, buf []byte) Decoder {
-	if cfg.isFramed {
-		return &framedDecoder{
-			cfg:               cfg,
-			shouldDecodeFrame: true,
-			reader:            reader,
-			iter:              cfg.NewIterator(nil, nil),
-		}
-	} else {
-		return &unframedDecoder{
-			cfg:              cfg,
-			iter:             cfg.NewIterator(reader, buf),
-			decodeFromReader: reader != nil,
-		}
+func (cfg *frozenConfig) NewDecoder(reader io.Reader, buf []byte) *Decoder {
+	return &Decoder{
+		cfg:              cfg,
+		iter:             cfg.NewIterator(reader, buf),
+		decodeFromReader: reader != nil,
 	}
 }
 
-func (cfg *frozenConfig) NewEncoder(writer io.Writer) Encoder {
-	if cfg.isFramed {
-		return &framedEncoder{
-			cfg:    cfg,
-			writer: writer,
-			stream: cfg.NewStream(nil, nil),
-		}
-	} else {
-		return &unframedEncoder{
-			cfg:    cfg,
-			stream: cfg.NewStream(writer, nil),
-		}
+func (cfg *frozenConfig) NewEncoder(writer io.Writer) *Encoder {
+	return &Encoder{
+		cfg:    cfg,
+		stream: cfg.NewStream(writer, nil),
 	}
+}
+
+func (cfg *frozenConfig) ToJSON(buf []byte) (string, error) {
+	msg, err := UnmarshalMessage(buf)
+	if err != nil {
+		return "", err
+	}
+	jsonEncoded, err := json.MarshalIndent(msg, "", "  ")
+	if err != nil {
+		return "", err
+	}
+	return string(jsonEncoded), nil
+}
+
+func (cfg *frozenConfig) MarshalMessage(msg general.Message) ([]byte, error) {
+	return cfg.Marshal(msg)
+}
+
+func (cfg *frozenConfig) UnmarshalMessage(buf []byte) (general.Message, error) {
+	var msg general.Message
+	err := cfg.Unmarshal(buf, &msg)
+	return msg, err
 }
