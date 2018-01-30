@@ -17,10 +17,17 @@ func (decoder *sliceDecoder) decode(ptr unsafe.Pointer, iter spi.Iterator) {
 	slice.Len = 0
 	offset := uintptr(0)
 	_, length := iter.ReadListHeader()
+
+	if slice.Cap < length {
+		newVal := reflect.MakeSlice(decoder.sliceType, 0, length)
+		slice.Data = unsafe.Pointer(newVal.Pointer())
+		slice.Cap = length
+	}
+
 	for i := 0; i < length; i++ {
-		growOne(slice, decoder.sliceType, decoder.elemType)
 		decoder.elemDecoder.decode(unsafe.Pointer(uintptr(slice.Data)+offset), iter)
 		offset += decoder.elemType.Size()
+		slice.Len += 1
 	}
 }
 
