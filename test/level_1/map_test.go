@@ -209,3 +209,14 @@ func Test_marshal_map(t *testing.T) {
 		}, val)
 	}
 }
+
+func Test_marshal_empty_map(t *testing.T) {
+	should := require.New(t)
+	for _, c := range test.MarshalCombinations {
+		output, err := c.Marshal(map[string]int64{})
+		should.NoError(err)
+		var val general.Map
+		should.NoError(c.Unmarshal(output, &val))
+		should.Equal(general.Map{}, val)
+	}
+}
