@@ -1,6 +1,7 @@
 package test
 
 import (
+	"context"
 	"testing"
 	"github.com/stretchr/testify/require"
 	"git.apache.org/thrift.git/lib/go/thrift"
@@ -18,8 +19,8 @@ func Test_binding(t *testing.T) {
 	proto.WriteFieldEnd()
 	proto.WriteFieldStop()
 	proto.WriteStructEnd()
-	transport.Flush()
+	transport.Flush(context.TODO())
 	var val binding_test.TestObject
-	should.NoError(api.Unmarshal(buf.Bytes(), &val))
+	should.NoError(api.Unmarshal(buf.Bytes()[4:], &val))
 	should.Equal(int64(1024), val.Field1)
 }

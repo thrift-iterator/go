@@ -160,3 +160,15 @@ func Test_marshal_list(t *testing.T) {
 		should.Equal(uint64(3), iter.ReadUint64())
 	}
 }
+
+func Test_marshal_empty_list(t *testing.T) {
+	should := require.New(t)
+	for _, c := range test.MarshalCombinations {
+		output, err := c.Marshal([]int64{})
+		should.NoError(err)
+		iter := c.CreateIterator(output)
+		elemType, length := iter.ReadListHeader()
+		should.Equal(protocol.TypeI64, elemType)
+		should.Equal(0, length)
+	}
+}

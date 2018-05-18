@@ -149,9 +149,9 @@ func Test_marshal_general_map(t *testing.T) {
 	should := require.New(t)
 	for _, c := range test.Combinations {
 		output, err := c.Marshal(general.Map{
-			"k1": int64(1),
-			"k2": int64(2),
-			"k3": int64(3),
+			int32(1): int64(1),
+			int32(2): int64(2),
+			int32(3): int64(3),
 		})
 		should.NoError(err)
 		var val general.Map
@@ -203,9 +203,20 @@ func Test_marshal_map(t *testing.T) {
 		var val general.Map
 		should.NoError(c.Unmarshal(output, &val))
 		should.Equal(general.Map{
-			int32(1): int64(1),
-			int32(2): int64(2),
-			int32(3): int64(3),
+			"k1": int64(1),
+			"k2": int64(2),
+			"k3": int64(3),
 		}, val)
+	}
+}
+
+func Test_marshal_empty_map(t *testing.T) {
+	should := require.New(t)
+	for _, c := range test.MarshalCombinations {
+		output, err := c.Marshal(map[string]int64{})
+		should.NoError(err)
+		var val general.Map
+		should.NoError(c.Unmarshal(output, &val))
+		should.Equal(general.Map{}, val)
 	}
 }
