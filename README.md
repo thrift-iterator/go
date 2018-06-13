@@ -64,7 +64,7 @@ err := thrifter.Unmarshal(thriftEncodedBytes, &msg)
 // the RPC call method name, type is string
 fmt.Println(msg.MessageName)
 // the RPC call arguments, type is general.Struct
-fmt.Println(msg.MessageArgs)
+fmt.Println(msg.Arguments)
 ```
 
 what is `general.Struct`, it is defined as a map
