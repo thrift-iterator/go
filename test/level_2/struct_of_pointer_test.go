@@ -48,10 +48,15 @@ func Test_marshal_struct_of_1_ptr(t *testing.T) {
 	should := require.New(t)
 	for _, c := range test.MarshalCombinations {
 		one := 1
-		output, err := c.Marshal(struct_of_pointer_test.StructOf1Ptr{
+		obj := struct_of_pointer_test.StructOf1Ptr{
 			&one,
-		})
+		}
+
+		output, err := c.Marshal(obj)
 		should.NoError(err)
+		output1, err := c.Marshal(&obj)
+		should.NoError(err)
+		should.Equal(output, output1)
 		var val *struct_of_pointer_test.StructOf1Ptr
 		should.NoError(c.Unmarshal(output, &val))
 		should.Equal(1, *val.Field1)
@@ -63,10 +68,15 @@ func Test_marshal_struct_of_2_ptr(t *testing.T) {
 	for _, c := range test.MarshalCombinations {
 		one := 1
 		two := 2
-		output, err := c.Marshal(struct_of_pointer_test.StructOf2Ptr{
+		obj := struct_of_pointer_test.StructOf2Ptr{
 			&one, &two,
-		})
+		}
+
+		output, err := c.Marshal(obj)
 		should.NoError(err)
+		output1, err := c.Marshal(&obj)
+		should.NoError(err)
+		should.Equal(output, output1)
 		var val *struct_of_pointer_test.StructOf2Ptr
 		should.NoError(c.Unmarshal(output, &val))
 		should.Equal(1, *val.Field1)

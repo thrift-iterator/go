@@ -87,7 +87,7 @@ func decoderOf(extension spi.Extension, prefix string, valType reflect.Type) int
 		for i := 0; i < valType.NumField(); i++ {
 			refField := valType.Field(i)
 			fieldId := parseFieldId(refField)
-			if fieldId == 0 {
+			if fieldId == -1 {
 				continue
 			}
 			decoderField := structDecoderField{
@@ -116,19 +116,19 @@ func isEnumType(valType reflect.Type) bool {
 
 func parseFieldId(refField reflect.StructField) protocol.FieldId {
 	if !unicode.IsUpper(rune(refField.Name[0])) {
-		return 0
+		return -1
 	}
 	thriftTag := refField.Tag.Get("thrift")
 	if thriftTag == "" {
-		return 0
+		return -1
 	}
 	parts := strings.Split(thriftTag, ",")
 	if len(parts) < 2 {
-		return 0
+		return -1
 	}
 	fieldId, err := strconv.Atoi(parts[1])
 	if err != nil {
-		return 0
+		return -1
 	}
 	return protocol.FieldId(fieldId)
 }

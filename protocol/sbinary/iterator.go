@@ -204,7 +204,9 @@ func (iter *Iterator) ReadString() string {
 
 func (iter *Iterator) ReadBinary() []byte {
 	size := iter.ReadUint32()
-	return iter.readLarge(int(size))
+	tmp := make([]byte, size)
+	copy(tmp, iter.readLarge(int(size)))
+	return tmp
 }
 
 func getTypeSize(elemType protocol.TType) int {

@@ -68,12 +68,17 @@ func Test_unmarshal_struct_of_list(t *testing.T) {
 func Test_marshal_general_struct_of_list(t *testing.T) {
 	should := require.New(t)
 	for _, c := range test.Combinations {
-		output, err := c.Marshal(general.Struct {
+		obj := general.Struct {
 			protocol.FieldId(1): general.List {
 				int64(1),
 			},
-		})
+		}
+
+		output, err := c.Marshal(obj)
 		should.NoError(err)
+		output1, err := c.Marshal(&obj)
+		should.NoError(err)
+		should.Equal(output, output1)
 		var val general.Struct
 		should.NoError(c.Unmarshal(output, &val))
 		should.Equal(general.List{int64(1)}, val[protocol.FieldId(1)])
@@ -83,10 +88,15 @@ func Test_marshal_general_struct_of_list(t *testing.T) {
 func Test_marshal_struct_of_list(t *testing.T) {
 	should := require.New(t)
 	for _, c := range test.MarshalCombinations {
-		output, err := c.Marshal(struct_of_list_test.TestObject{
+		obj := struct_of_list_test.TestObject{
 			[]int64{1},
-		})
+		}
+
+		output, err := c.Marshal(obj)
 		should.NoError(err)
+		output1, err := c.Marshal(&obj)
+		should.NoError(err)
+		should.Equal(output, output1)
 		var val general.Struct
 		should.NoError(c.Unmarshal(output, &val))
 		should.Equal(general.List{int64(1)}, val[protocol.FieldId(1)])

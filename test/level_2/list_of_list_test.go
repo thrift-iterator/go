@@ -84,15 +84,20 @@ func Test_unmarshal_list_of_list(t *testing.T) {
 func Test_marshal_general_list_of_list(t *testing.T) {
 	should := require.New(t)
 	for _, c := range test.Combinations {
-		output, err := c.Marshal(general.List{
+		lst := general.List{
 			general.List{
 				int64(1),
 			},
 			general.List {
 				int64(2),
 			},
-		})
+		}
+
+		output, err := c.Marshal(lst)
 		should.NoError(err)
+		output1, err := c.Marshal(&lst)
+		should.NoError(err)
+		should.Equal(output, output1)
 		var val general.List
 		should.NoError(c.Unmarshal(output, &val))
 		should.Equal(general.List{int64(1)}, val[0])
@@ -102,15 +107,20 @@ func Test_marshal_general_list_of_list(t *testing.T) {
 func Test_marshal_list_of_general_list(t *testing.T) {
 	should := require.New(t)
 	for _, c := range test.MarshalCombinations {
-		output, err := c.Marshal([]general.List{
+		lst := []general.List{
 			{
 				int64(1),
 			},
 			{
 				int64(2),
 			},
-		})
+		}
+
+		output, err := c.Marshal(lst)
 		should.NoError(err)
+		output1, err := c.Marshal(&lst)
+		should.NoError(err)
+		should.Equal(output, output1)
 		var val general.List
 		should.NoError(c.Unmarshal(output, &val))
 		should.Equal(general.List{int64(1)}, val[0])
@@ -120,10 +130,15 @@ func Test_marshal_list_of_general_list(t *testing.T) {
 func Test_marshal_list_of_list(t *testing.T) {
 	should := require.New(t)
 	for _, c := range test.MarshalCombinations {
-		output, err := c.Marshal([][]int64{
+		lst := [][]int64{
 			{1}, {2},
-		})
+		}
+
+		output, err := c.Marshal(lst)
 		should.NoError(err)
+		output1, err := c.Marshal(&lst)
+		should.NoError(err)
+		should.Equal(output, output1)
 		var val general.List
 		should.NoError(c.Unmarshal(output, &val))
 		should.Equal(general.List{int64(1)}, val[0])

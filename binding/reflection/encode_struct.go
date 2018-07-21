@@ -2,8 +2,8 @@ package reflection
 
 import (
 	"github.com/thrift-iterator/go/protocol"
-	"unsafe"
 	"github.com/thrift-iterator/go/spi"
+	"unsafe"
 )
 
 type structEncoder struct {
@@ -19,8 +19,20 @@ type structEncoderField struct {
 func (encoder *structEncoder) encode(ptr unsafe.Pointer, stream spi.Stream) {
 	stream.WriteStructHeader()
 	for _, field := range encoder.fields {
+		fieldPtr := unsafe.Pointer(uintptr(ptr) + field.offset)
+		switch field.encoder.(type) {
+		case *pointerEncoder, *sliceEncoder:
+			if *(*unsafe.Pointer)(fieldPtr) == nil {
+				continue
+			}
+		case *mapEncoder:
+			if *(*unsafe.Pointer)(fieldPtr) == nil {
+				continue
+			}
+			fieldPtr = *(*unsafe.Pointer)(fieldPtr)
+		}
 		stream.WriteStructField(field.encoder.thriftType(), field.fieldId)
-		field.encoder.encode(unsafe.Pointer(uintptr(ptr)+field.offset), stream)
+		field.encoder.encode(fieldPtr, stream)
 	}
 	stream.WriteStructFieldStop()
 }

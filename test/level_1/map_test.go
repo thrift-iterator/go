@@ -148,14 +148,20 @@ func Test_unmarshal_map(t *testing.T) {
 func Test_marshal_general_map(t *testing.T) {
 	should := require.New(t)
 	for _, c := range test.Combinations {
-		output, err := c.Marshal(general.Map{
+		m := general.Map{
 			int32(1): int64(1),
 			int32(2): int64(2),
 			int32(3): int64(3),
-		})
+		}
+
+		output, err := c.Marshal(m)
 		should.NoError(err)
-		var val general.Map
+		output1, err := c.Marshal(&m)
+		should.NoError(err)
+		var val, val1 general.Map
 		should.NoError(c.Unmarshal(output, &val))
+		should.NoError(c.Unmarshal(output1, &val1))
+		should.Equal(val, val1)
 		should.Equal(general.Map{
 			int32(1): int64(1),
 			int32(2): int64(2),
@@ -179,10 +185,15 @@ func Test_marshal_raw_map(t *testing.T) {
 		proto.WriteMapEnd()
 		var val raw.Map
 		should.NoError(c.Unmarshal(buf.Bytes(), &val))
+
 		output, err := c.Marshal(val)
 		should.NoError(err)
-		var generalVal general.Map
+		output1, err := c.Marshal(&val)
+		should.NoError(err)
+		var generalVal, generalVal1 general.Map
 		should.NoError(c.Unmarshal(output, &generalVal))
+		should.NoError(c.Unmarshal(output1, &generalVal1))
+		should.Equal(generalVal, generalVal1)
 		should.Equal(general.Map{
 			int32(1): int64(1),
 			int32(2): int64(2),
@@ -194,14 +205,20 @@ func Test_marshal_raw_map(t *testing.T) {
 func Test_marshal_map(t *testing.T) {
 	should := require.New(t)
 	for _, c := range test.MarshalCombinations {
-		output, err := c.Marshal(map[string]int64{
+		m := map[string]int64{
 			"k1": int64(1),
 			"k2": int64(2),
 			"k3": int64(3),
-		})
+		}
+
+		output, err := c.Marshal(m)
 		should.NoError(err)
-		var val general.Map
+		output1, err := c.Marshal(&m)
+		should.NoError(err)
+		var val, val1 general.Map
 		should.NoError(c.Unmarshal(output, &val))
+		should.NoError(c.Unmarshal(output1, &val1))
+		should.Equal(val, val1)
 		should.Equal(general.Map{
 			"k1": int64(1),
 			"k2": int64(2),

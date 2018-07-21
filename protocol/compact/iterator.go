@@ -99,14 +99,15 @@ func (iter *Iterator) ReadStructField() (protocol.TType, protocol.FieldId) {
 		fieldId = iter.lastFieldId + protocol.FieldId(modifier)
 	}
 	var fieldType protocol.TType
-	if TCompactType(firstByte&0x0f) == TypeBooleanTrue {
+	switch tType := TCompactType(firstByte & 0x0f); tType {
+	case TypeBooleanTrue:
 		fieldType = protocol.TypeBool
 		iter.pendingBoolField = 1
-	} else if TCompactType(firstByte&0x0f) == TypeBooleanFalse {
+	case TypeBooleanFalse:
 		fieldType = protocol.TypeBool
 		iter.pendingBoolField = 2
-	} else {
-		fieldType = TCompactType(firstByte & 0x0f).ToTType()
+	default:
+		fieldType = tType.ToTType()
 		iter.pendingBoolField = 0
 	}
 

@@ -1,10 +1,10 @@
 package reflection
 
 import (
-	"reflect"
-	"github.com/thrift-iterator/go/spi"
-	"unsafe"
 	"github.com/thrift-iterator/go/protocol"
+	"github.com/thrift-iterator/go/spi"
+	"reflect"
+	"unsafe"
 )
 
 func EncoderOf(extension spi.Extension, valType reflect.Type) spi.ValEncoder {
@@ -13,7 +13,9 @@ func EncoderOf(extension spi.Extension, valType reflect.Type) spi.ValEncoder {
 		valType.Elem().Kind() == reflect.Ptr
 	isOnePtrStruct := valType.Kind() == reflect.Struct && valType.NumField() == 1 &&
 		valType.Field(0).Type.Kind() == reflect.Ptr
-	if isPtr || isOnePtrArray || isOnePtrStruct {
+	isOneMapStruct := valType.Kind() == reflect.Struct && valType.NumField() == 1 &&
+		valType.Field(0).Type.Kind() == reflect.Map
+	if isPtr || isOnePtrArray || isOnePtrStruct || isOneMapStruct {
 		return &ptrEncoderAdapter{encoderOf(extension, "", valType)}
 	}
 	return &valEncoderAdapter{encoderOf(extension, "", valType)}
@@ -79,7 +81,7 @@ func encoderOf(extension spi.Extension, prefix string, valType reflect.Type) int
 		for i := 0; i < valType.NumField(); i++ {
 			refField := valType.Field(i)
 			fieldId := parseFieldId(refField)
-			if fieldId == 0 {
+			if fieldId == -1 {
 				continue
 			}
 			encoderField := structEncoderField{
@@ -94,6 +96,7 @@ func encoderOf(extension spi.Extension, prefix string, valType reflect.Type) int
 		}
 	case reflect.Ptr:
 		return &pointerEncoder{
+			valType:    valType.Elem(),
 			valEncoder: encoderOf(extension, prefix+" [ptrElem]", valType.Elem()),
 		}
 	}

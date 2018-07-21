@@ -147,6 +147,7 @@ func (stream *Stream) WriteBool(val bool) {
 		stream.WriteInt16(int16(fieldId))
 	}
 	stream.lastFieldId = fieldId
+	stream.pendingBoolField = 0
 }
 
 func (stream *Stream) WriteInt8(val int8) {

@@ -62,10 +62,15 @@ func Test_unmarshal_struct_of_string(t *testing.T) {
 func Test_marshal_general_struct_of_string(t *testing.T) {
 	should := require.New(t)
 	for _, c := range test.Combinations {
-		output, err := c.Marshal(general.Struct{
+		obj := general.Struct{
 			protocol.FieldId(1): "abc",
-		})
+		}
+
+		output, err := c.Marshal(obj)
 		should.NoError(err)
+		output1, err := c.Marshal(&obj)
+		should.NoError(err)
+		should.Equal(output, output1)
 		var val general.Struct
 		should.NoError(c.Unmarshal(output, &val))
 		should.Equal("abc", val[protocol.FieldId(1)])
@@ -75,10 +80,15 @@ func Test_marshal_general_struct_of_string(t *testing.T) {
 func Test_marshal_struct_of_string(t *testing.T) {
 	should := require.New(t)
 	for _, c := range test.MarshalCombinations {
-		output, err := c.Marshal(struct_of_string_test.TestObject{
+		obj := struct_of_string_test.TestObject{
 			"abc",
-		})
+		}
+
+		output, err := c.Marshal(obj)
 		should.NoError(err)
+		output1, err := c.Marshal(&obj)
+		should.NoError(err)
+		should.Equal(output, output1)
 		var val general.Struct
 		should.NoError(c.Unmarshal(output, &val))
 		should.Equal("abc", val[protocol.FieldId(1)])
