@@ -23,6 +23,7 @@ func NewStream(provider spi.ValEncoderProvider, writer io.Writer, buf []byte) *S
 		ValEncoderProvider: provider,
 		writer:             writer,
 		buf:                buf,
+		pendingBoolField:   -1,
 	}
 }
 
@@ -111,7 +112,7 @@ func (stream *Stream) WriteStructFieldStop() {
 	stream.buf = append(stream.buf, byte(protocol.TypeStop))
 	stream.lastFieldId = stream.fieldIdStack[len(stream.fieldIdStack)-1]
 	stream.fieldIdStack = stream.fieldIdStack[:len(stream.fieldIdStack)-1]
-	stream.pendingBoolField = 0
+	stream.pendingBoolField = -1
 }
 
 func (stream *Stream) WriteMapHeader(keyType protocol.TType, elemType protocol.TType, length int) {
@@ -124,7 +125,7 @@ func (stream *Stream) WriteMapHeader(keyType protocol.TType, elemType protocol.T
 }
 
 func (stream *Stream) WriteBool(val bool) {
-	if stream.pendingBoolField == 0 {
+	if stream.pendingBoolField == -1 {
 		if val {
 			stream.WriteUint8(1)
 		} else {
@@ -147,7 +148,7 @@ func (stream *Stream) WriteBool(val bool) {
 		stream.WriteInt16(int16(fieldId))
 	}
 	stream.lastFieldId = fieldId
-	stream.pendingBoolField = 0
+	stream.pendingBoolField = -1
 }
 
 func (stream *Stream) WriteInt8(val int8) {

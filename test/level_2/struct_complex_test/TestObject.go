@@ -15,7 +15,7 @@ const (
 type Int int32
 
 type TestObject struct {
-	Av bool                             `thrift:"av,1"`
+	Av bool                             `thrift:"av,0"`
 	Ap *bool                            `thrift:"ap,2,optional"`
 	Bv int8                             `thrift:"bv,3"`
 	Bp *int8                            `thrift:"bp,4,optional"`
