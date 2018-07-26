@@ -58,6 +58,11 @@ func (stream *Stream) Flush() {
 		stream.ReportError("Flush", err.Error())
 		return
 	}
+	if f, ok := stream.writer.(protocol.Flusher); ok {
+		if err = f.Flush(); err != nil {
+			stream.ReportError("Flush", err.Error())
+		}
+	}
 	stream.buf = stream.buf[:0]
 }
 

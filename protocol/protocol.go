@@ -64,3 +64,7 @@ type MessageHeader struct {
 	MessageType TMessageType
 	SeqId       SeqId
 }
+
+type Flusher interface {
+	Flush() error
+}
