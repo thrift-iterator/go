@@ -1,11 +1,11 @@
 package binary
 
 import (
-	"math"
-	"github.com/thrift-iterator/go/protocol"
 	"fmt"
-	"io"
+	"github.com/thrift-iterator/go/protocol"
 	"github.com/thrift-iterator/go/spi"
+	"io"
+	"math"
 )
 
 type Stream struct {
@@ -18,8 +18,8 @@ type Stream struct {
 func NewStream(provider spi.ValEncoderProvider, writer io.Writer, buf []byte) *Stream {
 	return &Stream{
 		ValEncoderProvider: provider,
-		writer: writer,
-		buf:    buf,
+		writer:             writer,
+		buf:                buf,
 	}
 }
 
@@ -73,7 +73,7 @@ func (stream *Stream) Write(buf []byte) error {
 }
 
 func (stream *Stream) WriteMessageHeader(header protocol.MessageHeader) {
-	versionAndMessageType := uint32(version1) | uint32(header.MessageType)
+	versionAndMessageType := uint32(protocol.BINARY_VERSION_1) | uint32(header.MessageType)
 	stream.WriteUint32(versionAndMessageType)
 	stream.WriteString(header.MessageName)
 	stream.WriteInt32(int32(header.SeqId))

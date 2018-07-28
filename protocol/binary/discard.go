@@ -1,27 +1,28 @@
 package binary
 
-import "github.com/thrift-iterator/go/protocol"
+import (
+	"github.com/thrift-iterator/go/protocol"
+	"github.com/thrift-iterator/go/spi"
+)
 
 func (iter *Iterator) Discard(ttype protocol.TType) {
 	switch ttype {
 	case protocol.TypeBool, protocol.TypeI08:
-		iter.buf = iter.buf[1:]
+		iter.readByte()
 	case protocol.TypeI16:
-		iter.buf = iter.buf[2:]
+		iter.readSmall(2)
 	case protocol.TypeI32:
-		iter.buf = iter.buf[4:]
+		iter.readSmall(4)
 	case protocol.TypeI64, protocol.TypeDouble:
-		iter.buf = iter.buf[8:]
+		iter.readSmall(8)
 	case protocol.TypeString:
-		b := iter.buf
-		size := uint32(b[3]) | uint32(b[2])<<8 | uint32(b[1])<<16 | uint32(b[0])<<24
-		iter.buf = iter.buf[size:]
+		iter.SkipBinary(nil)
 	case protocol.TypeList:
-		iter.SkipList(nil)
-	case protocol.TypeMap:
-		iter.SkipMap(nil)
+		spi.DiscardList(iter)
 	case protocol.TypeStruct:
-		iter.SkipStruct(nil)
+		spi.DiscardStruct(iter)
+	case protocol.TypeMap:
+		spi.DiscardMap(iter)
 	default:
 		panic("unsupported type")
 	}

@@ -3,13 +3,30 @@ package thrifter
 import (
 	"github.com/thrift-iterator/go/general"
 	"github.com/thrift-iterator/go/protocol"
-	"io"
 	"github.com/thrift-iterator/go/spi"
+	"io"
+	"reflect"
 )
 
 type Encoder struct {
 	cfg    *frozenConfig
 	stream spi.Stream
+}
+
+func (encoder *Encoder) Encode(val interface{}) error {
+	cfg := encoder.cfg
+	valType := reflect.TypeOf(val)
+	valEncoder := cfg.getGenEncoder(valType)
+	if valEncoder == nil {
+		valEncoder = cfg.encoderOf(valType)
+		cfg.addGenEncoder(valType, valEncoder)
+	}
+	valEncoder.Encode(val, encoder.stream)
+	encoder.stream.Flush()
+	if encoder.stream.Error() != nil {
+		return encoder.stream.Error()
+	}
+	return nil
 }
 
 func (encoder *Encoder) EncodeMessage(msg general.Message) error {

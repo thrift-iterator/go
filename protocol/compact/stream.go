@@ -1,11 +1,11 @@
 package compact
 
 import (
-	"io"
 	"fmt"
-	"math"
 	"github.com/thrift-iterator/go/protocol"
 	"github.com/thrift-iterator/go/spi"
+	"io"
+	"math"
 )
 
 type Stream struct {
@@ -77,8 +77,8 @@ func (stream *Stream) Write(buf []byte) error {
 }
 
 func (stream *Stream) WriteMessageHeader(header protocol.MessageHeader) {
-	stream.buf = append(stream.buf, compactProtocolId)
-	stream.buf = append(stream.buf, (compactVersion&versionMask)|((byte(header.MessageType)<<5)&0x0E0))
+	stream.buf = append(stream.buf, protocol.COMPACT_PROTOCOL_ID)
+	stream.buf = append(stream.buf, (protocol.COMPACT_VERSION&protocol.COMPACT_VERSION_MASK)|((byte(header.MessageType)<<5)&0x0E0))
 	stream.writeVarInt32(int32(header.SeqId))
 	stream.WriteString(header.MessageName)
 }
@@ -114,7 +114,7 @@ func (stream *Stream) WriteStructField(fieldType protocol.TType, fieldId protoco
 }
 
 func (stream *Stream) WriteStructFieldStop() {
-	stream.buf = append(stream.buf, byte(protocol.TypeStop))
+	stream.buf = append(stream.buf, byte(TypeStop))
 	stream.lastFieldId = stream.fieldIdStack[len(stream.fieldIdStack)-1]
 	stream.fieldIdStack = stream.fieldIdStack[:len(stream.fieldIdStack)-1]
 	stream.pendingBoolField = -1
