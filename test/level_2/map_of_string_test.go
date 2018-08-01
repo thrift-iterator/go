@@ -69,10 +69,15 @@ func Test_unmarshal_map_of_string_key(t *testing.T) {
 func Test_marshal_general_map_of_string_key(t *testing.T) {
 	should := require.New(t)
 	for _, c := range test.Combinations {
-		output, err := c.Marshal(general.Map{
+		m := general.Map{
 			"1": int64(1),
-		})
+		}
+
+		output, err := c.Marshal(m)
 		should.NoError(err)
+		output1, err := c.Marshal(&m)
+		should.NoError(err)
+		should.Equal(output, output1)
 		var val general.Map
 		should.NoError(c.Unmarshal(output, &val))
 		should.Equal(general.Map{
@@ -84,10 +89,15 @@ func Test_marshal_general_map_of_string_key(t *testing.T) {
 func Test_marshal_map_of_string_key(t *testing.T) {
 	should := require.New(t)
 	for _, c := range test.MarshalCombinations {
-		output, err := c.Marshal(map[string]int64{
+		m := map[string]int64{
 			"1": 1,
-		})
+		}
+
+		output, err := c.Marshal(m)
 		should.NoError(err)
+		output1, err := c.Marshal(&m)
+		should.NoError(err)
+		should.Equal(output, output1)
 		var val general.Map
 		should.NoError(c.Unmarshal(output, &val))
 		should.Equal(general.Map{

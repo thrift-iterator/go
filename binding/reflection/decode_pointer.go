@@ -15,5 +15,5 @@ func (decoder *pointerDecoder) decode(ptr unsafe.Pointer, iter spi.Iterator) {
 	value := reflect.New(decoder.valType).Interface()
 	newPtr := (*emptyInterface)(unsafe.Pointer(&value)).word
 	decoder.valDecoder.decode(newPtr, iter)
-	*((*uintptr)(ptr)) = uintptr(newPtr)
+	*(*unsafe.Pointer)(ptr) = newPtr
 }

@@ -1,11 +1,11 @@
 package compact
 
 import (
-	"io"
 	"fmt"
-	"math"
 	"github.com/thrift-iterator/go/protocol"
 	"github.com/thrift-iterator/go/spi"
+	"io"
+	"math"
 )
 
 type Stream struct {
@@ -23,6 +23,7 @@ func NewStream(provider spi.ValEncoderProvider, writer io.Writer, buf []byte) *S
 		ValEncoderProvider: provider,
 		writer:             writer,
 		buf:                buf,
+		pendingBoolField:   -1,
 	}
 }
 
@@ -61,6 +62,11 @@ func (stream *Stream) Flush() {
 		stream.ReportError("Flush", err.Error())
 		return
 	}
+	if f, ok := stream.writer.(protocol.Flusher); ok {
+		if err = f.Flush(); err != nil {
+			stream.ReportError("Flush", err.Error())
+		}
+	}
 	stream.buf = stream.buf[:0]
 }
 
@@ -71,8 +77,8 @@ func (stream *Stream) Write(buf []byte) error {
 }
 
 func (stream *Stream) WriteMessageHeader(header protocol.MessageHeader) {
-	stream.buf = append(stream.buf, compactProtocolId)
-	stream.buf = append(stream.buf, (compactVersion&versionMask)|((byte(header.MessageType)<<5)&0x0E0))
+	stream.buf = append(stream.buf, protocol.COMPACT_PROTOCOL_ID)
+	stream.buf = append(stream.buf, (protocol.COMPACT_VERSION&protocol.COMPACT_VERSION_MASK)|((byte(header.MessageType)<<5)&0x0E0))
 	stream.writeVarInt32(int32(header.SeqId))
 	stream.WriteString(header.MessageName)
 }
@@ -108,10 +114,10 @@ func (stream *Stream) WriteStructField(fieldType protocol.TType, fieldId protoco
 }
 
 func (stream *Stream) WriteStructFieldStop() {
-	stream.buf = append(stream.buf, byte(protocol.TypeStop))
+	stream.buf = append(stream.buf, byte(TypeStop))
 	stream.lastFieldId = stream.fieldIdStack[len(stream.fieldIdStack)-1]
 	stream.fieldIdStack = stream.fieldIdStack[:len(stream.fieldIdStack)-1]
-	stream.pendingBoolField = 0
+	stream.pendingBoolField = -1
 }
 
 func (stream *Stream) WriteMapHeader(keyType protocol.TType, elemType protocol.TType, length int) {
@@ -124,7 +130,7 @@ func (stream *Stream) WriteMapHeader(keyType protocol.TType, elemType protocol.T
 }
 
 func (stream *Stream) WriteBool(val bool) {
-	if stream.pendingBoolField == 0 {
+	if stream.pendingBoolField == -1 {
 		if val {
 			stream.WriteUint8(1)
 		} else {
@@ -147,6 +153,7 @@ func (stream *Stream) WriteBool(val bool) {
 		stream.WriteInt16(int16(fieldId))
 	}
 	stream.lastFieldId = fieldId
+	stream.pendingBoolField = -1
 }
 
 func (stream *Stream) WriteInt8(val int8) {

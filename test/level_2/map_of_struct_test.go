@@ -79,12 +79,17 @@ func Test_unmarshal_map_of_struct(t *testing.T) {
 func Test_marshal_general_map_of_struct(t *testing.T) {
 	should := require.New(t)
 	for _, c := range test.Combinations {
-		output, err := c.Marshal(general.Map{
+		m := general.Map{
 			int64(1): general.Struct {
 				protocol.FieldId(1): int64(1024),
 			},
-		})
+		}
+
+		output, err := c.Marshal(m)
 		should.NoError(err)
+		output1, err := c.Marshal(&m)
+		should.NoError(err)
+		should.Equal(output, output1)
 		var val general.Map
 		should.NoError(c.Unmarshal(output, &val))
 		should.Equal(general.Struct{
@@ -96,10 +101,15 @@ func Test_marshal_general_map_of_struct(t *testing.T) {
 func Test_marshal_map_of_struct(t *testing.T) {
 	should := require.New(t)
 	for _, c := range test.MarshalCombinations {
-		output, err := c.Marshal(map[int64]map_of_struct_test.TestObject{
+		m := map[int64]map_of_struct_test.TestObject{
 			1: {1024},
-		})
+		}
+
+		output, err := c.Marshal(m)
 		should.NoError(err)
+		output1, err := c.Marshal(&m)
+		should.NoError(err)
+		should.Equal(output, output1)
 		var val general.Map
 		should.NoError(c.Unmarshal(output, &val))
 		should.Equal(general.Struct{

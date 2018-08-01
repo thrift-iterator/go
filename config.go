@@ -1,21 +1,20 @@
 package thrifter
 
 import (
-	"reflect"
-	"io"
-	"github.com/thrift-iterator/go/protocol/sbinary"
-	"github.com/thrift-iterator/go/protocol/compact"
-	"github.com/thrift-iterator/go/protocol/binary"
-	"github.com/thrift-iterator/go/protocol"
-	"errors"
-	"github.com/v2pro/wombat/generic"
-	"github.com/thrift-iterator/go/spi"
-	"github.com/thrift-iterator/go/binding/reflection"
-	"github.com/thrift-iterator/go/binding/codegen"
-	"github.com/thrift-iterator/go/general"
-	"github.com/thrift-iterator/go/raw"
-	"sync"
 	"encoding/json"
+	"errors"
+	"github.com/thrift-iterator/go/binding/codegen"
+	"github.com/thrift-iterator/go/binding/reflection"
+	"github.com/thrift-iterator/go/general"
+	"github.com/thrift-iterator/go/protocol"
+	"github.com/thrift-iterator/go/protocol/binary"
+	"github.com/thrift-iterator/go/protocol/compact"
+	"github.com/thrift-iterator/go/raw"
+	"github.com/thrift-iterator/go/spi"
+	"github.com/v2pro/wombat/generic"
+	"io"
+	"reflect"
+	"sync"
 )
 
 type frozenConfig struct {
@@ -129,12 +128,9 @@ func (cfg *frozenConfig) NewStream(writer io.Writer, buf []byte) spi.Stream {
 func (cfg *frozenConfig) NewIterator(reader io.Reader, buf []byte) spi.Iterator {
 	switch cfg.protocol {
 	case ProtocolBinary:
-		if reader != nil {
-			return sbinary.NewIterator(cfg, reader, buf)
-		}
-		return binary.NewIterator(cfg, buf)
+		return binary.NewIterator(cfg, reader, buf)
 	case ProtocolCompact:
-		return compact.NewIterator(cfg, buf)
+		return compact.NewIterator(cfg, reader, buf)
 	}
 	panic("unsupported protocol")
 }
@@ -144,7 +140,7 @@ func (cfg *frozenConfig) WillDecodeFromBuffer(samples ...interface{}) {
 		panic("this config is using dynamic codegen, can not do static codegen")
 	}
 	for _, sample := range samples {
-		cfg.staticDecoderOf(false, reflect.TypeOf(sample))
+		cfg.staticDecoderOf(reflect.TypeOf(sample))
 	}
 }
 
@@ -153,7 +149,7 @@ func (cfg *frozenConfig) WillDecodeFromReader(samples ...interface{}) {
 		panic("this config is using dynamic codegen, can not do static codegen")
 	}
 	for _, sample := range samples {
-		cfg.staticDecoderOf(true, reflect.TypeOf(sample))
+		cfg.staticDecoderOf(reflect.TypeOf(sample))
 	}
 }
 
@@ -166,18 +162,15 @@ func (cfg *frozenConfig) WillEncode(samples ...interface{}) {
 	}
 }
 
-func (cfg *frozenConfig) decoderOf(decodeFromReader bool, valType reflect.Type) spi.ValDecoder {
+func (cfg *frozenConfig) decoderOf(valType reflect.Type) spi.ValDecoder {
 	if cfg.staticCodegen {
-		return cfg.staticDecoderOf(decodeFromReader, valType)
+		return cfg.staticDecoderOf(valType)
 	}
 	return reflection.DecoderOf(cfg.extension, valType)
 }
 
-func (cfg *frozenConfig) staticDecoderOf(decodeFromReader bool, valType reflect.Type) spi.ValDecoder {
+func (cfg *frozenConfig) staticDecoderOf(valType reflect.Type) spi.ValDecoder {
 	iteratorType := reflect.TypeOf((*binary.Iterator)(nil))
-	if decodeFromReader {
-		iteratorType = reflect.TypeOf((*sbinary.Iterator)(nil))
-	}
 	if cfg.protocol == ProtocolCompact {
 		iteratorType = reflect.TypeOf((*compact.Iterator)(nil))
 	}
@@ -233,7 +226,7 @@ func (cfg *frozenConfig) Unmarshal(buf []byte, val interface{}) error {
 	valType := reflect.TypeOf(val)
 	decoder := cfg.getGenDecoder(valType)
 	if decoder == nil {
-		decoder = cfg.decoderOf(false, valType)
+		decoder = cfg.decoderOf(valType)
 		cfg.addGenDecoder(valType, decoder)
 	}
 	if buf == nil {
@@ -265,9 +258,8 @@ func (cfg *frozenConfig) Marshal(val interface{}) ([]byte, error) {
 
 func (cfg *frozenConfig) NewDecoder(reader io.Reader, buf []byte) *Decoder {
 	return &Decoder{
-		cfg:              cfg,
-		iter:             cfg.NewIterator(reader, buf),
-		decodeFromReader: reader != nil,
+		cfg:  cfg,
+		iter: cfg.NewIterator(reader, buf),
 	}
 }
 

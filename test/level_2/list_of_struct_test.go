@@ -88,34 +88,50 @@ func Test_unmarshal_list_of_struct(t *testing.T) {
 func Test_marshal_general_list_of_struct(t *testing.T) {
 	should := require.New(t)
 	for _, c := range test.Combinations {
-		output, err := c.Marshal(general.List{
+		lst := general.List{
 			general.Struct{
 				protocol.FieldId(1): int64(1024),
 			},
 			general.Struct{
 				protocol.FieldId(1): int64(1024),
 			},
-		})
+		}
+
+		output, err := c.Marshal(lst)
 		should.NoError(err)
+		output1, err := c.Marshal(&lst)
+		should.NoError(err)
+		should.Equal(output, output1)
 		var val general.List
 		should.NoError(c.Unmarshal(output, &val))
 		should.Equal(general.Struct{
 			protocol.FieldId(1): int64(1024),
 		}, val[0])
+		should.Equal(general.Struct{
+			protocol.FieldId(1): int64(1024),
+		}, val[1])
 	}
 }
 
 func Test_marshal_list_of_struct(t *testing.T) {
 	should := require.New(t)
 	for _, c := range test.MarshalCombinations {
-		output, err := c.Marshal([]list_of_struct_test.TestObject{
+		lst := []list_of_struct_test.TestObject{
 			{1024}, {1024},
-		})
+		}
+
+		output, err := c.Marshal(lst)
+		should.NoError(err)
+		output1, err := c.Marshal(&lst)
+		should.Equal(output, output1)
 		should.NoError(err)
 		var val general.List
 		should.NoError(c.Unmarshal(output, &val))
 		should.Equal(general.Struct{
 			protocol.FieldId(1): int64(1024),
 		}, val[0])
+		should.Equal(general.Struct{
+			protocol.FieldId(1): int64(1024),
+		}, val[1])
 	}
 }

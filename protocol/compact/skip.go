@@ -2,68 +2,47 @@ package compact
 
 import "github.com/thrift-iterator/go/protocol"
 
-func (iter *Iterator) Skip(ttype protocol.TType, space []byte) []byte {
-	bufBeforeSkip := iter.buf
-	consumedBeforeSkip := iter.consumed
-	iter.Discard(ttype)
-	skipped := bufBeforeSkip[:iter.consumed-consumedBeforeSkip]
-	if len(space) > 0 {
-		return append(space, skipped...)
+func (iter *Iterator) skip(skipper func(), space []byte) []byte {
+	var tmp []byte
+	iter.skipped = make([]byte, 0, 10)
+	skipper()
+	tmp, iter.skipped = iter.skipped, nil
+	if iter.Error() != nil {
+		return nil
 	}
-	return skipped
+	if len(space) > 0 {
+		return append(space, tmp...)
+	}
+	return tmp
+}
+
+func (iter *Iterator) Skip(ttype protocol.TType, space []byte) []byte {
+	return iter.skip(func() { iter.Discard(ttype) }, space)
 }
 
 func (iter *Iterator) SkipMessageHeader(space []byte) []byte {
-	bufBeforeSkip := iter.buf
-	consumedBeforeSkip := iter.consumed
-	iter.discardMessageHeader()
-	skipped := bufBeforeSkip[:iter.consumed-consumedBeforeSkip]
-	if len(space) > 0 {
-		return append(space, skipped...)
-	}
-	return skipped
+	return iter.skip(func() { iter.ReadMessageHeader() }, space)
 }
 
 func (iter *Iterator) SkipStruct(space []byte) []byte {
-	bufBeforeSkip := iter.buf
-	consumedBeforeSkip := iter.consumed
-	iter.discardStruct()
-	skipped := bufBeforeSkip[:iter.consumed-consumedBeforeSkip]
-	if len(space) > 0 {
-		return append(space, skipped...)
-	}
-	return skipped
+	return iter.skip(func() { iter.Discard(protocol.TypeStruct) }, space)
 }
 
 func (iter *Iterator) SkipList(space []byte) []byte {
-	bufBeforeSkip := iter.buf
-	consumedBeforeSkip := iter.consumed
-	iter.discardList()
-	skipped := bufBeforeSkip[:iter.consumed-consumedBeforeSkip]
-	if len(space) > 0 {
-		return append(space, skipped...)
-	}
-	return skipped
+	return iter.skip(func() { iter.Discard(protocol.TypeList) }, space)
 }
 
 func (iter *Iterator) SkipMap(space []byte) []byte {
-	bufBeforeSkip := iter.buf
-	consumedBeforeSkip := iter.consumed
-	iter.discardMap()
-	skipped := bufBeforeSkip[:iter.consumed-consumedBeforeSkip]
-	if len(space) > 0 {
-		return append(space, skipped...)
-	}
-	return skipped
+	return iter.skip(func() { iter.Discard(protocol.TypeMap) }, space)
 }
 
 func (iter *Iterator) SkipBinary(space []byte) []byte {
-	bufBeforeSkip := iter.buf
-	consumedBeforeSkip := iter.consumed
-	iter.discardBinary()
-	skipped := bufBeforeSkip[:iter.consumed-consumedBeforeSkip]
-	if len(space) > 0 {
-		return append(space, skipped...)
+	tmp := iter.ReadBinary()
+	if iter.Error() != nil {
+		return nil
 	}
-	return skipped
+	if len(space) > 0 {
+		return append(space, tmp...)
+	}
+	return tmp
 }

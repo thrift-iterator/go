@@ -7,6 +7,18 @@ type SeqId int32
 type FieldId int16
 
 const (
+	BINARY_VERSION_MASK = 0xffff0000
+	BINARY_VERSION_1    = 0x80010000
+
+	COMPACT_PROTOCOL_ID      = 0x082
+	COMPACT_VERSION          = 0x01
+	COMPACT_VERSON_BE        = 0x02
+	COMPACT_VERSION_MASK     = 0x1f
+	COMPACT_TYPE_BITS        = 0x07
+	COMPACT_TYPE_SHIFT_AMOUT = 5
+)
+
+const (
 	MessgeTypeInvalid    TMessageType = 0
 	MessageTypeCall      TMessageType = 1
 	MessageTypeReply     TMessageType = 2
@@ -63,4 +75,8 @@ type MessageHeader struct {
 	MessageName string
 	MessageType TMessageType
 	SeqId       SeqId
+}
+
+type Flusher interface {
+	Flush() error
 }

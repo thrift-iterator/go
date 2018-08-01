@@ -82,6 +82,33 @@ var compact = Combination{
 		return compactCfg.Froze().Marshal(val)
 	},
 }
+
+var compactEncoderDecoder = Combination{
+	CreateProtocol: func() (*thrift.TMemoryBuffer, thrift.TProtocol) {
+		buf := thrift.NewTMemoryBuffer()
+		proto := thrift.NewTCompactProtocol(buf)
+		return buf, proto
+	},
+	CreateStream: func() spi.Stream {
+		return compactCfg.Froze().NewStream(nil, nil)
+	},
+	CreateIterator: func(buf []byte) spi.Iterator {
+		return compactCfg.Froze().NewIterator(bytes.NewBuffer(buf), nil)
+	},
+	Unmarshal: func(buf []byte, val interface{}) error {
+		decoder := compactCfg.Froze().NewDecoder(bytes.NewBuffer(buf), nil)
+		return decoder.Decode(val)
+	},
+	Marshal: func(val interface{}) ([]byte, error) {
+		encoder := compactCfg.Froze().NewEncoder(nil)
+		err := encoder.Encode(val)
+		if err != nil {
+			return nil, err
+		}
+		return encoder.Buffer(), nil
+	},
+}
+
 var binaryDynamicCfg = thrifter.Config{Protocol: thrifter.ProtocolBinary, StaticCodegen: false}
 var binaryDynamic = Combination{
 	CreateProtocol: func() (*thrift.TMemoryBuffer, thrift.TProtocol) {
@@ -118,7 +145,7 @@ var compactDynamic = Combination{
 }
 
 var Combinations = []Combination{
-	binary, binaryEncoderDecoder, compact,
+	binary, binaryEncoderDecoder, compact, compactEncoderDecoder,
 }
 
 var UnmarshalCombinations = append(Combinations,

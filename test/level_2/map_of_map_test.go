@@ -50,12 +50,17 @@ func Test_unmarshal_general_map_of_map(t *testing.T) {
 func Test_marshal_general_map_of_map(t *testing.T) {
 	should := require.New(t)
 	for _, c := range test.Combinations {
-		output, err := c.Marshal(general.Map{
+		m := general.Map{
 			int64(1): general.Map{
 				"k1": int64(1),
 			},
-		})
+		}
+
+		output, err := c.Marshal(m)
 		should.NoError(err)
+		output1, err := c.Marshal(&m)
+		should.NoError(err)
+		should.Equal(output, output1)
 		var val general.Map
 		should.NoError(c.Unmarshal(output, &val))
 		should.Equal(general.Map{
@@ -67,10 +72,15 @@ func Test_marshal_general_map_of_map(t *testing.T) {
 func Test_marshal_map_of_map(t *testing.T) {
 	should := require.New(t)
 	for _, c := range test.MarshalCombinations {
-		output, err := c.Marshal(map[int64]map[string]int64{
+		m := map[int64]map[string]int64{
 			1: {"k1": 1},
-		})
+		}
+
+		output, err := c.Marshal(m)
 		should.NoError(err)
+		output1, err := c.Marshal(&m)
+		should.NoError(err)
+		should.Equal(output, output1)
 		var val general.Map
 		should.NoError(c.Unmarshal(output, &val))
 		should.Equal(general.Map{

@@ -1,30 +1,143 @@
 package compact
 
 import (
+	"encoding/binary"
 	"fmt"
 	"github.com/thrift-iterator/go/protocol"
-	"math"
-	"io"
-	"encoding/binary"
 	"github.com/thrift-iterator/go/spi"
+	"io"
+	"math"
 )
 
 type Iterator struct {
 	spi.ValDecoderProvider
-	buf              []byte
+	reader  io.Reader
+	tmp     []byte
+	preread []byte
+	skipped []byte
+
 	err              error
 	fieldIdStack     []protocol.FieldId
 	lastFieldId      protocol.FieldId
-	consumed         int
 	pendingBoolField uint8
 }
 
-func NewIterator(provider spi.ValDecoderProvider, buf []byte) *Iterator {
-	return &Iterator{ValDecoderProvider: provider, buf: buf}
+func NewIterator(provider spi.ValDecoderProvider, reader io.Reader, buf []byte) *Iterator {
+	return &Iterator{
+		ValDecoderProvider: provider,
+		reader:             reader,
+		tmp:                make([]byte, 10),
+		preread:            buf,
+	}
+}
+
+func (iter *Iterator) readByte() byte {
+	tmp := iter.tmp[:1]
+	if len(iter.preread) > 0 {
+		tmp[0] = iter.preread[0]
+		iter.preread = iter.preread[1:]
+	} else {
+		_, err := iter.reader.Read(tmp)
+		if err != nil {
+			iter.ReportError("read", err.Error())
+			return 0
+		}
+	}
+	if iter.skipped != nil {
+		iter.skipped = append(iter.skipped, tmp[0])
+	}
+	return tmp[0]
+}
+
+func (iter *Iterator) readSmall(nBytes int) []byte {
+	tmp := iter.tmp[:nBytes]
+	wantBytes := nBytes
+	if len(iter.preread) > 0 {
+		if len(iter.preread) > nBytes {
+			copy(tmp, iter.preread[:nBytes])
+			iter.preread = iter.preread[nBytes:]
+			wantBytes = 0
+		} else {
+			prelength := len(iter.preread)
+			copy(tmp[:prelength], iter.preread)
+			wantBytes -= prelength
+			iter.preread = nil
+		}
+	}
+	if wantBytes > 0 {
+		_, err := io.ReadFull(iter.reader, tmp[nBytes-wantBytes:nBytes])
+		if err != nil {
+			for i := 0; i < len(tmp); i++ {
+				tmp[i] = 0
+			}
+			iter.ReportError("read", err.Error())
+			return tmp
+		}
+	}
+	if iter.skipped != nil {
+		iter.skipped = append(iter.skipped, tmp...)
+	}
+	return tmp
+}
+
+func (iter *Iterator) readLarge(nBytes int) []byte {
+	// allocate new buffer if not enough
+	if len(iter.tmp) < nBytes {
+		iter.tmp = make([]byte, nBytes)
+	}
+	tmp := iter.tmp[:nBytes]
+	wantBytes := nBytes
+	if len(iter.preread) > 0 {
+		if len(iter.preread) > nBytes {
+			copy(tmp, iter.preread[:nBytes])
+			iter.preread = iter.preread[nBytes:]
+			wantBytes = 0
+		} else {
+			prelength := len(iter.preread)
+			copy(tmp[:prelength], iter.preread)
+			wantBytes -= prelength
+			iter.preread = nil
+		}
+	}
+	if wantBytes > 0 {
+		_, err := io.ReadFull(iter.reader, tmp[nBytes-wantBytes:nBytes])
+		if err != nil {
+			for i := 0; i < len(tmp); i++ {
+				tmp[i] = 0
+			}
+			iter.ReportError("read", err.Error())
+			return tmp
+		}
+	}
+	if iter.skipped != nil {
+		iter.skipped = append(iter.skipped, tmp...)
+	}
+	return tmp
+}
+
+func (iter *Iterator) readVarInt32() int32 {
+	return int32(iter.readVarInt64())
+}
+
+func (iter *Iterator) readVarInt64() int64 {
+	shift := uint(0)
+	result := int64(0)
+	for {
+		b := iter.readByte()
+		if iter.err != nil {
+			return 0
+		}
+		result |= int64(b&0x7f) << shift
+		if (b & 0x80) != 0x80 {
+			break
+		}
+		shift += 7
+	}
+	return result
 }
 
 func (iter *Iterator) Spawn() spi.Iterator {
-	return &Iterator{ValDecoderProvider: iter.ValDecoderProvider}
+	return NewIterator(iter.ValDecoderProvider, nil, nil)
 }
 
 func (iter *Iterator) Error() error {
@@ -38,31 +151,22 @@ func (iter *Iterator) ReportError(operation string, err string) {
 }
 
 func (iter *Iterator) Reset(reader io.Reader, buf []byte) {
-	iter.buf = buf
+	iter.reader = reader
+	iter.preread = buf
 	iter.err = nil
 }
 
-func (iter *Iterator) consume(nBytes int) {
-	iter.buf = iter.buf[nBytes:]
-	iter.consumed += nBytes
-}
-
-const compactProtocolId = 0x082
-const compactVersion = 1
-const versionMask = 0x1f
-
 func (iter *Iterator) ReadMessageHeader() protocol.MessageHeader {
-	protocolId := iter.buf[0]
-	if compactProtocolId != protocolId {
+	protocolId := iter.readByte()
+	if protocolId != protocol.COMPACT_PROTOCOL_ID {
 		iter.ReportError("ReadMessageHeader", "invalid protocol")
 		return protocol.MessageHeader{}
 	}
-	versionAndType := iter.buf[1]
-	iter.consume(2)
-	version := versionAndType & versionMask
+	versionAndType := iter.readByte()
+	version := versionAndType & protocol.COMPACT_VERSION_MASK
 	messageType := protocol.TMessageType((versionAndType >> 5) & 0x07)
-	if version != compactVersion {
-		iter.ReportError("ReadMessageHeader", fmt.Sprintf("Expected version %02x but got %02x", compactVersion, version))
+	if version != protocol.COMPACT_VERSION {
+		iter.ReportError("ReadMessageHeader", fmt.Sprintf("expected version %02x but got %02x", protocol.COMPACT_VERSION, version))
 		return protocol.MessageHeader{}
 	}
 	seqId := protocol.SeqId(iter.readVarInt32())
@@ -79,10 +183,12 @@ func (iter *Iterator) ReadStructHeader() {
 	iter.lastFieldId = 0
 }
 
-func (iter *Iterator) ReadStructField() (protocol.TType, protocol.FieldId) {
-	firstByte := iter.buf[0]
-	iter.consume(1)
+func (iter *Iterator) ReadStructField() (fieldType protocol.TType, fieldId protocol.FieldId) {
+	firstByte := iter.readByte()
 	if firstByte == 0 {
+		if iter.Error() != nil {
+			return protocol.TypeStop, 0
+		}
 		iter.lastFieldId = iter.fieldIdStack[len(iter.fieldIdStack)-1]
 		iter.fieldIdStack = iter.fieldIdStack[:len(iter.fieldIdStack)-1]
 		iter.pendingBoolField = 0
@@ -90,23 +196,22 @@ func (iter *Iterator) ReadStructField() (protocol.TType, protocol.FieldId) {
 	}
 	// mask off the 4 MSB of the type header. it could contain a field id delta.
 	modifier := int16((firstByte & 0xf0) >> 4)
-	var fieldId protocol.FieldId
 	if modifier == 0 {
-		// not a delta. look ahead for the zigzag varint field id.
+		// not a delta, look ahead for the zigzag varint field id.
 		fieldId = protocol.FieldId(iter.ReadInt16())
 	} else {
 		// has a delta. add the delta to the last read field id.
 		fieldId = iter.lastFieldId + protocol.FieldId(modifier)
 	}
-	var fieldType protocol.TType
-	if TCompactType(firstByte&0x0f) == TypeBooleanTrue {
+	switch tType := TCompactType(firstByte & 0x0f); tType {
+	case TypeBooleanTrue:
 		fieldType = protocol.TypeBool
 		iter.pendingBoolField = 1
-	} else if TCompactType(firstByte&0x0f) == TypeBooleanFalse {
+	case TypeBooleanFalse:
 		fieldType = protocol.TypeBool
 		iter.pendingBoolField = 2
-	} else {
-		fieldType = TCompactType(firstByte & 0x0f).ToTType()
+	default:
+		fieldType = tType.ToTType()
 		iter.pendingBoolField = 0
 	}
 
@@ -115,31 +220,29 @@ func (iter *Iterator) ReadStructField() (protocol.TType, protocol.FieldId) {
 	return fieldType, fieldId
 }
 
-func (iter *Iterator) ReadListHeader() (protocol.TType, int) {
-	lenAndType := iter.buf[0]
-	iter.consume(1)
+func (iter *Iterator) ReadListHeader() (elemType protocol.TType, size int) {
+	lenAndType := iter.readByte()
 	length := int((lenAndType >> 4) & 0x0f)
 	if length == 15 {
 		length2 := iter.readVarInt32()
 		if length2 < 0 {
-			iter.ReportError("ReadListHeader", "invalid data length")
+			iter.ReportError("ReadListHeader", "invalid length")
 			return protocol.TypeStop, 0
 		}
 		length = int(length2)
 	}
-	elemType := TCompactType(lenAndType).ToTType()
+	elemType = TCompactType(lenAndType).ToTType()
 	return elemType, length
 }
 
-func (iter *Iterator) ReadMapHeader() (protocol.TType, protocol.TType, int) {
+func (iter *Iterator) ReadMapHeader() (keyType protocol.TType, elemType protocol.TType, size int) {
 	length := int(iter.readVarInt32())
 	if length == 0 {
 		return protocol.TypeStop, protocol.TypeStop, length
 	}
-	keyAndElemType := iter.buf[0]
-	iter.consume(1)
-	keyType := TCompactType(keyAndElemType >> 4).ToTType()
-	elemType := TCompactType(keyAndElemType & 0xf).ToTType()
+	keyAndElemType := iter.readByte()
+	keyType = TCompactType(keyAndElemType >> 4).ToTType()
+	elemType = TCompactType(keyAndElemType & 0xf).ToTType()
 	return keyType, elemType, length
 }
 
@@ -150,27 +253,28 @@ func (iter *Iterator) ReadBool() bool {
 	return iter.pendingBoolField == 1
 }
 
-func (iter *Iterator) ReadUint8() uint8 {
-	b := iter.buf
-	value := b[0]
-	iter.consume(1)
-	return value
+func (iter *Iterator) ReadInt() int {
+	return int(iter.ReadInt64())
+}
+
+func (iter *Iterator) ReadUint() uint {
+	return uint(iter.ReadInt64())
 }
 
 func (iter *Iterator) ReadInt8() int8 {
 	return int8(iter.ReadUint8())
 }
 
-func (iter *Iterator) ReadUint16() uint16 {
-	return uint16(iter.ReadUint32())
+func (iter *Iterator) ReadUint8() uint8 {
+	return iter.readByte()
 }
 
 func (iter *Iterator) ReadInt16() int16 {
 	return int16(iter.ReadInt32())
 }
 
-func (iter *Iterator) ReadUint32() uint32 {
-	return uint32(iter.ReadInt32())
+func (iter *Iterator) ReadUint16() uint16 {
+	return uint16(iter.ReadUint32())
 }
 
 func (iter *Iterator) ReadInt32() int32 {
@@ -179,8 +283,8 @@ func (iter *Iterator) ReadInt32() int32 {
 	return int32(u>>1) ^ -(result & 1)
 }
 
-func (iter *Iterator) readVarInt32() int32 {
-	return int32(iter.readVarInt64())
+func (iter *Iterator) ReadUint32() uint32 {
+	return uint32(iter.ReadInt32())
 }
 
 func (iter *Iterator) ReadInt64() int64 {
@@ -193,44 +297,19 @@ func (iter *Iterator) ReadUint64() uint64 {
 	return uint64(iter.ReadInt64())
 }
 
-func (iter *Iterator) readVarInt64() int64 {
-	shift := uint(0)
-	result := int64(0)
-	for i, b := range iter.buf {
-		result |= int64(b&0x7f) << shift
-		if (b & 0x80) != 0x80 {
-			iter.consume(i + 1)
-			break
-		}
-		shift += 7
-	}
-	return result
-}
-
-func (iter *Iterator) ReadInt() int {
-	return int(iter.ReadInt64())
-}
-
-func (iter *Iterator) ReadUint() uint {
-	return uint(iter.ReadUint64())
-}
-
 func (iter *Iterator) ReadFloat64() float64 {
-	value := math.Float64frombits(binary.LittleEndian.Uint64(iter.buf))
-	iter.consume(8)
-	return value
+	tmp := iter.readSmall(8)
+	return math.Float64frombits(binary.LittleEndian.Uint64(tmp))
 }
 
 func (iter *Iterator) ReadString() string {
 	length := iter.readVarInt32()
-	value := string(iter.buf[:length])
-	iter.consume(int(length))
-	return value
+	return string(iter.readLarge(int(length)))
 }
 
 func (iter *Iterator) ReadBinary() []byte {
 	length := iter.readVarInt32()
-	value := iter.buf[:length]
-	iter.consume(int(length))
-	return value
+	tmp := make([]byte, length)
+	copy(tmp, iter.readLarge(int(length)))
+	return tmp
 }
