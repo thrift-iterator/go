@@ -4,7 +4,7 @@ import "github.com/thrift-iterator/go/protocol"
 
 func (iter *Iterator) skip(skipper func(), space []byte) []byte {
 	var tmp []byte
-	iter.skipped = make([]byte, 0, 10)
+	iter.skipped = make([]byte, 0, 8)
 	skipper()
 	tmp, iter.skipped = iter.skipped, nil
 	if iter.Error() != nil {
