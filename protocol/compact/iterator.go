@@ -26,7 +26,7 @@ func NewIterator(provider spi.ValDecoderProvider, reader io.Reader, buf []byte) 
 	return &Iterator{
 		ValDecoderProvider: provider,
 		reader:             reader,
-		tmp:                make([]byte, 10),
+		tmp:                make([]byte, 8),
 		preread:            buf,
 	}
 }
@@ -85,34 +85,7 @@ func (iter *Iterator) readLarge(nBytes int) []byte {
 	if len(iter.tmp) < nBytes {
 		iter.tmp = make([]byte, nBytes)
 	}
-	tmp := iter.tmp[:nBytes]
-	wantBytes := nBytes
-	if len(iter.preread) > 0 {
-		if len(iter.preread) > nBytes {
-			copy(tmp, iter.preread[:nBytes])
-			iter.preread = iter.preread[nBytes:]
-			wantBytes = 0
-		} else {
-			prelength := len(iter.preread)
-			copy(tmp[:prelength], iter.preread)
-			wantBytes -= prelength
-			iter.preread = nil
-		}
-	}
-	if wantBytes > 0 {
-		_, err := io.ReadFull(iter.reader, tmp[nBytes-wantBytes:nBytes])
-		if err != nil {
-			for i := 0; i < len(tmp); i++ {
-				tmp[i] = 0
-			}
-			iter.ReportError("read", err.Error())
-			return tmp
-		}
-	}
-	if iter.skipped != nil {
-		iter.skipped = append(iter.skipped, tmp...)
-	}
-	return tmp
+	return iter.readSmall(nBytes)
 }
 
 func (iter *Iterator) readVarInt32() int32 {
