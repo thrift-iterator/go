@@ -71,9 +71,13 @@ func encoderOf(extension spi.Extension, prefix string, valType reflect.Type) int
 		}
 	case reflect.Map:
 		sampleObj := reflect.New(valType).Elem().Interface()
+		elemType := valType.Elem()
+		if elemType.Kind() == reflect.Ptr {
+			elemType = elemType.Elem()
+		}
 		return &mapEncoder{
 			keyEncoder:   encoderOf(extension, prefix+" [mapKey]", valType.Key()),
-			elemEncoder:  encoderOf(extension, prefix+" [mapElem]", valType.Elem()),
+			elemEncoder:  encoderOf(extension, prefix+" [mapElem]", elemType),
 			mapInterface: *(*emptyInterface)(unsafe.Pointer(&sampleObj)),
 		}
 	case reflect.Struct:

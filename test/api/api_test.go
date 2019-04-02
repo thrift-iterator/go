@@ -110,3 +110,31 @@ func Test_encode_message(t *testing.T) {
 		fmt.Println(fieldId, fieldValue)
 	}
 }
+
+type Foo struct {
+	Sa string   `thrift:"Sa,1" json:"Sa"`
+	Ib int32    `thrift:"Ib,2" json:"Ib"`
+	Lc []string `thrift:"Lc,3" json:"Lc"`
+}
+
+type Example struct {
+	Name string          `thrift:"Name,1" json:"Name"`
+	Ia   int64           `thrift:"Ia,2" json:"Ia"`
+	Lb   []string        `thrift:"Lb,3" json:"Lb"`
+	Mc   map[string]*Foo `thrift:"Mc,4" json:"Mc"`
+}
+
+func TestPanic(t *testing.T) {
+	var example = Example{
+		Name: "xxxxxxxxxxxxxxxx",
+		Ia:   12345678,
+		Lb:   []string{"a", "b", "c", "d", "1", "2", "3", "4", "5"},
+		Mc: map[string]*Foo{
+			"t1": &Foo{Sa: "sss", Ib: 987654321, Lc: []string{"1", "2", "3"}},
+		},
+	}
+	_, err := thrifter.Marshal(example)
+	if err != nil {
+		t.Fail()
+	}
+}
