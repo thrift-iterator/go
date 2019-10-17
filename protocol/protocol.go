@@ -44,6 +44,7 @@ const (
 	TypeList   TType = 15
 	TypeUTF8   TType = 16
 	TypeUTF16  TType = 17
+	TypeBinary TType = 18
 )
 
 var typeNames = map[TType]string{
@@ -62,6 +63,7 @@ var typeNames = map[TType]string{
 	TypeList:   "List",
 	TypeUTF8:   "UTF8",
 	TypeUTF16:  "UTF16",
+	TypeBinary: "Binary",
 }
 
 func (p TType) String() string {
