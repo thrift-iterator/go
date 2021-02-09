@@ -53,7 +53,7 @@ err = thrifter.Unmarshal(thriftEncodedBytes, &val)
 # without IDL
 
 you do not need to define IDL. you do not need to use static code generation.
-you do not event need to define struct.
+you do not even need to define struct.
 
 ```go
 import "github.com/thrift-iterator/go"
